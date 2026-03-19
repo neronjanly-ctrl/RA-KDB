@@ -1,11 +1,10 @@
-﻿@model IReadOnlyList<Domain>
+﻿@model PlatformIndexViewModel
 @using System
 @using System.Linq
 
 @{
     ViewData["Title"] = "RA-KDB Platform";
-
-    var raDomain = Model.FirstOrDefault(o =>
+    var raDomain = Model.Domains.FirstOrDefault(o =>
         o.IsPublic &&
         string.Equals(o.Id, "RA", StringComparison.OrdinalIgnoreCase));
 
@@ -28,16 +27,6 @@
         }
     };
 
-    var knowledgeCoverage = new[]
-    {
-        "Rheumatoid arthritis-related protein targets",
-        "Disease context and target relevance",
-        "Structured protein card presentation",
-        "Ligand-facing research preparation",
-        "Docking-oriented downstream reuse",
-        "Biological and network interpretation entry points"
-    };
-
     var capabilityCards = new[]
     {
         new
@@ -54,13 +43,18 @@
         }
     };
 
+    var featuredProteinSlides = Model.FeaturedProteins
+       .Select((protein, index) => new { protein, index })
+       .GroupBy(x => x.index / 1)
+       .Select(group => group.Select(x => x.protein).ToList())
+       .ToList();
 }
 
 @section Menu
     {
     <li class="nav-item"><a class="nav-link" href="#about">Overview</a></li>
     <li class="nav-item"><a class="nav-link" href="#knowledge">Knowledge Base</a></li>
-    <li class="nav-item"><a class="nav-link" href="#capabilities">Docking & Cards</a></li>
+    <li class="nav-item"><a class="nav-link" href="#capabilities">Docking</a></li>
     <li class="nav-item ml-2">
         <a class="btn btn-primary" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">Enter RA Workspace</a>
     </li>
@@ -99,9 +93,10 @@
 
         .ra-page-wrap {
             position: relative;
-            max-width: 1320px;
+            width: min(1560px, calc(100vw - 2.5rem));
+            max-width: none;
             margin: 0 auto;
-            padding: 1.5rem 1.5rem 5rem;
+            padding: 1.5rem 0 5rem;
         }
 
             .ra-page-wrap::before {
@@ -168,14 +163,14 @@
             line-height: 1.08;
             letter-spacing: -.025em;
             margin-bottom: 1rem;
-            max-width: 900px;
+            max-width: 1040px;
         }
 
         .ra-section-desc {
             color: var(--ra-text);
             font-size: 1.05rem;
             line-height: 1.9;
-            max-width: 850px;
+            max-width: 1060px;
             margin-bottom: 0;
         }
 
@@ -405,8 +400,8 @@
         /* Knowledge */
         .ra-knowledge-layout {
             display: grid;
-            grid-template-columns: 1.15fr .9fr;
-            gap: 3rem;
+            grid-template-columns: minmax(0, 1.22fr) minmax(420px, .92fr);
+            gap: 2.25rem;
             align-items: start;
             margin-top: 2.2rem;
         }
@@ -483,6 +478,196 @@
                     box-shadow: 0 0 0 5px rgba(77,141,255,.10);
                 }
 
+        .ra-protein-panel {
+            display: grid;
+            gap: 1rem;
+            margin-top: -.35rem;
+        }
+
+        .ra-protein-panel-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .ra-protein-panel-desc {
+            margin: -.4rem 0 0;
+            color: var(--ra-text);
+            line-height: 1.7;
+            font-size: .96rem;
+        }
+
+        .ra-protein-carousel-shell {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ra-protein-carousel {
+            position: relative;
+            min-height: 280px;
+        }
+
+        .ra-protein-slide {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            gap: .95rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px);
+            transition: opacity .35s ease, transform .35s ease;
+        }
+
+            .ra-protein-slide.is-active {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateY(0);
+            }
+
+        .ra-protein-card {
+            display: grid;
+            grid-template-columns: 88px minmax(0, 1fr);
+            gap: .95rem;
+            align-items: start;
+            padding: .95rem;
+            border-radius: 20px;
+            background: rgba(255,255,255,.82);
+            border: 1px solid rgba(220,231,245,.88);
+            box-shadow: 0 8px 22px rgba(24,52,86,.05);
+        }
+
+        .ra-protein-thumb {
+            width: 88px;
+            height: 88px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(244,248,252,.95), rgba(234,241,249,.88));
+            border: 1px solid rgba(217,229,241,.9);
+            padding: .4rem;
+        }
+
+        .ra-protein-card-body {
+            min-width: 0;
+        }
+
+        .ra-protein-card-title {
+            margin: 0 0 .35rem;
+            font-size: 1rem;
+            line-height: 1.35;
+            font-weight: 700;
+            color: var(--ra-title);
+        }
+
+            .ra-protein-card-title a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .ra-protein-card-title a:hover {
+                    color: var(--ra-blue-deep);
+                }
+
+        .ra-protein-card-meta {
+            display: grid;
+            gap: .22rem;
+            margin-bottom: .6rem;
+            color: var(--ra-text);
+            font-size: .92rem;
+            line-height: 1.55;
+        }
+
+            .ra-protein-card-meta strong {
+                color: var(--ra-text-strong);
+            }
+
+        .ra-protein-link-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem .8rem;
+            margin-bottom: .7rem;
+            font-size: .9rem;
+        }
+
+            .ra-protein-link-row a {
+                color: var(--ra-blue-deep);
+                text-decoration: none;
+            }
+
+        .ra-protein-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .45rem .8rem;
+            border-radius: 999px;
+            border: 1px solid rgba(77,141,255,.22);
+            background: rgba(77,141,255,.08);
+            color: var(--ra-blue-deep);
+            font-size: .88rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+            .ra-protein-action:hover {
+                text-decoration: none;
+                background: rgba(77,141,255,.14);
+            }
+
+        .ra-protein-empty {
+            padding: 1rem;
+            border-radius: 18px;
+            color: var(--ra-text);
+            background: rgba(255,255,255,.7);
+            border: 1px dashed rgba(208, 222, 236, .9);
+            line-height: 1.7;
+        }
+
+        .ra-protein-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            margin-top: .25rem;
+        }
+
+        .ra-protein-nav {
+            display: flex;
+            gap: .55rem;
+        }
+
+        .ra-protein-nav-btn {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 999px;
+            border: 1px solid rgba(220,232,248,.95);
+            background: rgba(255,255,255,.88);
+            color: #28445d;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .ra-protein-dots {
+            display: flex;
+            gap: .42rem;
+        }
+
+        .ra-protein-dot {
+            width: .62rem;
+            height: .62rem;
+            border-radius: 999px;
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+            background: rgba(133,160,192,.35);
+            transition: transform .18s ease, background .18s ease, width .18s ease;
+        }
+
+            .ra-protein-dot.is-active {
+                width: 1.35rem;
+                background: rgba(77,141,255,.9);
+            }
         /* Capabilities */
         .ra-cap-layout {
             display: grid;
@@ -599,6 +784,28 @@
             color: var(--ra-text-strong);
             line-height: 1.8;
         }
+
+        @@media (max-width: 1199.98px) {
+            .ra-page-wrap {
+                width: min(1320px, calc(100vw - 2rem));
+            }
+
+            .ra-knowledge-layout,
+            .ra-cap-layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .ra-section-title,
+            .ra-section-desc,
+            .ra-cap-copy .ra-section-title {
+                max-width: none;
+            }
+
+            .ra-protein-panel {
+                margin-top: 0;
+            }
+        }
     </style>
 }
 
@@ -672,8 +879,8 @@
         <div class="ra-kicker">Knowledge Database</div>
         <h2 class="ra-section-title">What the knowledge database is based on and what it is designed to cover</h2>
         <p class="ra-section-desc">
-            The knowledge database is not just a list of names. It is the conceptual foundation of the platform,
-            explaining both where the records come from and how they are organized so researchers can move from
+            The knowledge database is the conceptual foundation of the platform,explaining both 
+            where the records come from and how they are organized so researchers can move from
             disease-related target understanding into later analysis with continuity.
         </p>
 
@@ -691,14 +898,104 @@
                 </div>
             </div>
 
-            <div class="ra-coverage-panel">
-                <div class="ra-mini-title">Coverage in the platform</div>
-                <ul class="ra-coverage-list">
-                    @foreach (var item in knowledgeCoverage)
+            <div class="ra-coverage-panel ra-protein-panel">
+                <div class="ra-protein-panel-head">
+                    <div>
+                        <div class="ra-mini-title">Featured protein cards</div>
+                        <p class="ra-protein-panel-desc">
+                            Example proteins are shown here as reusable cards. Click any card to open the full protein detail panel with annotations, external resources, and local structure visualization.
+                        </p>
+                    </div>
+                </div>
+
+                @if (featuredProteinSlides.Count > 0)
+                {
+                    <div class="ra-protein-carousel-shell">
+                        <div class="ra-protein-carousel" id="raProteinCarousel">
+                            @for (var i = 0; i < featuredProteinSlides.Count; i++)
+                            {
+                                var slide = featuredProteinSlides[i];
+                                <div class="ra-protein-slide @(i == 0 ? "is-active" : null)" data-slide="@i">
+                                    @foreach (var protein in slide)
+                                    {
+                                        <article class="ra-protein-card">
+                                            <img class="ra-protein-thumb" src="@protein.ImageUrl" alt="@protein.ProteinName" />
+
+                                            <div class="ra-protein-card-body">
+                                                <h3 class="ra-protein-card-title">
+                                                    <a data-toggle="modal"
+                                                       data-target="#proteinInfo"
+                                                       data-pname="@protein.ProteinName"
+                                                       asp-controller="Protein"
+                                                       asp-action="Details"
+                                                       asp-route-domainId="@protein.DomainId"
+                                                       asp-route-cavityId="@protein.CavityId">
+                                                        @protein.ProteinName
+                                                    </a>
+                                                </h3>
+
+                                                <div class="ra-protein-card-meta">
+                                                    <div><strong>Organism:</strong> @protein.Organism</div>
+                                                    <div><strong>Symbol:</strong> @protein.Symbol</div>
+                                                    <div><strong>Gene:</strong> @protein.Gene</div>
+                                                </div>
+
+                                                <div class="ra-protein-link-row">
+                                                    @if (!string.IsNullOrWhiteSpace(protein.UniProtUrl))
+                                                    {
+                                                        <a href="@protein.UniProtUrl" target="_blank">@protein.UniProtId</a>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(protein.ChemblUrl))
+                                                    {
+                                                        <a href="@protein.ChemblUrl" target="_blank">@protein.ChemblId</a>
+                                                    }
+                                                </div>
+
+                                                <a class="ra-protein-action"
+                                                   data-toggle="modal"
+                                                   data-target="#proteinInfo"
+                                                   data-pname="@protein.ProteinName"
+                                                   asp-controller="Protein"
+                                                   asp-action="Details"
+                                                   asp-route-domainId="@protein.DomainId"
+                                                   asp-route-cavityId="@protein.CavityId">
+                                                    View details
+                                                </a>
+                                            </div>
+                                        </article>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @if (featuredProteinSlides.Count > 1)
                     {
-                        <li>@item</li>
+                        <div class="ra-protein-controls">
+                            <div class="ra-protein-nav">
+                                <button class="ra-protein-nav-btn" id="raProteinPrev" type="button" aria-label="Previous protein cards">
+                                    <span aria-hidden="true">&#8592;</span>
+                                </button>
+                                <button class="ra-protein-nav-btn" id="raProteinNext" type="button" aria-label="Next protein cards">
+                                    <span aria-hidden="true">&#8594;</span>
+                                </button>
+                            </div>
+
+                            <div class="ra-protein-dots" id="raProteinDots">
+                                @for (var i = 0; i < featuredProteinSlides.Count; i++)
+                                {
+                                    <button class="ra-protein-dot @(i == 0 ? "is-active" : null)" type="button" aria-label="Show protein slide @(i + 1)" data-slide="@i"></button>
+                                }
+                            </div>
+                        </div>
                     }
-                </ul>
+                }
+                else
+                {
+                    <div class="ra-protein-empty">
+                        No sample protein cards are available yet. Once featured proteins are configured for the RA domain, they will rotate here as reusable examples.
+                    </div>
+                }
             </div>
         </div>
     </section>
@@ -761,10 +1058,37 @@
     </section>
 </div>
 
+<div class="modal fade" id="proteinInfo" tabindex="-1" role="dialog" aria-labelledby="proteinName" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proteinName"></h5>
+                <div class="text-nowrap col-auto">
+                    <a class="close ml-2" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </a>
+                    <a href="" target="_blank" class="close maximizeBtn">
+                        <span aria-hidden="true"><i class="fa fa-window-maximize"></i></span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts
     {
+    <script src="~/lib/ngl/ngl.js"></script>
     <script>
         (() => {
+            if (typeof setupProteinInfoModal === 'function') {
+                setupProteinInfoModal();
+            }
             const anchorLinks = Array.from(document.querySelectorAll('a[href^="#"]'));
             anchorLinks.forEach((link) => {
                 const targetId = link.getAttribute('href');
@@ -866,6 +1190,86 @@
                 });
 
                 carousel.addEventListener('mouseleave', () => {
+                    restartAuto();
+                });
+
+                render(0);
+                restartAuto();
+            }
+
+            const proteinCarousel = document.getElementById('raProteinCarousel');
+            if (proteinCarousel) {
+                const slides = Array.from(proteinCarousel.querySelectorAll('.ra-protein-slide'));
+                const dotsWrap = document.getElementById('raProteinDots');
+                const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ra-protein-dot')) : [];
+                const prevBtn = document.getElementById('raProteinPrev');
+                const nextBtn = document.getElementById('raProteinNext');
+
+                let activeIndex = 0;
+                let timer = null;
+                const intervalMs = 6400;
+
+                const render = (index) => {
+                    slides.forEach((slide, i) => {
+                        slide.classList.toggle('is-active', i === index);
+                    });
+
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('is-active', i === index);
+                    });
+
+                    activeIndex = index;
+                };
+
+                const goTo = (index) => {
+                    const nextIndex = (index + slides.length) % slides.length;
+                    render(nextIndex);
+                };
+
+                const next = () => goTo(activeIndex + 1);
+                const prev = () => goTo(activeIndex - 1);
+
+                const restartAuto = () => {
+                    if (timer) {
+                        clearInterval(timer);
+                    }
+
+                    if (slides.length > 1) {
+                        timer = setInterval(next, intervalMs);
+                    }
+                };
+
+                dots.forEach((dot) => {
+                    dot.addEventListener('click', () => {
+                        const index = parseInt(dot.getAttribute('data-slide'), 10);
+                        if (!Number.isNaN(index)) {
+                            goTo(index);
+                            restartAuto();
+                        }
+                    });
+                });
+
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        prev();
+                        restartAuto();
+                    });
+                }
+
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        next();
+                        restartAuto();
+                    });
+                }
+
+                proteinCarousel.addEventListener('mouseenter', () => {
+                    if (timer) {
+                        clearInterval(timer);
+                    }
+                });
+
+                proteinCarousel.addEventListener('mouseleave', () => {
                     restartAuto();
                 });
 

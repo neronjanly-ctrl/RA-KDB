@@ -1,3 +1,4 @@
+using CommonTools;
 using DockingApiClient;
 using DockingDataModels;
 using GenericComputationPlatform.Extensions;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GenericComputationPlatform.Controllers;
@@ -38,7 +40,46 @@ public partial class HomeController : Controller
         ViewData["Badge"] = stat.RunningCount();
 
         IReadOnlyList<Domain> domains = await _domainClient.ListAsync();
-        return View(domains);
+        Domain raDomain = domains.FirstOrDefault(o =>o.IsPublic &&
+            string.Equals(o.Id, "RA", System.StringComparison.OrdinalIgnoreCase));
+
+        List<FeaturedProteinCardViewModel> featuredProteins = new();
+        if (raDomain != null)
+        {
+            IReadOnlyList<Protein> proteins = await _proteinClient.ListByDomainAsync(raDomain.Id, null);
+
+            featuredProteins = proteins
+                .SelectMany(o => o.Cavities ?? new List<Cavity>())
+                .Where(o => o.Protein != null)
+                .OrderBy(o => o.Protein.ProteinName)
+                .ThenBy(o => o.BindingSite)
+                .Take(6)
+                .Select(o => new FeaturedProteinCardViewModel
+                {
+                    DomainId = raDomain.Id,
+                    CavityId = o.Id.StringifyId(),
+                    ProteinId = o.ProteinId,
+                    ProteinName = o.Protein.ProteinName,
+                    Organism = o.Protein.Organism?.Replace(";", "; "),
+                    Symbol = $"{o.Protein.ProteinSymbol}_{o.Protein.OrganismSymbol}",
+                    Gene = o.Protein.GeneSymbol,
+                    BindingSite = o.BindingSite,
+                    ImageUrl = $"/images/s/{o.ProteinId}-{o.BindingSite}-model_1.png",
+                    UniProtId = o.Protein.Properties?.UniProt?.Id,
+                    UniProtUrl = o.Protein.Properties?.UniProt?.Url,
+                    ChemblId = o.Protein.Properties?.Chembl?.Id,
+                    ChemblUrl = o.Protein.Properties?.Chembl?.TargetUrl,
+                })
+                .ToList();
+        }
+
+        PlatformIndexViewModel model = new()
+        {
+            Domains = domains,
+            FeaturedProteins = featuredProteins,
+        };
+
+        return View(model);
     }
 
     [HttpGet]
