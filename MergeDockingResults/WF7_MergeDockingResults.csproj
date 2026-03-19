@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <AssemblyName>MergeDockingResults</AssemblyName>
+    <RootNamespace>MergeDockingResults</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\RatCvsSimulation\ChemicalFunctions\ChemicalFunctions.csproj" />
+    <ProjectReference Include="..\CommonTools\CommonTools.csproj" />
+  </ItemGroup>
+
+</Project>

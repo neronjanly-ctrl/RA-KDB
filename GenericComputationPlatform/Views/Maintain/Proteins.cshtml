@@ -1,0 +1,197 @@
+﻿@model IList<Protein>
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = "Protein Management";
+    var targetReportDict = (IDictionary<long, TargetReport>)ViewBag.TargetReportDict;
+}
+@section breadcrumb
+{
+    &raquo; <a asp-controller="Maintain" asp-action="Index">Maintain</a> &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<p>
+    Note: To add a protein to a <b>public</b> domain, <b class="text-danger">errors in red</b> for that protein must be resolved first.<br />
+    A protein with errors can be added to a <b>private</b> domain, but the errors must be resolved prior to publishing the domain.
+</p>
+<ol>
+    @foreach (var protein in Model)
+    {
+    var id = $"{protein.ProteinSymbol}_{protein.OrganismSymbol}";
+    <li>
+        <a href="#@id" id="_@id">
+            <b>@id</b>
+            <small>/ @(protein.GeneSymbol)_@(protein.OrganismSymbol)</small>
+        </a>
+        <small>
+            [@if (protein.ProteinDomains.Count == 0)
+            {
+            <b class="text-danger">No domain</b>
+            }
+            else
+            {
+            foreach (var domain in protein.ProteinDomains)
+            {
+            <a href="@Url.Action("Domains", "Maintain")#_@(domain.DomainId)">@domain.DomainId.ToUpper()</a>
+            }
+            }]
+
+            [@if (protein.Properties?.UniProt == null)
+            {
+            <b class="text-danger">No UniprotID</b>
+            }
+            else
+            {
+            <a href="@protein.Properties.UniProt.Url" target="_blank">@protein.Properties.UniProt.Id</a>
+            }]
+
+            [@if (protein.Cavities.Count == 0)
+            {
+            <b class="text-danger">No cavity</b>
+            }
+            else
+            {
+                foreach (var cavity in protein.Cavities)
+                {
+                    var targetReport = targetReportDict[cavity.Id];
+                    @:@(cavity.BindingSite)
+                    if (cavity.StructureCount == 0)
+                    {
+                        @:(<b class="text-danger">No model</b>)
+                    }
+                    else
+                    {
+                        var stat = targetReport.Structures.SelectMany(o => o)
+                            .Where(o => o.RequiredForVisualization)
+                            .GroupBy(o => o.FileName)
+                            .Select(o => new { Name = o.Key, Bad = o.Count(p => !p.Exists), Good = o.Count(p => p.Exists) })
+                            .ToArray();
+                        if (stat.Any(o => o.Bad > 0))
+                        {
+                        <text>(<span class="text-danger">missing
+                            @foreach (var s in stat)
+                            {
+                                if (s.Bad > 0)
+                                {
+                                    @:@(s.Name)(@s.Bad)
+                                }
+                            }</span>)
+                        </text>
+                        }
+                        else
+                        {
+                            @:(<b class="text-success">Full visualization</b>)
+                        }
+                    }
+                    @if (targetReport.Structures.Count > 0 && targetReport.ChemblCompounds?.IsDataComplete == true && targetReport.TrainedModels?.IsDataComplete == true)
+                    {
+                    @:(<b class="text-success">Full computation</b>))
+                    }
+                    else if (targetReport.Structures.Count > 0 && targetReport.TrainedModels?.IsDataComplete == true)
+                    {
+                    @:(<span class="text-success">Docking+Prediction</span>)
+                    }
+                    else if (targetReport.ChemblCompounds?.IsDataComplete == true && targetReport.TrainedModels?.IsDataComplete == true)
+                    {
+                    @:(<span class="text-success">Similarity+Prediction</span>)
+                    }
+                    else if (targetReport.Structures.Count > 0 && targetReport.ChemblCompounds?.IsDataComplete == true)
+                    {
+                    @:(<span class="text-success">Docking+Similarity</span>)
+                    }
+                    else if (targetReport.TrainedModels?.IsDataComplete == true)
+                    {
+                    @:(<span class="text-warning">Prediction</span>)
+                    }
+                    else if (targetReport.Structures.Count > 0)
+                    {
+                    @:(<span class="text-warning">Docking</span>)
+                    }
+                    else if (targetReport.ChemblCompounds?.IsDataComplete == true)
+                    {
+                    @:(<span class="text-warning">Similarity</span>)
+                    }
+                    else
+                    {
+                    @:(<b class="text-danger">No computation</b>)
+                    }
+                }
+            }]
+        </small>:
+
+        <b>@protein.ProteinName</b>
+    </li>
+    }
+</ol>
+}
+<table class="table">
+    <tr>
+        <th>Protein / Gene</th>
+        <th>Organism</th>
+        <th>Time</th>
+        <th>Trained</th>
+        <th>ChEMBL Compounds</th>
+        <th>Structures</th>
+        <th>Tags</th>
+    </tr>
+    @foreach (var protein in Model)
+    {
+        var id = $"{protein.ProteinSymbol}_{protein.OrganismSymbol}";
+        <tr>
+            <td>
+                <a id="@id">@id</a><br />
+                @(protein.GeneSymbol)_@(protein.OrganismSymbol)
+            </td>
+            <td>
+                @Html.Raw(string.Join("<br/>", protein.Organism.Split(";")))
+            </td>
+            <td>
+                Created: <span class="update-utms" data-utms="@protein.Created.UtcToUnixTimeMilliseconds()"></span><br />
+                Updated: <span class="update-utms" data-utms="@protein.Updated.UtcToUnixTimeMilliseconds()"></span>
+            </td>
+            <td>
+                @(protein.HasTrainedModels ? "Yes" : "No")
+            </td>
+            <td>
+                @if (protein.HasChemblCompounds)
+                {
+                    @(protein.HasActiveChemblCompounds ? "Active" : "Inactive")
+                    <br />
+                    <b>@protein.BioactivityCount / @protein.RawBioactivityCount</b>
+                }
+                else
+                {
+                    @:No
+                }
+            </td>
+            <td>
+                @foreach (var cavity in protein.Cavities)
+                {
+                    <b>@cavity.BindingSite</b>
+
+                    <br />
+                    foreach (var structure in cavity.Structures)
+                    {
+                        if (structure.Pdb == null)
+                        {
+                            <span>model_@(structure.Index + 1)</span>
+                        }
+                        else
+                        {
+                            <a href="@structure.Pdb.RcsbUrl">@structure.Pdb.Id</a>
+                        }
+                    }
+                }
+            </td>
+            <td>
+                @foreach (var tag in protein.Tags)
+                {
+                    <span>@tag.Id:</span> <b>@tag.Name</b>
+
+                    <br />
+                }
+            </td>
+        </tr>
+    }
+</table>

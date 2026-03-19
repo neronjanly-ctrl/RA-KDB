@@ -1,0 +1,161 @@
+﻿@model IList<Domain>
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = "Publish New CKB";
+}
+@section breadcrumb
+{
+    &raquo; <a asp-controller="Maintain" asp-action="Index">Maintain</a> &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<ol>
+    <li><a href="#Guide">Overall Guide</a></li>
+    <li><a href="#Sample">Workload Sample</a></li>
+    <li><a href="#Minimal">Minimal Sample</a></li>
+</ol>
+}
+
+<a id="Guide" />
+<h5>Overall Guide</h5>
+<ol>
+    <li><b>Literature reading and UniProt/PDB entries collection.</b> In this step you read papers and find proteins related to your domain. You can save your collection in Excel worksheets. You write down UniProt/PDB entries of these proteins but don't need to actually download PDB files. You can put the data in the way or format you like but <b>as clear and detailed as possible</b>, as you typically need to provide a table in the manuscript or supplemental information. For GCP platform integration, only the protein name and PDB/UniProt entry columns are required.</li>
+    <li><b>Download PDB files and split into chains and small molecules.</b> In this step you use our MCCS tool <a href="https://github.com/stcmz/pdbget" target="_blank">pdbget</a> to download and layout proteins in separate folders. To use pdbget you prepare list file(s) of PDB or UniProt entries (i.e. PDB/UniProt ID) that you want to download. You can add labels in the list to create an additional folder level. A protein with multiple PDB entries should put together using a label or UniProt entry. Please note that <b>CIF format is not supported</b>, so in case of download failure you should check if a PDB format is available for that specific PDB entry. Refer to Technical Guide for how to install and use pdbget.</li>
+    <li><b>Manual clean up.</b> In this step you delete redundant PDB files and keep only the interacting amino acids chain PDB, and small molecule PDB if any. Low quality structures that cannot be used in docking should also be deleted. The resolution is also a consideration but not the only one. Structures with a small molecule are usually the best because the pocket location is clearly determined. Structures with multiple small molecules should be treated carefully. If multiple binding sites are involved, they may need to be forked into several structures (create subfolders under the PDB ID folder, each for a pocket). Otherwise, the small molecules may need to be merged into a single PDB file. You should maintain the folder structure while cleaning up (copy text lines from multiple to a single PDB file). A protein with multiple PDB entries should be trimmed so that no more than three or four PDB entries are kept. Trimming down is the last decision to be made, which will be based on the comprehensive understanding about the pockets and interaction. The protein and small molecule file name should be named AminoAcids.pdb and Ligand.pdb respectively.</li>
+    <li><b>Generate pocket placeholders.</b> In this step you locate the pocket(s) in every protein and use Sybyl or other software to generate a pocket filler in MOL2 format. A pocket filler is typically a lump of carbon atoms. The MOL2 file should be named <b>Pocket.mol2</b>.</li>
+    <li><b>Visualize the protein and pocket.</b> In this step you open the protein and pocket filler in PyMol and then rotate and scale to a good view, and then render to a PNG using <b>RayTrace</b>. The rendering should be in 3000x3000 resolution, the protein should be in <b>rainbow</b> coloring mode and the pocket lump should be in <b>magenta</b> color. You can use command line to configure color modes and render to PNG in a single run. The PND file should be named <b>Rendering.png</b>.
+    <li><b>Upload the prepared folders to the server backend.</b> The prepared folders must contain the minimal files (see <a href="#Minimal">minimal sample</a>) and must be named in the format "PROTEIN_ORGANISM". Once they are done, you must upload the folders onto server backend and place them under <b>/opt/lampp/apache2/htdocs/DockingApiService/Workspace/Receptors</b>. Please note if you want to merge a folder into an existing one, you must do so with care.</li>
+    <li><b>Add proteins to the platform.</b> Once you have uploaded the protein folders, you should be able to add the new proteins by folder names in <a asp-controller="Maintain" asp-action="Proteins">Protein Management</a>. During the addition of new proteins, the platform will download and generate necessary files for each protein. The platform will use <a href="https://github.com/stcmz/mccs-toolchain" target="_blank">MCCS toolchain</a> to convert the protein PDB + pocket MOL2 + PNG into our generic computation platform workload (see <a href="#Sample">workload sample</a>).</li>
+    <li><b>Publish a new CKB.</b> Once you have successfully added the new proteins to the platform, you can create a new CKB (i.e. domain) in <a asp-controller="Maintain" asp-action="Domains">Domain Management</a>, add proteins (as named by the uploaded folders) into the CKB (domain), and then publish it to the public.</li>
+</ol>
+
+<a id="Sample" />
+<h5>Workload Sample</h5>
+<p>Below is the file architecture for target 5HT1A_HUMAN.</p>
+<ul>
+    <li>
+        5HT1A_HUMAN
+        <ul>
+            <li>
+                orthosteric
+                <ul>
+                    <li>
+                        model_1
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li>AminoAcids.pdbqt (Auto-generated)</li>
+                            <li><b class="text-warning">AminoAcids.mol2</b> (Auto-generated)</li>
+                            <li>AminoAcids_fixed.pdb (Auto-generated)</li>
+                            <li><b class="text-primary">AminoAcids_fixed.pdbqt</b> (Auto-generated)</li>
+                            <li>Ligand.pdb (Downloaded, Human-picked)</li>
+                            <li>Ligand.pdbqt (Auto-generated)</li>
+                            <li>Ligand.pka (Auto-generated)</li>
+                            <li><b class="text-primary">Pocket.conf</b> (Auto-generated)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                    <li>
+                        model_2
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li>AminoAcids.pdbqt (Auto-generated)</li>
+                            <li><b class="text-warning">AminoAcids.mol2</b> (Auto-generated)</li>
+                            <li>AminoAcids_fixed.pdb (Auto-generated)</li>
+                            <li><b class="text-primary">AminoAcids_fixed.pdbqt</b> (Auto-generated)</li>
+                            <li>Ligand.pdb (Downloaded, Human-picked)</li>
+                            <li>Ligand.pdbqt (Auto-generated)</li>
+                            <li>Ligand.pka (Auto-generated)</li>
+                            <li><b class="text-primary">Pocket.conf</b> (Auto-generated)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                    <li>
+                        model_3
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li>AminoAcids.pdbqt (Auto-generated)</li>
+                            <li><b class="text-warning">AminoAcids.mol2</b> (Auto-generated)</li>
+                            <li>AminoAcids_fixed.pdb (Auto-generated)</li>
+                            <li><b class="text-primary">AminoAcids_fixed.pdbqt</b> (Auto-generated)</li>
+                            <li>Ligand.pdb (Downloaded, Human-picked)</li>
+                            <li>Ligand.pdbqt (Auto-generated)</li>
+                            <li>Ligand.pka (Auto-generated)</li>
+                            <li><b class="text-primary">Pocket.conf</b> (Auto-generated)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><span class="text-success">5HT1A_HUMAN_Bioactivities.txt</span> (Auto-downloaded)</li>
+            <li><span class="text-success">5HT1A_HUMAN_Bioactivities.csv</span> (Auto-generated)</li>
+            <li><b>5HT1A_HUMAN_ChemblCompounds.fp2</b> (Auto-generated)</li>
+            <li><span class="text-success">5HT1A_HUMAN_ProvisionedCompounds.csv</span> (Auto-generated)</li>
+            <li><b class="text-danger">Model_LR.m</b> (Auto-generated)</li>
+            <li><b class="text-danger">Model_MLP.m</b> (Auto-generated)</li>
+            <li><b class="text-danger">Model_RF.m</b> (Auto-generated)</li>
+            <li><b class="text-danger">Model_SVM.m</b> (Auto-generated)</li>
+            <li><b>Properties.txt</b></li>
+        </ul>
+    </li>
+</ul>
+
+<p>Notes:</p>
+<ol>
+    <li>The <b>bolded files</b> are required by the platform.</li>
+    <li>The <span class="text-success">green files</span> are files related to similarity search.</li>
+    <li>The <b class="text-success">bolded green files</b> are required to run similarity search.</li>
+    <li>The <b class="text-danger">bolded red files</b> are required to run machine learning prediction.</li>
+    <li>The <b class="text-primary">bolded blue files</b> are required to run docking.</li>
+    <li>The <b class="text-warning">bolded yellow files</b> are required to visualize.</li>
+</ol>
+
+<a id="Minimal" />
+<h5>Minimal Sample</h5>
+<p>Below is the minimal file architecture required to publish in the platform. The platform will download or generate other required files. There should be at least one model and at most three models for every binding cavity.</p>
+<ul>
+    <li>
+        5HT1A_HUMAN
+        <ul>
+            <li>
+                orthosteric
+                <ul>
+                    <li>
+                        model_1
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                    <li>
+                        model_2
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                    <li>
+                        model_3
+                        <ul>
+                            <li>AminoAcids.pdb (Downloaded, Human-picked)</li>
+                            <li><b class="text-warning">Pocket.mol2</b> (Human-generated)</li>
+                            <li><b>Properties.txt</b></li>
+                            <li><b class="text-warning">Rendering.png</b> (Human-generated)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><b>Properties.txt</b></li>
+        </ul>
+    </li>
+</ul>

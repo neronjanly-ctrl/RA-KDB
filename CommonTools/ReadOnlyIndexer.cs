@@ -1,0 +1,120 @@
+﻿using System;
+
+namespace CommonTools;
+
+public class ReadOnlyIndexer<TArgument, TValue>
+{
+    public Func<TArgument, TValue> Getter { get; set; }
+
+    public TValue this[TArgument arg]
+    {
+        get
+        {
+            return Getter(arg);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TValue>
+{
+    public Func<TArgument1, TArgument2, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2]
+    {
+        get
+        {
+            return Getter(arg1, arg2);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4, TArgument5 arg5]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4, arg5);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4, TArgument5 arg5, TArgument6 arg6]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4, arg5, arg6);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4, TArgument5 arg5, TArgument6 arg6, TArgument7 arg7]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TArgument8, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TArgument8, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4, TArgument5 arg5, TArgument6 arg6, TArgument7 arg7, TArgument8 arg8]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+        }
+    }
+}
+
+public class ReadOnlyIndexer<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TArgument8, TArgument9, TValue>
+{
+    public Func<TArgument1, TArgument2, TArgument3, TArgument4, TArgument5, TArgument6, TArgument7, TArgument8, TArgument9, TValue> Getter { get; set; }
+
+    public TValue this[TArgument1 arg1, TArgument2 arg2, TArgument3 arg3, TArgument4 arg4, TArgument5 arg5, TArgument6 arg6, TArgument7 arg7, TArgument8 arg8, TArgument9 arg9]
+    {
+        get
+        {
+            return Getter(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+        }
+    }
+}

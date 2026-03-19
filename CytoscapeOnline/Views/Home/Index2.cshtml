@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.Title = "Cytoscape Online Demo";
+}
+
+<canvas>
+    Your browser doesn't support canvas.
+</canvas>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var model = @(Html.Raw(ViewBag.Data));
+    </script>
+    @Scripts.Render("~/bundles/scripts")
+}

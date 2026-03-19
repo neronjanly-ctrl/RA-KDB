@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <title>URL Mapping Test</title>
+    <style>
+        span, a {
+            display: block;
+        }
+
+        b {
+            margin-left: 2em;
+        }
+
+        .good {
+            color: green;
+        }
+
+        .bad {
+            color: red;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+</head>
+
+<body>
+    <h1></h1>
+    <p data-pattern="https://{domain}{location}{path}">
+        <span>https://localhost:5000 local domain with different protocol should be replaced with protocol+domain+path</span>
+        <a data-path="" href="https://localhost:5000">test</a>
+        <a data-path="?key=value" href="https://localhost:5000?key=value">test</a>
+        <a data-path="#tag" href="https://localhost:5000#tag">test</a>
+        <a data-path="?key=value#tag" href="https://localhost:5000?key=value#tag">test</a>
+        <a data-path="/" href="https://localhost:5000/">test</a>
+        <a data-path="/?key=value" href="https://localhost:5000/?key=value">test</a>
+        <a data-path="/#tag" href="https://localhost:5000/#tag">test</a>
+        <a data-path="/?key=value#tag" href="https://localhost:5000/?key=value#tag">test</a>
+        <a data-path="/test" href="https://localhost:5000/test">test</a>
+        <a data-path="/test?key=value" href="https://localhost:5000/test?key=value">test</a>
+        <a data-path="/test#tag" href="https://localhost:5000/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="https://localhost:5000/test?key=value#tag">test</a>
+        <a data-path="/test/" href="https://localhost:5000/test/">test</a>
+        <a data-path="/test/?key=value" href="https://localhost:5000/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="https://localhost:5000/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="https://localhost:5000/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="https://localhost:5000/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="https://localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="https://localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="https://localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="https://localhost:5000/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="https://localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="https://localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="https://localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="https://localhost:5000/index.html">test</a>
+        <a data-path="/index.html?key=value" href="https://localhost:5000/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="https://localhost:5000/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="https://localhost:5000/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="https://other.site.com{path}">
+        <span>https://other.site.com other domains with different protocol should remain as is</span>
+        <a data-path="" href="https://other.site.com">test</a>
+        <a data-path="?key=value" href="https://other.site.com?key=value">test</a>
+        <a data-path="#tag" href="https://other.site.com#tag">test</a>
+        <a data-path="?key=value#tag" href="https://other.site.com?key=value#tag">test</a>
+        <a data-path="/" href="https://other.site.com/">test</a>
+        <a data-path="/?key=value" href="https://other.site.com/?key=value">test</a>
+        <a data-path="/#tag" href="https://other.site.com/#tag">test</a>
+        <a data-path="/?key=value#tag" href="https://other.site.com/?key=value#tag">test</a>
+        <a data-path="/test" href="https://other.site.com/test">test</a>
+        <a data-path="/test?key=value" href="https://other.site.com/test?key=value">test</a>
+        <a data-path="/test#tag" href="https://other.site.com/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="https://other.site.com/test?key=value#tag">test</a>
+        <a data-path="/test/" href="https://other.site.com/test/">test</a>
+        <a data-path="/test/?key=value" href="https://other.site.com/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="https://other.site.com/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="https://other.site.com/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="https://other.site.com/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="https://other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="https://other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="https://other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="https://other.site.com/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="https://other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="https://other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="https://other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="https://other.site.com/index.html">test</a>
+        <a data-path="/index.html?key=value" href="https://other.site.com/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="https://other.site.com/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="https://other.site.com/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="{location}{path}">
+        <span>http://localhost:5000 domain with protocol should be replaced with path</span>
+        <a data-path="" href="http://localhost:5000">test</a>
+        <a data-path="?key=value" href="http://localhost:5000?key=value">test</a>
+        <a data-path="#tag" href="http://localhost:5000#tag">test</a>
+        <a data-path="?key=value#tag" href="http://localhost:5000?key=value#tag">test</a>
+        <a data-path="/" href="http://localhost:5000/">test</a>
+        <a data-path="/?key=value" href="http://localhost:5000/?key=value">test</a>
+        <a data-path="/#tag" href="http://localhost:5000/#tag">test</a>
+        <a data-path="/?key=value#tag" href="http://localhost:5000/?key=value#tag">test</a>
+        <a data-path="/test" href="http://localhost:5000/test">test</a>
+        <a data-path="/test?key=value" href="http://localhost:5000/test?key=value">test</a>
+        <a data-path="/test#tag" href="http://localhost:5000/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="http://localhost:5000/test?key=value#tag">test</a>
+        <a data-path="/test/" href="http://localhost:5000/test/">test</a>
+        <a data-path="/test/?key=value" href="http://localhost:5000/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="http://localhost:5000/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="http://localhost:5000/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="http://localhost:5000/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="http://localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="http://localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="http://localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="http://localhost:5000/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="http://localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="http://localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="http://localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="http://localhost:5000/index.html">test</a>
+        <a data-path="/index.html?key=value" href="http://localhost:5000/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="http://localhost:5000/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="http://localhost:5000/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="http://other.site.com{path}">
+        <span>http://other.site.com other domains with protocol should remain as is</span>
+        <a data-path="" href="http://other.site.com">test</a>
+        <a data-path="?key=value" href="http://other.site.com?key=value">test</a>
+        <a data-path="#tag" href="http://other.site.com#tag">test</a>
+        <a data-path="?key=value#tag" href="http://other.site.com?key=value#tag">test</a>
+        <a data-path="/" href="http://other.site.com/">test</a>
+        <a data-path="/?key=value" href="http://other.site.com/?key=value">test</a>
+        <a data-path="/#tag" href="http://other.site.com/#tag">test</a>
+        <a data-path="/?key=value#tag" href="http://other.site.com/?key=value#tag">test</a>
+        <a data-path="/test" href="http://other.site.com/test">test</a>
+        <a data-path="/test?key=value" href="http://other.site.com/test?key=value">test</a>
+        <a data-path="/test#tag" href="http://other.site.com/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="http://other.site.com/test?key=value#tag">test</a>
+        <a data-path="/test/" href="http://other.site.com/test/">test</a>
+        <a data-path="/test/?key=value" href="http://other.site.com/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="http://other.site.com/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="http://other.site.com/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="http://other.site.com/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="http://other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="http://other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="http://other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="http://other.site.com/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="http://other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="http://other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="http://other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="http://other.site.com/index.html">test</a>
+        <a data-path="/index.html?key=value" href="http://other.site.com/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="http://other.site.com/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="http://other.site.com/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="{location}{path}">
+        <span>//localhost:5000 local domain should be replaced with path</span>
+        <a data-path="" href="//localhost:5000">test</a>
+        <a data-path="?key=value" href="//localhost:5000?key=value">test</a>
+        <a data-path="#tag" href="//localhost:5000#tag">test</a>
+        <a data-path="?key=value#tag" href="//localhost:5000?key=value#tag">test</a>
+        <a data-path="/" href="//localhost:5000/">test</a>
+        <a data-path="/?key=value" href="//localhost:5000/?key=value">test</a>
+        <a data-path="/#tag" href="//localhost:5000/#tag">test</a>
+        <a data-path="/?key=value#tag" href="//localhost:5000/?key=value#tag">test</a>
+        <a data-path="/test" href="//localhost:5000/test">test</a>
+        <a data-path="/test?key=value" href="//localhost:5000/test?key=value">test</a>
+        <a data-path="/test#tag" href="//localhost:5000/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="//localhost:5000/test?key=value#tag">test</a>
+        <a data-path="/test/" href="//localhost:5000/test/">test</a>
+        <a data-path="/test/?key=value" href="//localhost:5000/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="//localhost:5000/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="//localhost:5000/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="//localhost:5000/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="//localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="//localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="//localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="//localhost:5000/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="//localhost:5000/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="//localhost:5000/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="//localhost:5000/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="//localhost:5000/index.html">test</a>
+        <a data-path="/index.html?key=value" href="//localhost:5000/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="//localhost:5000/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="//localhost:5000/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="//other.site.com{path}">
+        <span>//other.site.com other domains remain as is</span>
+        <a data-path="" href="//other.site.com">test</a>
+        <a data-path="?key=value" href="//other.site.com?key=value">test</a>
+        <a data-path="#tag" href="//other.site.com#tag">test</a>
+        <a data-path="?key=value#tag" href="//other.site.com?key=value#tag">test</a>
+        <a data-path="/" href="//other.site.com/">test</a>
+        <a data-path="/?key=value" href="//other.site.com/?key=value">test</a>
+        <a data-path="/#tag" href="//other.site.com/#tag">test</a>
+        <a data-path="/?key=value#tag" href="//other.site.com/?key=value#tag">test</a>
+        <a data-path="/test" href="//other.site.com/test">test</a>
+        <a data-path="/test?key=value" href="//other.site.com/test?key=value">test</a>
+        <a data-path="/test#tag" href="//other.site.com/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="//other.site.com/test?key=value#tag">test</a>
+        <a data-path="/test/" href="//other.site.com/test/">test</a>
+        <a data-path="/test/?key=value" href="//other.site.com/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="//other.site.com/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="//other.site.com/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="//other.site.com/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="//other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="//other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="//other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="//other.site.com/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="//other.site.com/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="//other.site.com/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="//other.site.com/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="//other.site.com/index.html">test</a>
+        <a data-path="/index.html?key=value" href="//other.site.com/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="//other.site.com/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="//other.site.com/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="{location}{path}">
+        <span>/ absolute links should be prepended with path</span>
+        <a data-path="/" href="/">test</a>
+        <a data-path="/?key=value" href="/?key=value">test</a>
+        <a data-path="/#tag" href="/#tag">test</a>
+        <a data-path="/?key=value#tag" href="/?key=value#tag">test</a>
+        <a data-path="/test" href="/test">test</a>
+        <a data-path="/test?key=value" href="/test?key=value">test</a>
+        <a data-path="/test#tag" href="/test#tag">test</a>
+        <a data-path="/test?key=value#tag" href="/test?key=value#tag">test</a>
+        <a data-path="/test/" href="/test/">test</a>
+        <a data-path="/test/?key=value" href="/test/?key=value">test</a>
+        <a data-path="/test/#tag" href="/test/#tag">test</a>
+        <a data-path="/test/?key=value#tag" href="/test/?key=value#tag">test</a>
+        <a data-path="/test/abc" href="/test/abc">test</a>
+        <a data-path="/test/abc?key=value" href="/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="/test/abc?key=value#tag">test</a>
+        <a data-path="/test/abc/" href="/test/abc/">test</a>
+        <a data-path="/test/abc?key=value" href="/test/abc?key=value">test</a>
+        <a data-path="/test/abc#tag" href="/test/abc#tag">test</a>
+        <a data-path="/test/abc?key=value#tag" href="/test/abc?key=value#tag">test</a>
+        <a data-path="/index.html" href="/index.html">test</a>
+        <a data-path="/index.html?key=value" href="/index.html?key=value">test</a>
+        <a data-path="/index.html#tag" href="/index.html#tag">test</a>
+        <a data-path="/index.html?key=value#tag" href="/index.html?key=value#tag">test</a>
+    </p>
+    <p data-pattern="{path}">
+        <span>relative links should remain as is</span>
+        <a data-path="" href="">test</a>
+        <a data-path="?key=value" href="?key=value">test</a>
+        <a data-path="#tag" href="#tag">test</a>
+        <a data-path="?key=value#tag" href="?key=value#tag">test</a>
+        <a data-path="test" href="test">test</a>
+        <a data-path="test?key=value" href="test?key=value">test</a>
+        <a data-path="test#tag" href="test#tag">test</a>
+        <a data-path="test?key=value#tag" href="test?key=value#tag">test</a>
+        <a data-path="test/" href="test/">test</a>
+        <a data-path="test/?key=value" href="test/?key=value">test</a>
+        <a data-path="test/#tag" href="test/#tag">test</a>
+        <a data-path="test/?key=value#tag" href="test/?key=value#tag">test</a>
+        <a data-path="test/abc" href="test/abc">test</a>
+        <a data-path="test/abc?key=value" href="test/abc?key=value">test</a>
+        <a data-path="test/abc#tag" href="test/abc#tag">test</a>
+        <a data-path="test/abc?key=value#tag" href="test/abc?key=value#tag">test</a>
+        <a data-path="test/abc/" href="test/abc/">test</a>
+        <a data-path="test/abc?key=value" href="test/abc?key=value">test</a>
+        <a data-path="test/abc#tag" href="test/abc#tag">test</a>
+        <a data-path="test/abc?key=value#tag" href="test/abc?key=value#tag">test</a>
+        <a data-path="index.html" href="index.html">test</a>
+        <a data-path="index.html?key=value" href="index.html?key=value">test</a>
+        <a data-path="index.html#tag" href="index.html#tag">test</a>
+        <a data-path="index.html?key=value#tag" href="index.html?key=value#tag">test</a>
+    </p>
+    <script>
+        let goodCount = 0, badCount = 0;
+
+        $("a").each(function () {
+            const domain = "www.cbligand.org", location = "/g";
+
+            const a = $(this);
+            const href = a.attr("href");
+            a.text(href !== "" ? href : "(blank)");
+
+            let pattern = a.parent().data("pattern"), path = a.data("path");
+            pattern = pattern.replace(/\{domain\}/, domain).replace(/\{location\}/, location).replace(/\{path\}/, path);
+
+            if (href !== pattern) {
+                a.addClass("bad");
+                badCount++;
+                a.append(`<b>${pattern}</b>`);
+            }
+            else {
+                a.addClass("good");
+                goodCount++;
+            }
+            a.removeAttr("href");
+        });
+
+        $("h1").text(`Summary - good: ${goodCount}, bad: ${badCount}`);
+    </script>
+</body>
+</html>

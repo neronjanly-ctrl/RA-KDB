@@ -1,0 +1,227 @@
+﻿@inject IOptions<AppSettings> _appSettings
+@model JobDetailsModel
+@{
+    ViewData["Title"] = $"{Model.Job.Name} #{Model.Job.Id} Blood-Brain Barrier Permeation Prediction";
+    int blockBytes = _appSettings.Value.Formatting.FingerprintBlockBytes;
+    int rowBlocks = _appSettings.Value.Formatting.FingerprintRowBlocks;
+
+    var ligands = Model.Job.GetLigands();
+}
+
+<!-- Heading and Toggle Buttons -->
+<div class="row mb-2">
+    <h2 class="col-auto mr-auto">
+        @ViewData["Title"]
+    </h2>
+</div>
+
+<!-- Guide Line -->
+<div class="small text-muted mb-2">
+    @if (Model.Job.Status != RunningStatus.Finished)
+    {
+        <a href="@(_appSettings.Value.ExternalUrls.JobHub)?jobId=@Model.Job.Id" class="d-none" id="jobhub" aria-hidden="true"></a>
+    }
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span id="statusDesc2"></span>
+    <br />
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span>
+        This BBB permeation predictor is specially designed to classify whether a compound can cross the blood–brain barrier (<span style="color:red">BBB+</span>) or not (<span style="color:blue">BBB−</span>).
+    </span>
+    <br />
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span>
+        For more information on BBB and the prediction algorithm, please refer to <a href="https://en.wikipedia.org/wiki/Blood-brain_barrier">Wikipedia</a> and <a href="https://pubs.acs.org/doi/full/10.1021/ci500004h">our paper</a>.
+    </span>
+</div>
+
+@for (int l = 0; l < Model.Job.JobLigands.Count; l++)
+{
+    var ligandName = Model.Job.JobLigands[l].LigandName;
+    var ligand = Model.Job.JobLigands[l].Ligand;
+    <table class="table table-fixed">
+        <tbody>
+            @foreach (var bbb in Model.BbbModels.GroupBy(o => o.Algorithm))
+            {
+                <tr>
+                    <td>
+                        Ligand
+                        @if (Model.Job.LigandCount > 1)
+                        {
+                            @(l + 1)
+                        }
+                        @ligandName - @bbb.Key.GetName() Algorithm
+                        <div class="row">
+                            @foreach (var fpa in bbb)
+                            {
+                                var score = ligand.BbbScores[bbb.Key, fpa.Fingerprint];
+                                double xmin = double.MaxValue, xmax = double.MinValue, ymin = double.MaxValue, ymax = double.MinValue;
+                                var data1 = fpa.NegativeCurve;
+                                var data2 = fpa.PositiveCurve;
+
+
+                                for (var i = 0; i < data1.GetLength(0); i++)
+                                {
+                                    xmin = Math.Min(data1[i, 0], xmin);
+                                    xmax = Math.Max(data1[i, 0], xmax);
+                                    ymin = Math.Min(data1[i, 1], ymin);
+                                    ymax = Math.Max(data1[i, 1], ymax);
+                                }
+
+                                for (var i = 0; i < data2.GetLength(0); i++)
+                                {
+                                    xmin = Math.Min(data2[i, 0], xmin);
+                                    xmax = Math.Max(data2[i, 0], xmax);
+                                    ymin = Math.Min(data2[i, 1], ymin);
+                                    ymax = Math.Max(data2[i, 1], ymax);
+                                }
+
+                                double xstep = (xmax - xmin) / 10, ystep = (ymax - ymin) / 10;
+                                double xmarkmin = (int)(xmin / xstep - 1) * xstep, xmarkmax = (int)(xmax / xstep + 1) * xstep;
+                                double ymarkmin = (int)(ymin / ystep - 1) * ystep, ymarkmax = (int)(ymax / ystep + 1) * ystep;
+                                //xmarkmin = -20;
+                                //xmarkmax = 40;
+                                //ymarkmax = 0.05;
+                                //ymarkmin = 0;
+                                //xstep = 10;
+                                //ystep = 0.02;
+                                double xlen = xmarkmax - xmarkmin, ylen = ymarkmax - ymarkmin;
+
+                                double scale = 1;
+                                var marklen = 4 * scale;
+                                double xblood = 2 * scale, yblood = 2 * scale, xdist = 4 * scale, ydist = 4 * scale;
+
+                                double padLeft = 32 * scale, padRight = 20 * scale, padTop = 20 * scale, padBottom = 20 * scale, width = 540 * scale, height = 300 * scale;
+                                double fontSize = 6 * scale, legendFontSize = 16 * scale;
+                                const string axisColor = "#666", bbbNegColor = "blue", bbbPosColor = "red", thresholdColor = "gray", scoreColor = "green";
+
+                                double getx(double x)
+                                {
+                                    return padLeft + xdist + (width - padLeft - padRight - xdist) / xlen * (x - xmarkmin);
+                                }
+
+                                double gety(double y)
+                                {
+                                    return height - padBottom - ydist - (height - padTop - padBottom - ydist) / ylen * (y - ymarkmin);
+                                }
+
+                                string fmt(double v)
+                                {
+                                    return v.ToString("g3");
+                                }
+
+                                var pdata1 = $"M{fmt(getx(data1[0, 0]))} {fmt(gety(data1[0, 1]))}";
+                                var pdata2 = $"M{fmt(getx(data2[0, 0]))} {fmt(gety(data2[0, 1]))}";
+
+                                for (var i = 1; i < data1.GetLength(0); i++)
+                                {
+                                    pdata1 += $"S{fmt(getx(data1[i, 2]))} {fmt(gety(data1[i, 3]))} {fmt(getx(data1[i, 0]))} {fmt(gety(data1[i, 1]))}";
+                                }
+
+                                for (var i = 1; i < data2.GetLength(0); i++)
+                                {
+                                    pdata2 += $"S{fmt(getx(data2[i, 2]))} {fmt(gety(data2[i, 3]))} {fmt(getx(data2[i, 0]))} {fmt(gety(data2[i, 1]))}";
+                                }
+                                double _xmin = getx(xmarkmin), _xmax = getx(xmarkmax), _ymin = gety(ymarkmin), _ymax = gety(ymarkmax);
+
+                                <div class="card m-2" style="width: @fmt(width)px">
+                                    <div class="card-header text-nowrap text-muted">
+                                        With <b class="text-dark">@fpa.Fingerprint.GetName()</b> Fingerprint
+                                        |
+                                        Score:
+                                        @if (!score.HasValue)
+                                        {
+                                            <b class="text-dark">Computing...</b>
+                                            <link rel="bbbscore" href="@Url.Action("BbbScore", "Ligand", new { domainId = Model.DomainId, ligandId = ligand.Id.StringifyId(), algo = fpa.Algorithm.GetArgumentName(), fp = fpa.Fingerprint.GetArgumentName() })" />
+                                        }
+                                        else
+                                        {
+                                            <b class="text-dark bbbscore">@score.Value.ToString("0.00")</b>
+                                        }
+                                    </div>
+                                    <svg width="@fmt(width)" height="@fmt(height)">
+                                        <g class="xAxis" stroke="@axisColor">
+                                            <line x1="@fmt(_xmin - xblood)" y1="@fmt(_ymin + ydist)" x2="@fmt(_xmax + xblood)" y2="@fmt(_ymin + ydist)" />
+                                            @for (var x = xmarkmin; x <= xmarkmax; x += xstep)
+                                            {
+                                                <line x1="@fmt(getx(x))" y1="@fmt(_ymin + ydist)" x2="@fmt(getx(x))" y2="@fmt(_ymin + ydist + marklen)" />
+                                            }
+                                        </g>
+                                        <g class="yAxis" stroke="@axisColor">
+                                            <line x1="@fmt(_xmin - xdist)" y1="@fmt(_ymax - yblood)" x2="@fmt(_xmin - xdist)" y2="@fmt(_ymin + yblood)" />
+                                            @for (var y = ymarkmin; y <= ymarkmax; y += ystep)
+                                            {
+                                                <line x1="@fmt(_xmin - xdist)" y1="@fmt(gety(y))" x2="@fmt(_xmin - xdist - marklen)" y2="@fmt(gety(y))" />
+                                            }
+                                        </g>
+                                        <g class="xAxisLabels" stroke="none" text-anchor="middle" font-size="@fmt(fontSize)">
+                                            @for (var x = xmarkmin; x <= xmarkmax; x += xstep)
+                                            {
+                                                <text>
+                                                    <text x="@fmt(getx(x))" y="@fmt(_ymin + ydist + marklen + fontSize)">@x.ToString("0.0##")</text>
+                                                </text>
+                                            }
+                                            <text x="@fmt(_xmax + xblood)" y="@fmt(_ymin)" text-anchor="end" font-size="@fmt(fontSize * 1.5)">Prediction Value</text>
+                                        </g>
+                                        <g class="yAxisLabels" stroke="none" text-anchor="end" font-size="@fmt(fontSize)">
+                                            @for (var y = ymarkmin; y <= ymarkmax; y += ystep)
+                                            {
+                                                <text>
+                                                    <text x="@fmt(_xmin - xdist - marklen * 1.5)" y="@fmt(gety(y) + fontSize / 3)">@y.ToString("0.0##")</text>
+                                                </text>
+                                            }
+                                            <text x="@fmt(_xmin + fontSize)" y="@fmt(_ymax - yblood)" transform="rotate(-90 @fmt(_xmin + fontSize) @fmt(_ymax - yblood))" font-size="@fmt(fontSize * 1.5)">Density</text>
+                                        </g>
+                                        <g class="bbbLegends" font-size="@legendFontSize" text-anchor="start">
+                                            <text x="@fmt(_xmax - legendFontSize * 4)" y="@fmt(_ymax + legendFontSize)" fill="@bbbNegColor">BBB-</text>
+                                            <text x="@fmt(_xmax - legendFontSize * 4)" y="@fmt(_ymax + 2.5 * legendFontSize)" fill="@bbbPosColor">BBB+</text>
+                                        </g>
+                                        <g class="bbbCurves" fill="none">
+                                            <path d="@pdata1" stroke="@bbbNegColor" />
+                                            <path d="@pdata2" stroke="@bbbPosColor" />
+                                        </g>
+                                        <g class="thresholdBar">
+                                            <line x1="@fmt(getx(fpa.Threshold))" y1="@fmt(_ymin)" x2="@fmt(getx(fpa.Threshold))" y2="@fmt(_ymax)" stroke="@thresholdColor" stroke-dasharray="1 1" />
+                                            <text x="@fmt(getx(fpa.Threshold) - legendFontSize / 3)" y="@fmt(_ymax + legendFontSize / 2)" font-size="@fmt(legendFontSize / 2)" text-anchor="end" fill="@thresholdColor">Threshold @fpa.Threshold</text>
+                                        </g>
+                                        <g class="scoreBar d-none" data-offset="@fmt(getx(0))" data-scale="@fmt(getx(1) - getx(0))">
+                                            <line x1="0" y1="@fmt(_ymin)" x2="0" y2="@fmt(legendFontSize * 0.25)" stroke="@scoreColor" stroke-dasharray="1 1" />
+                                            <text x="@fmt(-legendFontSize / 3)" y="@fmt(legendFontSize * 0.75)" font-size="@fmt(legendFontSize / 2)" text-anchor="end" fill="@scoreColor">Score</text>
+                                        </g>
+                                    </svg>
+                                </div>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Menu {
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.DomainId">Home</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Job</a></li>
+    <li class="nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">BBB</a></li>
+    <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))">Output</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Spider Plot</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.DomainId">Targets</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.DomainId">Help</a></li>
+}
+
+@section Scripts {
+    <environment include="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.min.js"></script>
+    </environment>
+    <script>
+        JobStatusHelper.setStatus("@Model.Job.Status.ToString()", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        JobProgressHelper.setProgress(@Model.Job.Progress, "@Model.Job.TimeRemainingString", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        setupJobHubConnection();
+        loadPreContents();
+        loadBbbScores();
+    </script>
+}

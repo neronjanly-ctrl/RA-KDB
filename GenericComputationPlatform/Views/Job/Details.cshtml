@@ -1,0 +1,217 @@
+﻿@inject IOptions<AppSettings> _appSettings
+@model JobDetailsModel
+@{
+    ViewData["Title"] = $"{Model.Job.Name} #{Model.Job.Id} Summary";
+    int blockBytes = _appSettings.Value.Formatting.FingerprintBlockBytes;
+    int rowBlocks = _appSettings.Value.Formatting.FingerprintRowBlocks;
+
+    var ligands = Model.Job.GetLigands();
+}
+
+<div class="jumbotron">
+    <h1 class="display-4">Job #@Model.Job.Id - @Model.Job.Name</h1>
+    <p class="small">
+        <span class="text-nowrap">Created at: <span class="text-muted mr-4 update-utms" data-utms="@Model.Job.Created.UtcToUnixTimeMilliseconds()"></span></span>
+        <span class="text-nowrap"><span id="updatedTimeText">Last updated</span> at: <span id="updatedTime" class="text-muted mr-4 update-utms" data-utms="@Model.Job.Updated.UtcToUnixTimeMilliseconds()"></span></span>
+        <span class="text-nowrap">Current status: <span id="statusText"></span></span>
+    </p>
+    <hr class="my-4">
+    <p id="statusDesc"></p>
+    <p class="lead">
+        <a class="btn btn-primary btn-lg" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))" role="button">See Detailed Output</a>
+        <a class="btn btn-outline-primary btn-lg" asp-controller="Job" asp-action="Report" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Download CSV <i class="fa fa-download"></i></a>
+    </p>
+</div>
+
+<div class="text-muted mb-3">
+    <span class="bg-info mr-2">&nbsp;</span>Overall Progress
+</div>
+<table class="table table-fixed">
+    <tbody>
+        <tr>
+            <td>
+                <div class="progress mb-4">
+                    @if (Model.Job.Status != RunningStatus.Finished)
+                    {
+                        <a href="@(_appSettings.Value.ExternalUrls.JobHub)?jobId=@Model.Job.Id" class="collapse" id="jobhub" aria-hidden="true"></a>
+                    }
+                    <div class="progress-bar progress-bar-striped bg-info" id="progressBar"
+                         role="progressbar" style="width: @Model.Job.Progress.ToString("P")"
+                         aria-valuenow="@Model.Job.Progress" aria-valuemin="0" aria-valuemax="100">
+                        @Model.Job.Progress.ToString("P")
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+@for (int i = 0; i < ligands.Length; i++)
+{
+    var ligand = ligands[i];
+    var ligandId = ligands[i].Id.StringifyId();
+    <div class="text-muted mb-3">
+        <span class="bg-info mr-2">&nbsp;</span>Ligand Models@(ligands.Length > 1 ? $" {i + 1}" : "")
+    </div>
+    <table class="table table-fixed">
+        <tbody>
+            <tr>
+                <td width="30%">Name</td>
+                <td>
+                    @Model.Job.JobLigands[i].LigandName
+                </td>
+            </tr>
+            <tr>
+                <td width="30%">2D and 3D depictions</td>
+                <td>
+                    <img class="img-fluid" src="@Url.Action("Depiction", "Ligand", new { ligandId = ligandId, type = "2d" })" alt="2D Depiction of @Model.Job.Name" />
+                    <img class="img-fluid" src="@Url.Action("Depiction", "Ligand", new { ligandId = ligandId, type = "3d" })" alt="3D Depiction of @Model.Job.Name" />
+                </td>
+            </tr>
+            @if (Model.PreviewLigandModels)
+            {
+                foreach (var format in Model.ModelFormats)
+                {
+                    <tr>
+                        <td>
+                            @format.Value format<br />
+                            <a class="btn btn-outline-primary mt-2" asp-controller="Ligand" asp-action="Model" asp-route-ligandId="@ligandId" asp-route-format="@format.Key"><i class="fa fa-download" aria-hidden="true"></i></a>
+                        </td>
+                        @if (format.Key == "smi")
+                        {
+                            <td class="code">@ligand.Smiles</td>
+                        }
+                        else
+                        {
+                            <td>
+                                <link rel="model" href="@Url.Action("Model", "Ligand", new { ligandId = ligandId, format = format.Key })" />
+                                <pre>Loading...</pre>
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td>
+                        SMILES
+                    </td>
+                    <td class="code">
+                        @ligand.Smiles
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        Model downloads
+                        <div class="my-3">
+                            @foreach (var format in Model.ModelFormats)
+                            {
+                                <a title="@format.Value" class="btn btn-outline-primary text-nowrap mt-2 mr-2" asp-controller="Ligand" asp-action="Model" asp-route-ligandId="@ligand.Id.StringifyId()" asp-route-format="@format.Key">
+                                    @format.Value
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            @if (!Model.PreviewLigandFingerprints)
+            {
+                <tr>
+                    <td colspan="2">
+                        Fingerprints
+                        <div class="my-3">
+                            @foreach (var type in Model.FingerprintTypes)
+                            {
+                                <a title="@type" class="btn btn-outline-primary text-nowrap mt-2 mr-2"
+                                    asp-controller="Ligand" asp-action="Fingerprint" asp-route-ligandId="@ligand.Id.StringifyId()" asp-route-type="@type" target="_blank"
+                                   data-toggle="modal" data-target="#fingerprintInfo" data-fptype="@type" data-fp="@ligand.Fingerprints[type]?.ToHexString(blockBytes, rowBlocks)">
+                                    @type
+                                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                </a>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (Model.PreviewLigandFingerprints)
+{
+    foreach (var ligand in ligands)
+    {
+        <div class="text-muted mb-3">
+            <span class="bg-info mr-2">&nbsp;</span>Fingerprints for Ligand @ligand.Smiles
+        </div>
+        <table class="table table-fixed">
+            <tbody>
+                @foreach (var type in Model.FingerprintTypes)
+                {
+                    if (ligand.Fingerprints[type] == null)
+                    {
+                        continue;
+                    }
+                    <tr>
+                        <td width="30%">@type</td>
+                        <td>
+                            <pre>@ligand.Fingerprints[type]</pre>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <!-- Modal -->
+    <div class="modal fade" id="fingerprintInfo" tabindex="-1" role="dialog" aria-labelledby="fingerprintType" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fingerprintType"></h5>
+                    <div class="text-nowrap col-auto">
+                        <a class="close ml-2" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </a>
+                    </div>
+                </div>
+                <pre class="modal-body">
+                    </pre>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Menu {
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.DomainId">Home</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a></li>
+    <li class="nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Job</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">BBB</a></li>
+    <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))">Output</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Spider Plot</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.DomainId">Targets</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.DomainId">Help</a></li>
+}
+
+@section Scripts {
+    <environment include="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.min.js"></script>
+    </environment>
+    <script>
+        JobStatusHelper.setStatus("@Model.Job.Status.ToString()", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        JobProgressHelper.setProgress(@Model.Job.Progress, "@Model.Job.TimeRemainingString", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        setupJobHubConnection();
+        setupFingerprintInfoModal();
+        loadPreContents();
+    </script>
+}

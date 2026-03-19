@@ -1,0 +1,134 @@
+﻿@model IList<Job>
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = "Job Management";
+}
+@section breadcrumb
+{
+    &raquo; <a asp-controller="Maintain" asp-action="Index">Maintain</a> &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<ol>
+    @foreach (var job in Model)
+    {
+    var domains = job.GetDomains();
+    <li>
+        <a href="#@job.Id" id="_@job.Id"><b>#@job.Id</b></a>
+        <small>
+            [@foreach (var domain in domains) {
+            <a href="@Url.Action("Domains", "Maintain")#_@(domain.Id)">@domain.Id.ToUpper()</a>
+            }]
+            [<span class="@(job.Status == RunningStatus.Failed ? "text-danger" : job.Status == RunningStatus.Finished ? "text-success" : "text-primary")">@job.Status, @job.Progress.ToString("P")</span>]
+            @if (job.UserId != null)
+            {
+            @:[<span>@job.UserId</span>, @(job.IsPrivate ? "Private" : "Public")]
+            }
+        </small>:
+
+        <form asp-controller="Maintain" asp-action="RenameJob" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            <input name="name" value="@job.Name" class="small" style="line-height: 1.5; width: 14em" />
+            [ <a asp-controller="Maintain" asp-action="RenameJob" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Rename</a>
+        </form>
+
+        @if (job.Status == RunningStatus.Initializing || job.Status == RunningStatus.Running)
+        {
+        <form asp-controller="Maintain" asp-action="FailJob" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            | <a asp-controller="Maintain" asp-action="FailJob" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Set Failed</a>
+        </form>
+        }
+
+        @if (job.Status == RunningStatus.Created)
+        {
+        <form asp-controller="Maintain" asp-action="ReissueJob" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            | <a asp-controller="Maintain" asp-action="ReissueJob" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Reissue</a>
+        </form>
+        }
+
+        @if (job.Status == RunningStatus.Finished || job.Status == RunningStatus.Failed)
+        {
+        <form asp-controller="Maintain" asp-action="DeleteJob" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            | <a asp-controller="Maintain" asp-action="DeleteJob" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Delete</a>
+        </form>
+        <form asp-controller="Maintain" asp-action="ClearResult" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            | <a asp-controller="Maintain" asp-action="ClearResult" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Clear Results</a>
+        </form>
+        <form asp-controller="Maintain" asp-action="EraseCache" asp-route-jobId="@job.Id" method="post" style="display: inline">
+            | <a asp-controller="Maintain" asp-action="EraseCache" asp-route-jobId="@job.Id" class="text-danger" onclick="this.closest('form').submit();return false">Erase Docking Cache</a>
+        </form>
+        }]
+
+        @if (domains.Length == 1)
+        {
+        var domain = domains[0];
+        <text>
+            [
+            <a asp-controller="Job" asp-action="Details" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">View</a> |
+            <a asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">BBB</a> |
+            <a asp-controller="Job" asp-action="CardView" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" asp-route-pageNum="1" target="_blank">Card Output</a> |
+            <a asp-controller="Job" asp-action="TableViewAll" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">Table Output</a> |
+            <a asp-controller="Job" asp-action="Plot" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">Spider Plot</a>
+            ]
+        </text>
+        }
+        else
+        {
+        foreach (var domain in domains)
+        {
+        var id = domain.Id.ToUpper();
+        <text>
+            [
+            <a asp-controller="Job" asp-action="Details" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">View(@id)</a> |
+            <a asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">BBB(@id)</a> |
+            <a asp-controller="Job" asp-action="CardView" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" asp-route-pageNum="1" target="_blank">Card Output(@id)</a> |
+            <a asp-controller="Job" asp-action="TableViewAll" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">Table Output(@id)</a> |
+            <a asp-controller="Job" asp-action="Plot" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">Spider Plot(@id)</a>
+            ]
+        </text>
+        }
+        }
+    </li>
+    }
+</ol>
+}
+<table class="table">
+    <tr>
+        <th>Job</th>
+        <th>Time</th>
+        <th>Ligands &amp; Smiles</th>
+    </tr>
+    @foreach (var job in Model)
+    {
+        <tr>
+            <td>
+                <a id="@job.Id" />
+                @foreach (var domain in job.GetDomains())
+                {
+                    <a asp-controller="Job" asp-action="Details" asp-route-domainId="@domain.Id" asp-route-jobId="@job.Id" target="_blank">[Preview #@job.Id Home Page]</a>
+                    <br />
+                }
+                #@job.Id @job.Name
+                @Html.Raw(job.IsPrivate ? $"<br/>(Private for {job.UserId})" : "")
+                <br />
+            </td>
+            <td>
+                Created: <span class="update-utms" data-utms="@job.Created.UtcToUnixTimeMilliseconds()"></span><br />
+                Started: @if (job.Started != default)
+                {
+                    <span class="update-utms" data-utms="@job.Started.UtcToUnixTimeMilliseconds()"></span>
+                }<br />
+                Updated: <span class="update-utms" data-utms="@job.Updated.UtcToUnixTimeMilliseconds()"></span>
+            </td>
+            <td>
+                @foreach (var jobLigand in job.JobLigands)
+                {
+                    <b>@jobLigand.LigandName</b> @:(@jobLigand.Ligand.Id.StringifyId())
+                    <br />
+                    @jobLigand.Ligand.Smiles
+                    <br />
+                }
+            </td>
+        </tr>
+    }
+</table>

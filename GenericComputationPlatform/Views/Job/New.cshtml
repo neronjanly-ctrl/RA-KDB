@@ -1,0 +1,92 @@
+﻿@model Domain
+@inject IOptions<AppSettings> _appSettings
+@{
+    ViewData["Title"] = "New Job";
+    int maxLigands = _appSettings.Value.Options.MaxInputLigands;
+    string userName = "John";
+    if (User.Identity.IsAuthenticated)
+    {
+        int idx = User.Identity.Name.IndexOf('@');
+        if (idx > 0)
+            userName = User.GetFirstName();
+    }
+}
+
+<h2>New Job on @Model.Name</h2>
+<hr />
+
+<form asp-controller="Job" asp-action="Create" asp-route-domainId="@Model.Id" asp-antiforgery="true" method="post">
+    <div class="form-group row job-name-row">
+        <label class="col-sm-2 col-form-label" for="jobName">
+            <span class="bg-info mr-2">&nbsp;</span>
+            <strong>Job Name</strong>
+        </label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="jobName" name="jobName" placeholder="e.g. @userName's drug01-@Model.Id.ToUpper()" />
+            <div class="alert alert-danger fade collapse mt-2" role="alert" id="jobNameRequired">
+                <strong>Job Name</strong> is required.
+            </div>
+            <small class="form-text text-muted">Provide a mnemonic name of the job for your convenience. Visible to the public.</small>
+        </div>
+    </div>
+    @*<div class="form-group row mol-name-row">
+            <label class="col-sm-2 col-form-label" for="LigandName">
+                <span class="bg-info mr-2">&nbsp;</span>
+                <strong>Molecule Name</strong>
+            </label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control d-inline-block" id="LigandName" name="LigandName" />
+                <div class="alert alert-danger fade collapse mt-2" role="alert" id="ligandNameRequired">
+                    <strong>Molecule Name</strong> is required.
+                </div>
+                <small class="form-text text-muted">Provide the name of the molecule to be computed.</small>
+            </div>
+        </div>
+        <div class="form-group row mol-row">
+            <label class="col-sm-2" for="JME">
+                <span class="bg-info mr-2">&nbsp;</span>
+                <strong>Molecule</strong>
+            </label>
+            <div class="col-sm-10">
+                <div code="JME.class" name="JME" id="JME" class="mol-editor" width="100%" height="380px">
+                    You must enable JavaScript for using this site.
+                </div>
+                <div class="alert alert-danger fade collapse mt-2" role="alert" id="moleculeRequired">
+                    <strong>Molecule</strong> is required.
+                </div>
+                <small class="form-text text-muted">Draw a molecule or paste MOL, SDF or SMILES via clicking on the blue double-triangle button on the right of the toolbar.</small>
+            </div>
+        </div>*@
+    <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-10">
+            <a asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.Id" asp-route-jobId="0" class="d-none"></a>
+            <button id="create" class="btn btn-warning">Create Job</button>
+            <button id="addmol" class="btn btn-primary">Add Molecule</button>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <input type="checkbox" class="ml-4" id="isPrivate" name="isPrivate" />
+                <label for="isPrivate" title="Only the creator can access the job. Others can only see the job name.">
+                    <strong>Private job</strong>
+                </label>
+            }
+            <small class="form-text text-info" id="formMessage"></small>
+        </div>
+    </div>
+</form>
+
+@section Menu {
+    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">Home</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">All Jobs</a></li>
+    <li class="nav-item active bg-danger"><a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">New Job</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Targets</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a></li>
+}
+
+@section Scripts {
+    <script src="~/lib/jsme/jsme.nocache.js"></script>
+    <script type="text/javascript">
+        hookJobCreateButtons();
+        setMaxLigands(@maxLigands);
+    </script>
+}

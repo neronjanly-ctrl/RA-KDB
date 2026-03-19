@@ -1,0 +1,103 @@
+﻿@inject IOptions<AppSettings> _appSettings
+@model Job
+@{
+    string domainId = Context.Request.RouteValues["domainId"].ToString();
+    ViewData["Title"] = $"{Model.Name} #{Model.Id} Plot";
+}
+
+<!-- Heading and Toggle Buttons -->
+<div class="row mb-2">
+    <h2 class="col-auto mr-auto">
+        @ViewData["Title"]
+    </h2>
+    @if (!ViewBag.SameGeneProteinSymbol)
+    {
+        <div class="col-auto">
+            <div class="btn-group ml-4">
+                @if (Context.UseGeneSymbolForTargetDisplay())
+                {
+                    <a href="#" class="btn btn-outline-primary active use-protein-symbol" title="Show gene symbol for targets">Gene</a>
+                    <a href="#" class="btn btn-outline-light text-muted use-protein-symbol" title="Show protein symbol for targets">Protein</a>
+                }
+                else
+                {
+                    <a href="#" class="btn btn-outline-light text-muted use-gene-symbol" title="Show gene symbol for targets">Gene</a>
+                    <a href="#" class="btn btn-outline-primary active use-gene-symbol" title="Show protein symbol for targets">Protein</a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Guide Line -->
+<div class="small text-muted mb-2">
+    @if (Model.Status != RunningStatus.Finished)
+    {
+        <a href="@(_appSettings.Value.ExternalUrls.JobHub)?jobId=@Model.Id" class="d-none" id="jobhub" aria-hidden="true"></a>
+    }
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span id="statusDesc2"></span>
+    <br />
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span>The number on a connection line is the average docking score in the AutoDock Vina metric.</span>
+    <br />
+    <span class="bg-info mr-2">&nbsp;</span>
+    Keyboard Guide:
+    <b>Space</b> - Toggle label display of average docking scores
+    <b>D</b> - Toggle depiction display
+</div>
+
+<hr />
+
+<section>
+    <aside class="toolbox">
+        Size:
+        <input type="text" value="" maxlength="4" min="30" max="300" />
+        Color:
+        <div></div>
+        Border Width:
+        <input type="text" value="" maxlength="4" min="0" max="20" />
+        Border Color:
+        <div></div>
+        Text Size:
+        <input type="text" value="" maxlength="4" min="10" max="100" />
+        Label Color:
+        <div></div>
+    </aside>
+    <canvas class="viewport">
+        Your browser doesn't support canvas.
+    </canvas>
+    @foreach (var ligand in Model.JobLigands)
+    {
+        <a class="depiction d-none" id="lig-@ligand.LigandId.StringifyId()" asp-controller="Ligand" asp-action="Depiction" asp-route-ligandId="@ligand.LigandId.StringifyId()" asp-route-type="2d" aria-hidden="true"></a>
+    }
+</section>
+
+@section Menu {
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">Job</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">BBB</a></li>
+    <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = domainId, jobId = Model.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = domainId, jobId = Model.Id }))">Output</a></li>
+    <li class="nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">Spider Plot</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId">Targets</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">Help</a></li>
+}
+
+@section Scripts {
+    <environment include="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.js"></script>
+        <script src="~/lib/jquery-mousewheel/jquery.mousewheel.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.min.js"></script>
+        <script src="~/lib/jquery-mousewheel/jquery.mousewheel.js"></script>
+    </environment>
+    <script type="text/javascript">
+        JobStatusHelper.setStatus("@Model.Status.ToString()", @Model.Updated.UtcToUnixTimeMilliseconds());
+        JobProgressHelper.setProgress(@Model.Progress, "@Model.TimeRemainingString", @Model.Updated.UtcToUnixTimeMilliseconds());
+        setupJobHubConnection();
+        var model = @Html.Raw(ViewBag.Data);
+        setupViewport(model);
+    </script>
+}

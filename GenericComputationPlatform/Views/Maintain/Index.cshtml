@@ -1,0 +1,66 @@
+﻿@model IList<Domain>
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = "Maintain";
+}
+@section breadcrumb
+{
+    &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<ol>
+    <li><a asp-controller="Maintain" asp-action="Publish">Publish New CKB</a></li>
+    <li><a href="#Domains">Domains</a> [<a asp-controller="Maintain" asp-action="Domains">Manage</a>]</li>
+    <li><a href="#Jobs">Jobs</a> [<a asp-controller="Maintain" asp-action="Jobs">Manage</a>]</li>
+    <li><a href="#Proteins">Proteins</a> [<a asp-controller="Maintain" asp-action="Proteins">Manage</a>]</li>
+</ol>
+}
+<table class="table">
+    <tr>
+        <td>
+            <a asp-controller="Maintain" asp-action="Domains" id="Domains">Domains</a>
+        </td>
+        <td>
+            <ul>
+                @foreach (Domain domain in ViewBag.Domains)
+                {
+                    <li>
+                        <b><a href="@Url.Action("Domains", "Maintain")#_@(domain.Id)">@domain.Id.ToUpper()</a></b> (@domain.Name, @domain.ProteinCount protein@(domain.ProteinCount > 1 ? "s" : ""))
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a asp-controller="Maintain" asp-action="Jobs" id="Jobs">Jobs</a>
+        </td>
+        <td>
+            <ul>
+                @foreach (Job job in ViewBag.Jobs)
+                {
+                    <li>
+                        <b><a href="@Url.Action("Jobs", "Maintain")#_@(job.Id)">#@job.Id @job.Name</a></b> (@job.Status, @job.TimeRemainingString left, @job.ProteinCount proteins, @job.LigandCount ligands, use @job.DomainCount domains, has @job.ResultCount result entries)
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a asp-controller="Maintain" asp-action="Proteins" id="Proteins">Proteins</a>
+        </td>
+        <td>
+            <ul>
+                @foreach (Protein protein in ViewBag.Proteins)
+                {
+                    <li>
+                        <b><a href="@Url.Action("Proteins", "Maintain")#_@(protein.Id)">@protein.Id</a></b> (@protein.ProteinName, in @protein.DomainCount domains)
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+</table>

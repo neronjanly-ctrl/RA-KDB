@@ -1,0 +1,177 @@
+﻿@model Cavity
+@{
+    int jobId = Convert.ToInt32(ViewContext.RouteData.Values["jobId"]);
+    string cavityId = (string)ViewContext.RouteData.Values["cavityId"];
+    string domainId = (string)ViewContext.RouteData.Values["domainId"];
+
+    if (Context.IsAjaxRequest())
+    {
+        Layout = null;
+    }
+
+    ViewData["Title"] = $"Symbol {Model.ProteinId}";
+}
+
+<h2 id="proteinHeader" class="@(Context.IsAjaxRequest() ? "collapse" : "")">
+    @ViewData["Title"]
+    <small class="text-muted">@Model.Protein.ProteinName</small>
+</h2>
+
+<div class="alert alert-info">
+    <div class="row">
+        <div class="col"><b>Synonyms:</b> @string.Join(", ", Model.Protein.Properties.Synonyms)</div>
+        <div class="col"><b>Gene Family:</b> @Model.Protein.Properties.GeneFamily</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col text-center no-gutters">
+        <div id="viewport" class="mb-1 mx-auto" style="width: @(Context.IsAjaxRequest() ? 360 : 440)px; height: 440px">
+            <link rel="model" href="~/models/@(Model.ProteinId)-@(Model.BindingSite)-model_1.mol2" />
+        </div>
+        <div class="small text-muted my-2">
+            <span class="text-nowrap"><i class="fa fa-arrows-alt"></i> Rotate: left button</span>
+            <span class="text-nowrap"><i class="fa fa-hand-paper-o"></i> Pan: right button</span>
+            <span class="text-nowrap"><i class="fa fa-search-plus"></i> Zoom: scroll wheel</span>
+        </div>
+        <div class="small text-muted">
+            <i class="fa fa-info-circle"></i> The model illustrated above is conformation 1.
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="text-muted my-3"><span class="bg-info mr-2">&nbsp;</span>External Resources</div>
+        <table class="table table-fixed">
+            <tbody>
+                @if (Model.Protein.Properties.UniProt != null)
+                {
+                    <tr>
+                        <td>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.UniProt.Url" target="_blank">
+                                UniProt
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.UniProt.InterProUrl" target="_blank">
+                                InterPro
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="text-nowrap" href="@Model.Protein.Properties.UniProt.PDBeUrl" target="_blank">
+                                PDBe
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Protein.Properties.Ensembl != null)
+                {
+                    <tr>
+                        <td>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.Ensembl.Url" target="_blank">
+                                Ensembl
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.Ensembl.RegionDetailUrl" target="_blank">
+                                Region in detail
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="text-nowrap" href="@Model.Protein.Properties.Ensembl.SequenceUrl" target="_blank">
+                                Sequence
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Protein.Properties.GenBank != null)
+                {
+                    <tr>
+                        <td>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.GenBank.Url" target="_blank">
+                                GenBank
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.GenBank.ENAUrl" target="_blank">
+                                ENA
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="text-nowrap" href="@Model.Protein.Properties.GenBank.DDBJUrl" target="_blank">
+                                DDBJ
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Protein.Properties.Ncbi != null)
+                {
+                    <tr>
+                        <td>
+                            <a class="mr-2 text-nowrap" href="@Model.Protein.Properties.Ncbi.RefSeqUrl" target="_blank">
+                                RefSeq
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a class="text-nowrap" href="@Model.Protein.Properties.Ncbi.NCBISequenceViewerUrl" target="_blank">
+                                NCBI Sequence Viewer
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="text-muted mb-3"><span class="bg-info mr-2">&nbsp;</span>Model Downloads</div>
+        <table class="table table-fixed">
+            <tbody>
+                @for (var i = 0; i < Model.StructureCount; i++)
+                {
+                    <tr>
+                        <td>
+                            <span class="mr-2 text-nowrap">Conformation @(i + 1)</span>
+                            <a class="mt-2 mr-2 text-nowrap" href="~/models/@(Model.ProteinId)-@(Model.BindingSite)-model_@(i + 1).mol2">
+                                Protein model
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                            </a>
+                            <a class="mt-2 text-nowrap" href="~/models/@(Model.ProteinId)-@(Model.BindingSite)-model_@(i + 1)-pocket.mol2">
+                                Binding pocket
+                                <i class="fa fa-download" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/ngl/ngl.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const stage = new NGL.Stage("viewport", { backgroundColor: "white" });
+            const url = $("link[rel=model]").attr("href");
+            stage.loadFile(url, { defaultRepresentation: true });
+        });
+    </script>
+}
+
+@section Menu {
+    @if (jobId > 0)
+    {
+        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
+        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
+        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@domainId" asp-route-jobId="@jobId">Job</a></li>
+        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domainId" asp-route-jobId="@jobId">BBB</a></li>
+        <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = domainId, jobId = jobId, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = domainId, jobId = jobId }))">Output</a></li>
+        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@domainId" asp-route-jobId="@jobId">Spider Plot</a></li>
+        <li class="nav-item active bg-info"><a class="nav-link" asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@domainId" asp-route-jobId="@jobId" asp-route-cavityId="@cavityId">Protein</a></li>
+        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId">Targets</a></li>
+        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">Help</a></li>
+    }
+    else
+    {
+        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
+        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
+        <li class="nav-item active bg-info"><a class="nav-link" asp-controller="Protein" asp-action="Details" asp-route-domainId="@domainId" asp-route-cavityId="@cavityId">Protein</a></li>
+        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId">Targets</a></li>
+        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">Help</a></li>
+    }
+}

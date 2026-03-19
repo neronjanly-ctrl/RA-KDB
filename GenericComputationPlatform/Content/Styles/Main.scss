@@ -1,0 +1,183 @@
+﻿@media (min-width: 1200px) {
+    .container {
+        max-width: 95%;
+    }
+}
+
+@media (min-width: 1440px) {
+    .container {
+        max-width: 90%;
+    }
+}
+
+input::placeholder {
+    color: lightgray !important;
+}
+
+body {
+    font-family: Verdana,sans-serif;
+}
+
+.bg-dark {
+    background-color: rgba(#244f7f, 0.9) !important;
+}
+
+span.at, span.dot {
+    display: inline-block;
+}
+
+span.at::after {
+    content: "@";
+}
+
+span.dot::after {
+    content: ".";
+}
+
+.na {
+    color: gray;
+}
+/* 修改悬浮导航布局 (change code from "color: gray;" to "mol-editor") */
+.navbar {
+    .container,
+    .container-fluid {
+        padding-left: var(--nav-horizontal-padding, 0);
+        padding-right: var(--nav-horizontal-padding, 0);
+    }
+}
+
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0 12px 0 0;
+
+    img {
+        width: var(--nav-logo-width, 128px);
+        height: var(--nav-logo-height, 80px);
+        object-fit: contain;
+        display: block;
+    }
+
+    .navbar-brand-copy {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+        color: #1f2a37;
+        border-left: 1px solid #ccd5df;
+        padding-left: .75rem;
+    }
+
+    .navbar-brand-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #1f2a37;
+    }
+
+    .navbar-brand-subtitle {
+        font-size: .75rem;
+        color: #40556d;
+        letter-spacing: .01em;
+    }
+}
+
+.navbar-nav .nav-link {
+    font-size: 1.05rem;
+}
+
+.navbar-nav .btn {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+}
+
+@media (max-width: 991.98px) {
+    .navbar-brand .navbar-brand-copy {
+        display: none;
+    }
+}
+
+.mol-editor {
+    min-width: 400px;
+}
+
+.user-guide {
+    ol {
+        li {
+            margin: 2em 0;
+        }
+    }
+
+    img {
+        border: 2px solid darkgray;
+        display: block;
+        zoom: 0.4;
+        margin: 1em 0;
+    }
+}
+
+.fp b {
+    color: red;
+    font-weight: normal;
+}
+
+#jobResult {
+    img {
+        //height: 128px;
+        //width: 128px;
+        object-fit: contain;
+    }
+}
+
+.comparison {
+    tr {
+        th {
+            width: 50%;
+        }
+    }
+}
+
+.close {
+    cursor: pointer;
+}
+
+.table-fixed {
+    table-layout: fixed;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 100, 0.03);
+}
+
+.table-striped tbody tr:hover {
+    background-color: rgba(0, 0, 100, 0.06);
+}
+
+.table-maxwidth {
+    td {
+        max-width: 200px;
+    }
+}
+
+.code {
+    font-family: Consolas, Courier New, Courier, monospace;
+    overflow-wrap: break-word;
+}
+
+.img-fluid {
+    zoom: 0.5;
+}
+
+@media (min-width: 992px) {
+    .modal-lg {
+        max-width: 900px;
+    }
+}
+
+.text-warning2 {
+    color: mix(#ffc107, #28a745, 40) !important
+}
+
+.bg-warning2 {
+    background-color: mix(#ffc107, #28a745, 40) !important
+}

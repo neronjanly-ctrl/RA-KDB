@@ -1,0 +1,31 @@
+﻿@{
+    ViewBag.Title = "Cytoscape Online Demo";
+}
+
+<section>
+    <aside class="toolbox">
+        Size:
+        <input type="text" value="" maxlength="4" min="10" max="500" />
+        Color:
+        <div></div>
+        Border Width:
+        <input type="text" value="" maxlength="4" min="0" max="100" />
+        Border Color:
+        <div></div>
+        Text Size:
+        <input type="text" value="" maxlength="4" min="12" max="100" />
+        Label Color:
+        <div></div>
+    </aside>
+    <canvas class="viewport">
+        Your browser doesn't support canvas.
+    </canvas>
+</section>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var model = @(Html.Raw(ViewBag.Data));
+    </script>
+    @Scripts.Render("~/bundles/drugmodel")
+}

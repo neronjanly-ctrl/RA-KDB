@@ -1,0 +1,583 @@
+﻿@inject IOptions<AppSettings> _appSettings
+@model JobOutputModel
+@{
+    ViewData["Title"] = $"{Model.Job.Name} #{Model.Job.Id} Output";
+}
+@functions
+{
+    string GetLigId(Result result)
+    {
+        return result.LigandId.StringifyId().Substring(0, 8);
+    }
+    string GetCavId(Result result)
+    {
+        return result.CavityId.StringifyId().Substring(0, 8);
+    }
+}
+
+<!-- Heading and Toggle Buttons -->
+<div class="row mb-2">
+    <h2 class="col-auto mr-auto">
+        @ViewData["Title"]
+        <a class="btn btn-outline-primary btn-sm" asp-controller="Job" asp-action="Report" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Download CSV <i class="fa fa-download"></i></a>
+    </h2>
+    <div class="col-auto">
+        <div class="btn-group">
+            @if (Model.UseCardOutputDisplay)
+            {
+                if (Model.PageNum > 0)
+                {
+                    <a class="page-link" asp-controller="Job" asp-action="CardViewAll" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" aria-label="All">View All</a>
+                }
+                else
+                {
+                    <a class="page-link" asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="1" aria-label="View paged">View Paged</a>
+                }
+                <span class="mr-2"></span>
+                <a asp-controller="Job" asp-action="TableViewAll" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" class="btn btn-outline-light text-muted"><i class="fa fa-list-ul" aria-hidden="true"></i></a>
+                <a asp-controller="Job" asp-action="TableViewAll" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" class="btn btn-outline-primary active"><i class="fa fa-th" aria-hidden="true"></i></a>
+            }
+            else
+            {
+                <a asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="1" class="btn btn-outline-primary active"><i class="fa fa-list-ul" aria-hidden="true"></i></a>
+                <a asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="1" class="btn btn-outline-light text-muted"><i class="fa fa-th" aria-hidden="true"></i></a>
+            }
+        </div>
+        @if (!Model.SameGeneProteinSymbol)
+        {
+            <div class="btn-group ml-4">
+                @if (Model.UseGeneSymbolForTargetDisplay)
+                {
+                    <a href="#" class="btn btn-outline-primary active use-protein-symbol" title="Show gene symbol for targets">Gene</a>
+                    <a href="#" class="btn btn-outline-light text-muted use-protein-symbol" title="Show protein symbol for targets">Protein</a>
+                }
+                else
+                {
+                    <a href="#" class="btn btn-outline-light text-muted use-gene-symbol" title="Show gene symbol for targets">Gene</a>
+                    <a href="#" class="btn btn-outline-primary active use-gene-symbol" title="Show protein symbol for targets">Protein</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Status Line -->
+<div class="small text-muted">
+    @if (Model.Job.Status != RunningStatus.Finished)
+    {
+        <a href="@(_appSettings.Value.ExternalUrls.JobHub)?jobId=@Model.Job.Id" class="d-none" id="jobhub" aria-hidden="true"></a>
+    }
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span id="statusDesc2"></span>
+    <br />
+    <span class="bg-info mr-2">&nbsp;</span>
+    <span>The docking scores are in the AutoDock Vina metric.</span>
+</div>
+
+@if (Model.UseCardOutputDisplay) // card view
+{
+    <hr />
+    <div class="row" id="jobResult">
+        @if (Model.Results != null)
+        {
+            foreach (var result in Model.Results)
+            {
+                var ligand = Model.Job.JobLigands.First(o => o.LigandId == result.LigandId);
+                var ligandId = ligand.LigandId.StringifyId();
+                var cavityId = result.CavityId.StringifyId();
+                int width = Model.MaxStructureCount < 3 ? 12 : 14;
+                <div class="card m-2" style="width: @(width)rem">
+                    <div class="card-header py-0">
+                        <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@result.Cavity.ProteinId"
+                           asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@result.Cavity.Id.StringifyId()">
+                            <img class="card-img-top" src="~/images/m/@(result.Cavity.ProteinId)-@(result.Cavity.BindingSite)-model_1.png" alt="" />
+                        </a>
+                    </div>
+                    <div class="card-body py-3">
+                        @if (Model.Job.LigandCount > 1)
+                        {
+                            <span class="small text-muted">L: @ligand.LigandName</span>
+                        }
+                        <h5 class="card-title" title="@result.Cavity.ProteinId">
+                            <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@result.Cavity.ProteinId"
+                               asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@result.Cavity.Id.StringifyId()">
+                                @(Model.UseGeneSymbolForTargetDisplay ? result.Cavity.Protein.GeneSymbol : result.Cavity.Protein.ProteinSymbol)_@result.Cavity.Protein.OrganismSymbol
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </h5>
+                        <p class="card-text small c@(GetCavId(result)) l@(GetLigId(result))">
+                            Docking Scores:<br />
+                            @if (result.DockingScores.Length == 0)
+                            {
+                                <span class="ml-3 na d-inline-block">N/A</span>
+                            }
+                            else
+                            {
+                                <span class="ml-3 text-nowrap d-inline-block">
+                                    @for (int i = 0; i < result.DockingScores.Length; i++)
+                                    {
+                                        if (result.DockingScores[i] == null)
+                                        {
+                                            <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-modelId="0"
+                                               class="text-dark d-none">
+                                                <b class="d@(i)"></b>
+                                                <i class="fa fa-download"></i>
+                                            </a>
+                                            <b>?</b>
+                                        }
+                                        else if (string.IsNullOrEmpty(result.DockedModelHashes[i]))
+                                        {
+                                            <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-modelId="@(i + 1)"
+                                               class="text-dark">
+                                                <b class="d@(i)">@result.GetFormattedVinaScore(i)</b>
+                                                <i class="fa fa-download"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            // only with DockedModelHashes supports one-protein-multiple-cavities
+                                            <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-dockingId="@result.DockedModelHashes[i]"
+                                               class="text-dark">
+                                                <b class="d@(i)">@result.GetFormattedVinaScore(i)</b>
+                                                <i class="fa fa-download"></i>
+                                            </a>
+                                        }
+                                    }
+                                </span>
+                            }
+                            <br />
+                            Similarity Score:<br />
+                            @if (result.MostSimilarActiveCompound == null)
+                            {
+                                <span class="ml-3 na d-inline-block">N/A</span>
+                            }
+                            else
+                            {
+                                <b class="ml-3 s4">@result.GetFormattedActiveSimilarity()</b>
+                            }
+                            <br />
+                            Best Match:<br />
+                            @if (result.MostSimilarActiveCompound == null)
+                            {
+                                <span class="ml-3 na d-inline-block">N/A</span>
+                            }
+                            else if (result.MostSimilarActiveCompound.Activity == BioActivity.Unknown)
+                            {
+                                <span class="ml-3 text-nowrap">
+                                    <a class="text-dark d-none" data-toggle="modal" data-target="#compareLigands" data-proteinId="@result.Cavity.ProteinId"
+                                       asp-controller="Job" asp-action="Compare" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId" asp-route-ligandId="@ligandId">
+                                        <b class="s6"></b> <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                    <b>?</b>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="ml-3 text-nowrap">
+                                    <a class="text-dark" data-toggle="modal" data-target="#compareLigands" data-proteinId="@result.Cavity.ProteinId"
+                                       asp-controller="Job" asp-action="Compare" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId" asp-route-ligandId="@ligandId">
+                                        <b class="s6">@result.MostSimilarActiveCompound.Id</b> <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </span>
+                            }
+                            @if (Model.HasPrediction)
+                            {
+                                <br />
+                                @:Prediction Result:<br />
+                                @if (result.Prediction == null)
+                                {
+                                    <span class="ml-3 na d-inline-block">N/A</span>
+                                }
+                                else if (result.Prediction.Activity == BioActivity.Unknown)
+                                {
+                                    <b class="ml-3">
+                                        <span class="s5">?</span><sup class="s7"></sup>
+                                    </b>
+                                }
+                                else
+                                {
+                                    <b class="ml-3">
+                                        <span class="s5">@result.GetFormattedActivity()</span><sup class="s7" title="Confidence Level @result.GetFormattedConfidenceLevel()">@result.GetFormattedConfidenceLevel()</sup>
+                                    </b>
+                                }
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+}
+else // table view
+{
+    <hr />
+    <table class="table table-striped table-hover table-maxwidth mt-3 w-100" id="jobResult">
+        <thead>
+            <tr>
+                @if (Model.Job.LigandCount > 1)
+                {
+                    <th scope="col" rowspan="2">Ligand</th>
+                }
+                <th scope="col" rowspan="2">@(Model.UseGeneSymbolForTargetDisplay && !Model.SameGeneProteinSymbol ? "Gene Symbol" : "Protein Symbol")</th>
+                <th scope="col" rowspan="2">Approved Name</th>
+                @*<th scope="col" width="120px">Depiction</th>*@
+                @if (Model.MaxStructureCount > 1)
+                {
+                    <th scope="col" colspan="@Model.MaxStructureCount">Docking Scores</th>
+                }
+                else
+                {
+                    <th scope="col" rowspan="2">Docking Score</th>
+                }
+                <th scope="col" rowspan="2" title="A score between 0 and 1 that reflects the similarity of the input molecule and the best matched known molecule">
+                    Similarity<br />Score
+                    <i class="fa fa-question-circle-o text-muted"></i>
+                </th>
+                <th scope="col" rowspan="2" title="The most similar molecule to the input among all known molecules of the protein">
+                    Best Match
+                    <i class="fa fa-question-circle-o text-muted"></i>
+                </th>
+                @if (Model.HasPrediction)
+                {
+                    <th scope="col" colspan="2">Prediction</th>
+                }
+            </tr>
+            @if (Model.HasPrediction)
+            {
+                <tr>
+                    @if (Model.MaxStructureCount > 1)
+                    {
+                        for (int i = 0; i < Model.MaxStructureCount; i++)
+                        {
+                            <th scope="col">Model @(i + 1)</th>
+                        }
+                    }
+                    <th scope="col">Result</th>
+                    <th scope="col">Confidence Level</th>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    @if (Model.MaxStructureCount > 1)
+                    {
+                        for (int i = 0; i < Model.MaxStructureCount; i++)
+                        {
+                            <th scope="col">Model @(i + 1)</th>
+                        }
+                    }
+                </tr>
+            }
+        </thead>
+        <tbody>
+            @if (Model.Results != null)
+            {
+                foreach (var result in Model.Results)
+                {
+                    var ligand = Model.Job.JobLigands.First(o => o.LigandId == result.LigandId);
+                    var ligandId = ligand.LigandId.StringifyId();
+                    var cavityId = result.CavityId.StringifyId();
+                    <tr class="c@(GetCavId(result)) l@(GetLigId(result))">
+                        @if (Model.Job.LigandCount > 1)
+                        {
+                            <th scope="row">@ligand.LigandName</th>
+                            <td>
+                                <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@result.Cavity.ProteinId" class="text-nowrap"
+                                   asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId">
+                                    @(Model.UseGeneSymbolForTargetDisplay ? result.Cavity.Protein.GeneSymbol : result.Cavity.Protein.ProteinSymbol)_@result.Cavity.Protein.OrganismSymbol <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        }
+                        else
+                        {
+                            <th scope="row">
+                                <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@result.Cavity.ProteinId" class="text-nowrap"
+                                   asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId">
+                                    @(Model.UseGeneSymbolForTargetDisplay ? result.Cavity.Protein.GeneSymbol : result.Cavity.Protein.ProteinSymbol)_@result.Cavity.Protein.OrganismSymbol <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </th>
+                        }
+                        <td>
+                            @result.Cavity.Protein.ProteinName
+                        </td>
+                        @*<td>
+                                <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@result.Protein.Name"
+                                   asp-controller="Protein" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId">
+                                    <img src="~/images/m/@(result.Cavity.Protein.Name)-@(result.Cavity.BindingSite)-model_1.png" alt="" />
+                                </a>
+                            </td>*@
+                        @for (int i = 0; i < Model.MaxStructureCount; i++)
+                        {
+                            <td>
+                                @if (i >= result.DockingScores.Length)
+                                {
+                                    <span class="na">N/A</span>
+                                }
+                                else if (result.DockingScores[i] == null)
+                                {
+                                    <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-modelId="0"
+                                       class="text-dark text-nowrap d-none">
+                                        <span class="d@(i)"></span>
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                    <span>?</span>
+                                }
+                                else if (string.IsNullOrEmpty(result.DockedModelHashes[i]))
+                                {
+                                    <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-modelId="@(i + 1)"
+                                       class="text-dark text-nowrap">
+                                        <span class="d@(i)">@result.GetFormattedVinaScore(i)</span>
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Ligand" asp-action="Docked" asp-route-ligandId="@ligandId" asp-route-proteinId="@result.Cavity.ProteinId" asp-route-dockingId="@result.DockedModelHashes[i]"
+                                       class="text-dark text-nowrap">
+                                        <span class="d@(i)">@result.GetFormattedVinaScore(i)</span>
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                }
+                            </td>
+                        }
+                        <td class="s4">
+                            @if (result.MostSimilarActiveCompound == null)
+                            {
+                                <span class="na">N/A</span>
+                            }
+                            else
+                            {
+                                @result.GetFormattedActiveSimilarity()
+                            }
+                        </td>
+                        <td>
+                            @if (result.MostSimilarActiveCompound == null)
+                            {
+                                <span class="na">N/A</span>
+                            }
+                            else if (result.MostSimilarActiveCompound.Activity == BioActivity.Unknown)
+                            {
+                                <a class="text-dark text-nowrap d-none" data-toggle="modal" data-target="#compareLigands" data-proteinId="@result.Cavity.ProteinId"
+                                   asp-controller="Job" asp-action="Compare" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId" asp-route-ligandId="@ligandId">
+                                    <span class="s6"></span> <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                <span>?</span>
+                            }
+                            else
+                            {
+                                <a class="text-dark text-nowrap" data-toggle="modal" data-target="#compareLigands" data-proteinId="@result.Cavity.ProteinId"
+                                   asp-controller="Job" asp-action="Compare" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-cavityId="@cavityId" asp-route-ligandId="@ligandId">
+                                    <span class="s6">@result.MostSimilarActiveCompound.Id</span> <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            }
+                        </td>
+                        @if (Model.HasPrediction)
+                        {
+                            <td class="s5">
+                                @if (result.Prediction == null)
+                                {
+                                    <span class="na">N/A</span>
+                                }
+                                else
+                                {
+                                    @result.GetFormattedActivity()
+                                }
+                            </td>
+                            <td class="s7">
+                                @if (result.Prediction == null)
+                                {
+                                    <span class="na">N/A</span>
+                                }
+                                else
+                                {
+                                    @result.GetFormattedConfidenceLevel()
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Protein Info Modal -->
+<div class="modal fade" id="proteinInfo" tabindex="-1" role="dialog" aria-labelledby="proteinName" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proteinName"></h5>
+                <div class="text-nowrap col-auto">
+                    <a class="close ml-2" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </a>
+                    <a href="" target="_blank" class="close maximizeBtn">
+                        <span aria-hidden="true"><i class="fa fa-window-maximize"></i></span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Compare Ligands Modal -->
+<div class="modal fade" id="compareLigands" tabindex="-1" role="dialog" aria-labelledby="chemblId" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chemblId"></h5>
+                <div class="text-nowrap col-auto">
+                    <a class="close ml-2" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </a>
+                    <a href="" target="_blank" class="close maximizeBtn">
+                        <span aria-hidden="true"><i class="fa fa-window-maximize"></i></span>
+                    </a>
+                </div>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.UseCardOutputDisplay)
+{
+    <!-- Pagination -->
+    <nav aria-label="Job list pagination">
+        <ul class="pagination justify-content-end">
+            @if (Model.PageNum > 0)
+            {
+                <li class="page-item@(Model.PageNum > 1 ? "" : " disabled")">
+                    <a class="page-link"
+                       asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="@(Model.PageNum - 1)" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                for (var i = 1; i <= Model.PageCount; i++)
+                {
+                    if (i == Model.PageNum)
+                    {
+                        <li class="page-item active">
+                            <a class="page-link" asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="@i">@i<span class="sr-only">(current)</span></a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item">
+                            <a class="page-link" asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="@i">@i</a>
+                        </li>
+                    }
+                }
+                <li class="page-item">
+                    <a class="page-link" asp-controller="Job" asp-action="CardViewAll" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" aria-label="All">View All</a>
+                </li>
+                <li class="page-item@(Model.PageNum < Model.PageCount ? "" : " disabled")">
+                    <a class="page-link" asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="@(Model.PageNum + 1)" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-controller="Job" asp-action="CardView" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id" asp-route-pageNum="1" aria-label="View paged">View Paged</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@section Menu {
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.DomainId">Home</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Job</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">BBB</a></li>
+    <li class="nav-item active"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = Model.PageNum }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))">Output</a></li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Spider Plot</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.DomainId">Targets</a></li>
+    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.DomainId">Help</a></li>
+}
+
+@section Styles {
+    <environment include="Development">
+        <link rel="stylesheet" href="~/lib/datatables.net-bs4/css/dataTables.bootstrap4.css" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" href="~/lib/datatables.net-bs4/css/dataTables.bootstrap4.min.css" />
+    </environment>
+}
+
+@section Scripts {
+    <environment include="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.js"></script>
+        <script src="~/lib/datatables.net/jquery.dataTables.js"></script>
+        <script src="~/lib/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/lib/@("@microsoft")/signalr/signalr.min.js"></script>
+        <script src="~/lib/datatables.net/jquery.dataTables.min.js"></script>
+        <script src="~/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>
+    </environment>
+    <script src="~/lib/ngl/ngl.js"></script>
+    <script>
+        JobStatusHelper.setStatus("@Model.Job.Status.ToString()", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        JobProgressHelper.setProgress(@Model.Job.Progress, "@Model.Job.TimeRemainingString", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
+        setupJobHubConnection();
+        setupProteinInfoModal();
+        setupCompareLigandsModal();
+        @if (!Model.UseCardOutputDisplay)
+        {
+            <text>
+        $.fn.dataTable.ext.order["dom-float"] = function (settings, col) {
+            return this.api().column(col, { order: "index" }).nodes().map(function (td, i) {
+                const txt = $(td).text().trim();
+                return txt.match(/\d+/) ? parseFloat(txt) : Infinity;
+            });
+        };
+
+        $.fn.dataTable.ext.order["dom-int-tail"] = function (settings, col) {
+            return this.api().column(col, { order: "index" }).nodes().map(function (td, i) {
+                const txt = $(td).text().match(/\d+/);
+                return txt ? parseInt(txt) : Infinity;
+            });
+        };
+
+        $(() => $("#jobResult").DataTable({
+            "pageLength": 50,
+            "lengthMenu": [[20, 50, 100, -1], [20, 50, 100, "All"]],
+            "columns": [
+                @if (Model.Job.LigandCount > 1)
+                {
+                    @:null,
+                }
+                null, // Gene/Protein Symbol
+                null, // Approved Name
+                @for (int i = 0; i < Model.MaxStructureCount; i++)
+                {
+                    @:{ "orderDataType": "dom-float", "type": "number" }, // Docking Score Model i
+                }
+                { "orderDataType": "dom-float", "type": "number" }, // Similarity Score
+                { "orderDataType": "dom-int-tail", "type": "number" }, // Best Match
+                @if (Model.HasPrediction)
+                {
+                    @:null, // Result
+                    @:{ "orderDataType": "dom-float", "type": "number" } // Confidence Level
+                }
+            ],
+            "order": [],
+        }));
+            </text>
+        }
+    </script>
+}

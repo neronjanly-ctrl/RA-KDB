@@ -1,0 +1,177 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace CommonTools;
+
+
+[Serializable]
+public class ClosingQuotationException : Exception
+{
+    public ClosingQuotationException() { }
+    public ClosingQuotationException(string message) : base(message) { }
+    public ClosingQuotationException(string message, Exception inner) : base(message, inner) { }
+    protected ClosingQuotationException(
+      System.Runtime.Serialization.SerializationInfo info,
+      System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+}
+
+public static class CsvHelper
+{
+    public static string FormatCsvRow(params object[] fields)
+    {
+        return fields.FormatCsvRow();
+    }
+
+    public static string FormatCsvRow(this IEnumerable<object> fields)
+    {
+        return string.Join(",", fields
+            .Select(o => o?.ToString())
+            .Select(o =>
+            {
+                if (string.IsNullOrWhiteSpace(o))
+                    return null;
+                if (o.Contains(','))
+                    return o.Contains('"') ? $"\"{o.Replace("\"", "\"\"")}\"" : $"\"{o}\"";
+                if (o.First() == '\"' || o.Last() == '\"')
+                    return $"\"{o.Replace("\"", "\"\"")}\"";
+                return o;
+            }));
+    }
+
+    public static IEnumerable<string> FormatCsvRows(this IEnumerable<IEnumerable<object>> rows, params IEnumerable<object>[] headerSets)
+    {
+        return headerSets.Concat(rows).Select(o => o.FormatCsvRow());
+    }
+
+    public static IEnumerable<string[]> ParseCsvRows(this IEnumerable<string> rows, params string[] columnNames) => rows.ParseCsvRows(',', columnNames);
+
+    public static IEnumerable<string[]> ParseCsvRows(this IEnumerable<string> rows, char delimiter, params string[] columnNames)
+    {
+        Dictionary<string, int> headers = rows.First().SplitCsvFields(delimiter).Select((o, i) => new { o, i }).ToDictionary(o => o.o, o => o.i);
+
+        int[] colIndicies = new int[columnNames.Length];
+        int maxIndex = -1;
+
+        for (int i = 0; i < columnNames.Length; i++)
+        {
+            if (headers.ContainsKey(columnNames[i]))
+            {
+                colIndicies[i] = headers[columnNames[i]];
+                maxIndex = Math.Max(maxIndex, colIndicies[i]);
+            }
+            else
+            {
+                throw new Exception($"Cannot find column {columnNames[i]}");
+            }
+        }
+
+        foreach (string[] fields in rows.Skip(1).SplitCsvFieldsMultiline(delimiter))
+        {
+            if (maxIndex >= fields.Length)
+                yield return Array.Empty<string>();
+            else
+                yield return colIndicies.Select(o => fields[o]).ToArray();
+        }
+    }
+
+    public static IEnumerable<Dictionary<string, string>> CsvRowsToDictionaries(this IEnumerable<string> rows, char delimiter = ',')
+    {
+        string[] headers = rows.First().SplitCsvFields().ToArray();
+
+        foreach (string[] fields in rows.Skip(1).SplitCsvFieldsMultiline(delimiter))
+        {
+            yield return Enumerable.Range(0, headers.Length).ToDictionary(o => headers[o], o => fields[o]);
+        }
+    }
+
+    public static IEnumerable<string[]> SplitCsvFieldsMultiline(this IEnumerable<string> rows, char delimiter = ',')
+    {
+        IEnumerator<string> it = rows.GetEnumerator();
+        string lastRow = string.Empty;
+
+        while (it.MoveNext())
+        {
+            string row = lastRow + it.Current;
+            string[]? result = null;
+
+            try
+            {
+                result = row.SplitCsvFields(delimiter);
+                lastRow = string.Empty;
+            }
+            catch (ClosingQuotationException)
+            {
+                lastRow = row;
+            }
+
+            if (result != null && result.Length > 0)
+                yield return result;
+        }
+    }
+
+    public static string[] SplitCsvFields(this string row, char delimiter = ',')
+    {
+        List<string> list = new();
+        StringBuilder sb = new();
+        bool escape = false, quote = false;
+
+        for (int i = 0; i <= row.Length; i++)
+        {
+            if (escape) // "...?
+            {
+                if (quote) // "..."?
+                {
+                    if (i == row.Length || row[i] == delimiter) // "...",
+                    {
+                        quote = false;
+                        escape = false;
+                        list.Add(sb.ToString());
+                        sb.Clear();
+                    }
+                    else if (row[i] == '"') // "...""
+                    {
+                        quote = false;
+                        sb.Append('"');
+                    }
+                    else // "..."x
+                    {
+                        throw new Exception($"Invalid character after quotation mark at col {i}");
+                    }
+                    continue;
+                }
+                else
+                {
+                    if (i == row.Length)
+                    {
+                        throw new ClosingQuotationException($"Closing quotation mark is missing at col {i}");
+                    }
+                    else if (row[i] == '"')
+                    {
+                        quote = true;
+                        continue;
+                    }
+                }
+            }
+            else // ,...?
+            {
+                if (i == row.Length || row[i] == delimiter) // ,...,
+                {
+                    list.Add(sb.ToString());
+                    sb.Clear();
+                    continue;
+                }
+                else if (row[i] == '"')
+                {
+                    escape = true;
+                    continue;
+                }
+            }
+
+            sb.Append(row[i]);
+        }
+
+        return list.ToArray();
+    }
+}

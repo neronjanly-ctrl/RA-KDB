@@ -1,0 +1,5 @@
+﻿Use Pymol to open the protein mol2, then command:
+load Pocket.mol2; zoom; show surface, Pocket; set antialias, 2; spectrum; spectrum count, magenta_magenta, Pocket;
+
+Rotate to the position you like, then command:
+ray 3000,3000; png .\Rendering.png

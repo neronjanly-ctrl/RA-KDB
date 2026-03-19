@@ -1,0 +1,106 @@
+﻿@model IList<Domain>
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = "Domain Management";
+}
+@section breadcrumb
+{
+    &raquo; <a asp-controller="Maintain" asp-action="Index">Maintain</a> &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<div>
+    <a id="_Publish" />
+    <form asp-controller="Maintain" asp-action="CreateDomain" method="post" style="display: inline">
+        <label for="DomainId">Publish a new domain:</label>
+        <input id="DomainId" name="DomainId" placeholder="id" class="small" style="line-height: 1.5; width: 14em" />
+        <input id="DomainName" name="DomainName" placeholder="name" class="small" style="line-height: 1.5; width: 30em" />
+        [<a asp-controller="Maintain" asp-action="CreateDomain" class="text-danger" onclick="this.closest('form').submit();return false">Create</a>]
+    </form>
+</div>
+<ol>
+    @foreach (var domain in Model)
+    {
+    <li>
+        <a href="#@(domain.Id)" class="@(domain.IsPublic ? "" : "text-muted")" id="_@domain.Id">
+            <b>@domain.Id.ToUpper()</b>
+            <small>[@domain.ProteinCount protein@(domain.ProteinCount > 1 ? "s" : "")]</small>: @domain.Name
+        </a>
+
+        [<a asp-controller="Maintain" asp-action="DomainIntegrity" asp-route-domainId="@domain.Id" asp-route-viewMask="@Context.GetIntegrityView()">Manage Proteins</a>]
+
+        @if (!domain.IsPublic && domain.ProteinCount == 0)
+        {
+        <form asp-controller="Maintain" asp-action="DeleteDomain" asp-route-domainId="@domain.Id" method="post" style="display: inline">
+            [<a asp-controller="Maintain" asp-action="DeleteDomain" asp-route-domainId="@domain.Id" class="text-danger" onclick="this.closest('form').submit();return false">Delete</a>]
+        </form>
+        }
+
+        @if (!domain.IsPublic && domain.ProteinCount > 0)
+        {
+        <form asp-controller="Maintain" asp-action="PublishDomain" asp-route-domainId="@domain.Id" method="post" style="display: inline">
+            [<a asp-controller="Maintain" asp-action="PublishDomain" asp-route-domainId="@domain.Id" class="text-danger" onclick="this.closest('form').submit();return false">Publish</a>]
+        </form>
+        }
+    </li>
+    }
+</ol>
+}
+<table class="table">
+    <tr>
+        <th style="min-width: 8rem">Domain</th>
+        <th style="min-width: 8rem">Summary</th>
+        <th style="min-width: calc(60%)">Proteins</th>
+        <th>Jobs</th>
+    </tr>
+    @foreach (var domain in Model)
+    {
+        var proteins = domain.GetProteins();
+        var jobs = domain.GetJobs();
+        <tr>
+            <td>
+                <a id="@domain.Id" asp-controller="Home" asp-action="Index" asp-route-domainId="@domain.Id" target="_blank">[Preview @domain.Id.ToUpper() Home Page]</a>
+                <br />
+                <form asp-controller="Maintain" asp-action="UpdateDomain" asp-route-domainId="@domain.Id" method="post">
+                    <label for="@domain.Id-name">Name:</label><br />
+                    <input name="name" id="@domain.Id-name" style="width: 32em" value="@domain.Name" /><br />
+                    <label for="@domain.Id-keys">Keywords (One a line):</label><br />
+                    <textarea name="keywords" id="@domain.Id-keys" rows="7" cols="60">@string.Join("\n", domain?.Keywords ?? new string[0])</textarea><br />
+                    <label for="@domain.Id-desc">Description (MarkDown):</label><br />
+                    <textarea name="description" id="@domain.Id-desc" rows="10" cols="60">@domain.Description</textarea><br />
+                    <label for="@domain.Id-cite">Citations (MarkDown):</label><br />
+                    <textarea name="citations" id="@domain.Id-cite" rows="10" cols="60">@domain.Citation</textarea><br />
+                    <input type="submit" value="Save Changes" />
+                </form>
+            </td>
+            <td>
+                Id: <b>@domain.Id.ToUpper()</b><br />
+                Proteins: <b>@domain.ProteinCount</b><br />
+                Jobs: <b>@domain.DomainJobs.Count</b><br />
+                Is Public: <b>@(domain.IsPublic ? "Yes" : "No")</b>
+            </td>
+            <td>
+                <b><a asp-controller="Maintain" asp-action="DomainIntegrity" asp-route-domainId="@domain.Id" asp-route-viewMask="@Context.GetIntegrityView()">[Manage Proteins]</a></b>
+                <ul>
+                    @foreach (var proteinGrp in proteins.GroupBy(o => o.Id[0]))
+                    {
+                        <li>
+                            @foreach (var protein in proteinGrp)
+                            {
+                                <a href="@Url.Action("Proteins", "Maintain")#_@protein.Id">@protein.Id</a>
+                            }
+                        </li>
+                    }
+                </ul>
+            </td>
+            <td>
+                @foreach (var job in jobs)
+                {
+                    <a href="@Url.Action("Jobs", "Maintain")#_@job.Id" id="@job.Id">#@job.Id @job.Name</a>
+                    <br />
+                }
+            </td>
+        </tr>
+    }
+</table>

@@ -1,0 +1,56 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace CommonTools;
+
+public static class EnumAnnotationHelper<TEnum>
+    where TEnum : notnull
+{
+    private static readonly IReadOnlyDictionary<TEnum, Attribute[]> _attributes;
+    private static readonly IReadOnlyDictionary<Type, TEnum[]> _enums;
+
+    static EnumAnnotationHelper()
+    {
+        _attributes =
+            (from value in Enum.GetValues(typeof(TEnum)).Cast<TEnum>()
+             join field in typeof(TEnum).GetFields()
+             on value.ToString() equals field.Name
+             select new
+             {
+                 Value = value,
+                 Attrs = field.GetCustomAttributes(false)
+             }).ToDictionary(o => o.Value, o => o.Attrs.Cast<Attribute>().ToArray());
+
+        _enums = _attributes
+            .SelectMany(o => o.Value, (o, i) => new { Type = i.GetType(), Value = o.Key })
+            .GroupBy(o => o.Type)
+            .ToDictionary(o => o.Key, o => o.Select(p => p.Value).ToArray());
+
+        Enums = _attributes.Keys.ToArray();
+    }
+
+    public static TAttribute GetAttribute<TAttribute>(TEnum enumValue)
+    {
+        return _attributes[enumValue].OfType<TAttribute>().FirstOrDefault();
+    }
+
+    public static IEnumerable<TAttribute> GetAttributes<TAttribute>(TEnum enumValue)
+    {
+        return _attributes[enumValue].OfType<TAttribute>();
+    }
+
+    public static bool HasAttribute<TAttribute>(TEnum enumValue)
+    {
+        return _attributes[enumValue].OfType<TAttribute>().Any();
+    }
+
+    public static IList<TEnum> GetWithAttribute<TAttribute>()
+    {
+        if (_enums.ContainsKey(typeof(TAttribute)))
+            return _enums[typeof(TAttribute)];
+        return new List<TEnum>();
+    }
+
+    public static TEnum[] Enums { get; private set; }
+}

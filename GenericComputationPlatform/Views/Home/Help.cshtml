@@ -1,0 +1,63 @@
+﻿@model Domain
+@{ 
+    ViewData["Title"] = "User Guide";
+}
+<h2>User Guide</h2>
+<hr />
+
+<div class="text-muted mb-3">
+    <span class="bg-info mr-2">&nbsp;</span>How to create a computation job for @Model.Name?
+</div>
+
+<div class="mb-3 user-guide small">
+    <ol>
+        <li>
+            To issue a new computation job, you first need to click on the yellow <a asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id" target="_blank">Create a new job</a> button from the <a asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id" target="_blank">ALL JOBS</a> page. You can find the link to <b>ALL JOBS</b> wherever you are on this web site.
+            <img src="~/guide/step1.png" alt="step1" />
+        </li>
+        <li>
+            Name your job and draw your molecule with the Molecular Editor. You can also paste in any pre-existing molecule structure in either <i>MOL</i>, <i>SDF</i> or <i>SMILES</i> format via the dropdown menu of the blue double-triangle icon on the toolbar. In this way, please be aware that the pasted code should <b>NOT</b> contain any leading or trailing spaces. Hit <b>Accept</b> to continue.
+            <img src="~/guide/step2.1.png" alt="step2.1" />
+            <img src="~/guide/step2.2.png" alt="step2.2" />
+        </li>
+        <li>
+            Verify the graphic depiction of your molecule presented at the Molecular Editor canvas area. You can use the editor to modify it as needed and then hit the yellow <b>Create Job</b> button below when it is ready to go. Your job will be created immediately and enqueued to be processed.
+            <img src="~/guide/step3.png" alt="step3" />
+        </li>
+    </ol>
+</div>
+
+<div class="text-muted mb-3">
+    <span class="bg-info mr-2">&nbsp;</span>How to inspect prediction results?
+</div>
+
+<div class="mb-3 user-guide small">
+    <ol>
+        <li>
+            Once your job is created and enqueued, you will be brought to the home page of the newly created job where you are presented useful functionalities like <i>Molecular Fingerprint</i>, <i>Molecular Model Download</i> and <i>BBB Prediction</i> for the input molecule. Scroll down the page to access all the tools. Links to <b>OUTPUT</b> and <b>SPIDER PLOT</b> can be found from the context-aware navigation bar where you will find prediction results of your job.
+            <img src="~/guide/step4.png" alt="step4" />
+        </li>
+        <li>
+            The <b>OUTPUT</b> page can display results of your job in either <i>table mode</i> or <i>cards mode</i> for your conveniences. Toggle between views with the top right switch. In <i>table mode</i> you are provided multiple options to customize the view such as defining the pagination length and the sorting column. Results that are finalized will be presented with links to see detailed information about the protein, to download models or to compare between best matched known molecule. Also note that the sorting headers support multi-sorting by clicking multiple column headers one after another while holding SHIFT key at the same time.
+            <img src="~/guide/step5.1.png" alt="step5.1" />
+            In card mode you can instinctly compare 3D models of the targets. Same functionalities are provided but view customization is limited.
+            <img src="~/guide/step5.2.png" alt="step5.2" />
+        </li>
+        <li>
+            Switch to <b>SPIDER PLOT</b> and you will see prediction result in graphics. A bunch of customization tools are provided. You can define molecule/target circle colors and sizes, text colors and sizes, border sizes and colors. You can also toggle visibility of interaction labels, display of molecular depiction. All nodes on the graph are also manipulatable. You can define position of every single nodes and by holding SHIFT or CTRL key you can even move the entire graph and multi-select nodes. Additional functionalities including exporting the plot to an image are coming soon. At the moment with Chrome you can <i>Save image as</i> by right clicking on the image.
+            <img src="~/guide/step6.png" alt="step6" />
+        </li>
+    </ol>
+</div>
+
+@section Menu {
+    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">Home</a></li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">
+            All Jobs
+            <span class="badge badge-light">@ViewData["Badge"]</span>
+        </a>
+    </li>
+    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Targets</a></li>
+    <li class="nav-item active"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a></li>
+}

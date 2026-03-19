@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "Preparing";
+}
+
+<div class="main">
+    <h2>@ViewBag.Title</h2>
+    <div>Please choose a xlsx file containing the information of target interactions.</div>
+    <form action="/process" method="post" enctype="multipart/form-data">
+        <div><input type="file" name="DataFile" /></div>
+        @if (!string.IsNullOrWhiteSpace(ViewBag.ErrMessage))
+        {
+            <div class="err">@ViewBag.ErrMessage</div>
+        }
+        <div><button type="submit">Upload</button></div>
+    </form>
+    <hr />
+    <div>
+        <h2>Sample Data File:</h2>
+        <table>
+            <tr><th>Protein</th><th>Target</th><th>Value</th><th>Drug</th><th>Short Name</th><th>Known</th></tr>
+            <tr><td>2hi4_A</td><td>Cytochrome P450 1A2</td><td>6.66</td><td>axitinib</td><td>CYP1A2</td><td>1</td></tr>
+            <tr><td>3eta_B</td><td>Insulin receptor</td><td>10.05</td><td>lapatinib</td><td>INSR</td><td>0</td></tr>
+            <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+        </table>
+    </div>
+    <div>
+        Note: Only columns of Value, Drug, Short Name, Known are required. In the Known column, specify 0 for "Unknown", non-zero number for "Known".
+    </div>
+</div>

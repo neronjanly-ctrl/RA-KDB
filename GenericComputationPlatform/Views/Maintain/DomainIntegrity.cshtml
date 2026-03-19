@@ -1,0 +1,272 @@
+﻿@model DomainIntegrityViewModel
+@{
+    Layout = "_MaintainLayout";
+    ViewData["Title"] = $"{@Model.DomainId.ToUpper()} Proteins";
+    var proteins = (IReadOnlyList<Protein>)ViewBag.Proteins;
+}
+@functions
+{
+    int id = 0;
+
+    IHtmlContent CheckBox(string text, bool check, int required = 0, bool header = true)
+    {
+        if (!header && (check && Model.HideExistingFiles || required == 0 && Model.HideOptionalFiles))
+            return null;
+        id++;
+        var @class = required != 0 && !check ? $" class=\"{(required > 1 ? "error" : "warning")}-text\"" : "";
+        var cb = @$"<input id=""cb{id}"" type=""checkbox"" disabled {(check ? "checked " : "")}/><label for=""cb{id}""{@class}>{text}</label>";
+        if (!header)
+            cb = @$"<div style=""display:block"">{cb}</div>";
+        return Html.Raw(cb);
+    }
+
+    IHtmlContent OptionButton(string opt, string onActionName, string offActionName)
+    {
+        IHtmlContent a;
+        if (Model.ViewMask.Contains(opt[0]))
+        {
+            a = Html.ActionLink(offActionName, "DomainIntegrity", "Maintain", new { domainId = Model.DomainId, viewMask = Model.ViewMask.Replace(opt, "") });
+        }
+        else
+        {
+            a = Html.ActionLink(onActionName, "DomainIntegrity", "Maintain", new { domainId = Model.DomainId, viewMask = Model.ViewMask + opt });
+        }
+        return a;
+    }
+}
+@section breadcrumb
+{
+    &raquo; <a asp-controller="Maintain" asp-action="Index">Maintain</a> &raquo; <a asp-controller="Maintain" asp-action="Domains">Domain Management</a> &raquo; <b>@ViewData["Title"]</b>
+}
+@section contents
+{
+<h4>CONTENTS</h4>
+<p>Note: To publish a domain, <b class="text-danger">all errors in red</b> must be resolved first. To add proteins, <a href="#_AddProteins">click here</a>.</p>
+@if (Model.TargetReports.Count == 0)
+{
+    @:[<b class="text-danger">No protein</b>]
+}
+<ol>
+    @foreach (var targetReport in Model.TargetReports)
+    {
+    if (Model.HideBlankRows && !targetReport.HasReports)
+    continue;
+    <li>
+        <a href="#@targetReport.ProteinId-@targetReport.BindingSite">
+            <b>@targetReport.ProteinId</b>
+            <small>
+                [@if (targetReport.BindingSite == null)
+                {
+                <b class="text-danger">No cavity</b>
+                }
+                else
+                {
+                @:@(targetReport.BindingSite)(@targetReport.Structures.Count)
+                }]
+
+                [@if (targetReport.Structures.Count == 0)
+                {
+                <b class="text-danger">No model</b>
+                }
+                else
+                {
+                var stat = targetReport.Structures.SelectMany(o => o)
+                .Where(o => o.RequiredForVisualization)
+                .GroupBy(o => o.FileName)
+                .Select(o => new { Name = o.Key, Bad = o.Count(p => !p.Exists), Good = o.Count(p => p.Exists) })
+                .ToArray();
+                if (stat.Any(o => o.Bad > 0))
+                {
+                <span class="text-danger">
+                    missing
+                    @foreach (var s in stat)
+                    {
+                    if (s.Bad > 0)
+                    {
+                    @:@(s.Name)(@s.Bad)
+                    }
+                    }
+                </span>
+                }
+                else
+                {
+                <b class="text-success">Full visualization</b>
+                }
+                }]
+
+                [@if (targetReport.Structures.Count > 0 && targetReport.ChemblCompounds?.IsDataComplete == true && targetReport.TrainedModels?.IsDataComplete == true)
+                {
+                <b class="text-success">Full computation</b>
+                }
+                else if (targetReport.Structures.Count > 0 && targetReport.TrainedModels?.IsDataComplete == true)
+                {
+                <span class="text-success">Docking+Prediction</span>
+                }
+                else if (targetReport.ChemblCompounds?.IsDataComplete == true && targetReport.TrainedModels?.IsDataComplete == true)
+                {
+                <span class="text-success">Similarity+Prediction</span>
+                }
+                else if (targetReport.Structures.Count > 0 && targetReport.ChemblCompounds?.IsDataComplete == true)
+                {
+                <span class="text-success">Docking+Similarity</span>
+                }
+                else if (targetReport.TrainedModels?.IsDataComplete == true)
+                {
+                <span class="text-warning">Prediction</span>
+                }
+                else if (targetReport.Structures.Count > 0)
+                {
+                <span class="text-warning">Docking</span>
+                }
+                else if (targetReport.ChemblCompounds?.IsDataComplete == true)
+                {
+                <span class="text-warning">Similarity</span>
+                }
+                else
+                {
+                <b class="text-danger">No computation</b>
+                }]
+            </small>: @targetReport.ProteinName
+        </a>
+        <form asp-controller="Maintain" asp-action="DeleteDomainProtein" asp-route-domainId="@Model.DomainId" asp-route-proteinId="@targetReport.ProteinId" method="post" style="display: inline">
+            [<a asp-controller="Maintain" asp-action="DeleteDomainProtein" asp-route-domainId="@Model.DomainId" asp-route-proteinId="@targetReport.ProteinId" class="text-danger" onclick="this.closest('form').submit();return false">Delete</a>]
+        </form>
+    </li>
+    }
+</ol>
+}
+
+<h4 id="_AddProteins">ADD PROTEINS</h4>
+<div class="mx-2 mb-5">
+    <a asp-controller="Maintain" asp-action="Proteins" id="BaseViewProteinLink" class="d-none"></a>
+    <form asp-controller="Maintain" asp-action="AddDomainProteins" asp-route-domainId="@Model.DomainId" method="post" style="display: inline">
+        <label for="Options">Choose a Protein ID and Add:</label><br />
+        <select id="Options" onchange="ViewProteinLink.href=BaseViewProteinLink.href+'#_'+this.value">
+            @foreach (var protein in proteins)
+            {
+                <option value="@protein.Id">@protein.Id (@protein.ProteinName)</option>
+            }
+        </select>
+        [<a href="" onclick="ProteinIds.value+=Options.value+'\n';return false">Add</a>] [<a href="@Url.Action("Proteins", "Maintain")#_@proteins[0].Id" id="ViewProteinLink">View Protein</a>]<br />
+        <label for="ProteinIds">Or Type Protein IDs (One a line):</label><br />
+        <textarea id="ProteinIds" name="ProteinIds" rows="12" cols="20"></textarea><br />
+        [<a asp-controller="Maintain" asp-action="AddDomainProteins" asp-route-domainId="@Model.DomainId" class="text-danger" onclick="this.closest('form').submit();return false">Save Changes</a>]
+    </form>
+</div>
+
+<h4>SUMMARY</h4>
+<div>
+    @OptionButton("h", "Hide Headers", "Show Headers") |
+    @OptionButton("g", "Hide Existing Files", "Show Existing Files") |
+    @OptionButton("o", "Hide Optional Files", "Show Optional Files") |
+    @OptionButton("b", "Hide Blank Rows", "Show Blank Rows")
+</div>
+<p>
+    <b>Complete:</b> @Model.DataCompleteCount (Manual: @Model.ManualDataCompleteCount; Automatic: @Model.AutomaticDataCompleteCount) out of @Model.TotalCount<br />
+    <b>Docking:</b> @Model.ReadyForDockingCount / @Model.TotalDockingCount;
+    <b>Hunting:</b> @Model.ReadyForHuntingCount / @Model.TotalHuntingCount;
+    <b>Classifying:</b> @Model.ReadyForClassifyingCount / @Model.TotalClassifyingCount;
+    <b>Computation:</b> @Model.ReadyForComputationCount / @Model.TotalComputationCount;
+    <b>Visualization:</b> @Model.ReadyForVisualizationCount / @Model.TotalVisualizationCount<br />
+    <h3>
+        @if (Model.ReadyForComputationCount == Model.TotalComputationCount && Model.ReadyForDockingCount == Model.TotalDockingCount)
+        {
+            <span class="success-text">Computation: ALL PASSED!</span>
+        }
+        else
+        {
+            <span class="error-text">Computation: NOT GOOD!</span>
+        }
+        <br />
+        @if (Model.ReadyForVisualizationCount == Model.TotalVisualizationCount)
+        {
+            <span class="success-text">Visualization: ALL PASSED!</span>
+        }
+        else
+        {
+            <span class="warning-text">Visualization: NOT GOOD!</span>
+        }
+    </h3>
+</p>
+<table class="table">
+    <tr>
+        <th rowspan="2" style="width: 18rem">
+            @if (Model.HideBlankRows)
+            {
+                <text>@Model.HasReportsCount / @Model.TotalCount</text>
+            }
+            else
+            {
+                @Model.TotalCount
+            }
+            Cavities
+        </th>
+        <th colspan="@(Model.MaxStructureCount)">Structures</th>
+        <th rowspan="2">Chembl Compounds</th>
+        <th rowspan="2">Trained Models</th>
+    </tr>
+    <tr>
+        @for (int i = 0; i < Model.MaxStructureCount; i++)
+        {
+            <th>Model @(i + 1)</th>
+        }
+    </tr>
+    @foreach (var targetReport in Model.TargetReports)
+    {
+        if (Model.HideBlankRows && !targetReport.HasReports)
+            continue;
+        <tr>
+            <td>
+                @if (!Model.HideHeaders)
+                {
+                    <text>
+                        @CheckBox("Complete", targetReport.IsDataComplete)
+                        (@CheckBox("Manual", targetReport.IsManualDataComplete) / @CheckBox("Automatic", targetReport.IsAutomaticDataComplete))
+                        <hr />
+                    </text>
+                }
+                <a id="@targetReport.ProteinId-@targetReport.BindingSite">
+                    <b>@targetReport.ProteinId</b> <small>@targetReport.BindingSite</small><br />
+                    @targetReport.ProteinName
+                </a>
+            </td>
+            @{
+                string name = targetReport.ProteinId;
+            }
+            @foreach (var fileReportSet in targetReport.Structures
+           .Concat(new FileReportSet[Model.MaxStructureCount - targetReport.Structures.Count])
+           .Append(targetReport.ChemblCompounds)
+           .Append(targetReport.TrainedModels))
+            {
+                @if (fileReportSet != null)
+                {
+                    <td>
+                        @if (!Model.HideHeaders)
+                        {
+                            <text>
+                                @CheckBox("Complete", fileReportSet.IsDataComplete)
+                                (@CheckBox("Manual", fileReportSet.IsManualDataComplete)/@CheckBox("Automatic", fileReportSet.IsAutomaticDataComplete))
+                                <hr />
+                            </text>
+                        }
+                        @foreach (var fileReport in fileReportSet)
+                        {
+                            int required = 0;
+                            if (fileReport.RequiredForComputation)
+                                required = 2;
+                            else if (fileReport.RequiredForVisualization)
+                                required = 1;
+                            <text>
+                                @CheckBox(string.Format(fileReport.FileName, name), fileReport.Exists, required, false)
+                            </text>
+                        }
+                    </td>
+                }
+                else
+                {
+                    <td class="nacell"></td>
+                }
+            }
+        </tr>
+    }
+</table>
