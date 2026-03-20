@@ -1,251 +1,1137 @@
-﻿@{
-    ViewData["Title"] = "RA Protein Knowledge Platform";
-}
+﻿@model Domain
+@using System.Linq
+@using System.Collections.Generic
+@using DockingDataModels
+@using GenericComputationPlatform.ViewModels
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/page2.css" asp-append-version="true" />
+@{
+    ViewData["Title"] = "RA Workspace";
+
+    var tags = ViewBag.Tags as IReadOnlyList<ProteinTag> ?? new List<ProteinTag>();
+    var featuredProteins = ViewBag.FeaturedWorkspaceProteins as IReadOnlyList<FeaturedProteinCardViewModel>
+                           ?? new List<FeaturedProteinCardViewModel>();
+
+    int workspaceProteinCount = ViewBag.WorkspaceProteinCount ?? 64;
+    int workspaceModuleCount = ViewBag.WorkspaceModuleCount ?? 4;
+    int workspaceStepCount = ViewBag.WorkspaceStepCount ?? 3;
+
+    var modules = new[]
+    {
+        new
+        {
+            Id = "inflammation",
+            Title = "Inflammatory signaling",
+            Desc = "Core cytokine and pathway nodes that explain inflammatory initiation and amplification in RA.",
+            Detail = "This module captures the inflammatory backbone of the workspace, including cytokine- and pathway-centered targets that help users understand disease activation and pharmacological interpretability.",
+            Proteins = new[] { "TNFA", "IL6", "JAK1", "JAK2", "NFKB1" }
+        },
+        new
+        {
+            Id = "invasion",
+            Title = "Synovial invasion & matrix degradation",
+            Desc = "Targets related to tissue remodeling, invasiveness, and persistent structural damage.",
+            Detail = "This module emphasizes disease persistence and joint destruction, highlighting proteins associated with matrix breakdown, migration, angiogenesis, and invasive synovial behavior.",
+            Proteins = new[] { "MMP2", "MMP9", "FAK1", "HGF", "MET" }
+        },
+        new
+        {
+            Id = "autoimmune",
+            Title = "Autoimmune regulation",
+            Desc = "Molecules linked to adaptive immunity, RA specificity, and sustained pathogenic signaling.",
+            Detail = "This module keeps the workspace RA-oriented by highlighting proteins associated with autoimmune susceptibility, adaptive immune regulation, and disease-specific interpretation.",
+            Proteins = new[] { "IL2", "PADI4", "PTN22", "SYK", "SRC" }
+        },
+        new
+        {
+            Id = "support",
+            Title = "Regulatory / background support",
+            Desc = "Contextual proteins that improve network completeness and biological interpretation.",
+            Detail = "These proteins support broader biological context and pathway completeness, making the final panel more explainable without dominating the disease-core signal.",
+            Proteins = new[] { "AHR", "ABCG2", "PPARA", "PPARG", "PPIA" }
+        }
+    };
+
+    var curationSteps = new[]
+    {
+        new
+        {
+            Step = "Version 1",
+            Title = "Broad inflammatory candidate pool",
+            Desc = "Wide coverage of inflammatory and immune-related molecules to preserve pathway completeness and avoid premature information loss.",
+            Why = "Preserved pathway breadth before specialization."
+        },
+        new
+        {
+            Step = "Version 2",
+            Title = "RA Core / RA Drug branching",
+            Desc = "Mechanistic separation into disease-specific pathology and pharmacologically interpretable inflammatory pathways.",
+            Why = "Separated disease-core interpretation from drug-axis interpretation."
+        },
+        new
+        {
+            Step = "Final",
+            Title = "Integrated RA protein knowledge panel",
+            Desc = "A compact final collection balancing disease mechanism, interpretability, and downstream docking utility.",
+            Why = "Retained a concise panel for explanation and application."
+        }
+    };
 }
 
 @section Menu {
-    <li class="nav-item">
-        <a class="nav-link" href="#workflow">Method</a>
+    <li class="nav-item active">
+        <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">RA Workspace</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#modules">Knowledge Framework</a>
+        <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Protein Database</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/KnowledgeBase">Database</a>
+        <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">Docking</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/Docking">Docking</a>
+        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a>
     </li>
 }
 
-<div class="ra-platform-page">
-    <section class="hero">
-        <div class="container-custom hero-grid">
-            <div class="hero-copy">
-                <div class="eyebrow">Curated • Mechanism-aware • Docking-ready</div>
+@section Styles {
+    <style>
+        :root {
+            --ra-bg: #f7f9fc;
+            --ra-surface: rgba(255,255,255,.82);
+            --ra-surface-strong: rgba(255,255,255,.92);
+            --ra-title: #162033;
+            --ra-text: #627089;
+            --ra-line: #dde6f2;
+            --ra-blue: #2f6bff;
+            --ra-blue-soft: rgba(47,107,255,.08);
+            --ra-cyan: #67c9d0;
+            --ra-teal-soft: rgba(103,201,208,.10);
+            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
+            --ra-shadow-card: 0 14px 30px rgba(20, 44, 84, .05);
+        }
 
-                <h1>
-                    A curated RA protein knowledge platform for mechanism interpretation and docking-guided exploration
-                </h1>
+        body {
+            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(103,201,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
+            color: var(--ra-title);
+        }
 
-                <p class="lead">
-                    From broad inflammatory candidates to a refined 64-protein knowledge base, this platform transforms biological complexity into a structured, disease-aware, and application-ready resource for rheumatoid arthritis research.
-                </p>
+        .ra-workspace-page {
+            width: min(1460px, calc(100vw - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 5rem;
+        }
 
-                <p class="hero-cn">
-                    该平台并非简单收集蛋白，而是通过三阶段筛选流程，将炎症候选、RA核心机制与药理相关节点整合为一个可解释、可追溯、可用于对接分析的知识系统。
-                </p>
+        .ra-section + .ra-section {
+            margin-top: 4rem;
+        }
 
-                <div class="hero-tags">
-                    <span class="hero-tag">Mechanism-aware</span>
-                    <span class="hero-tag">Disease-oriented</span>
-                    <span class="hero-tag">Structured knowledge</span>
-                    <span class="hero-tag">Docking-connected</span>
+        .ra-card {
+            background: var(--ra-surface);
+            border: 1px solid var(--ra-line);
+            border-radius: 30px;
+            box-shadow: var(--ra-shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .ra-hero {
+            display: grid;
+            grid-template-columns: 1.15fr .85fr;
+            gap: 2rem;
+        }
+
+        .ra-hero-copy {
+            padding: 2.6rem 2.3rem;
+        }
+
+        .ra-kicker {
+            display: inline-flex;
+            align-items: center;
+            padding: .42rem .95rem;
+            border-radius: 999px;
+            background: var(--ra-blue-soft);
+            color: var(--ra-blue);
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .ra-title {
+            font-size: clamp(2.7rem, 4.6vw, 5.2rem);
+            line-height: 1.02;
+            font-weight: 800;
+            letter-spacing: -.045em;
+            margin-bottom: 1rem;
+        }
+
+        .ra-desc {
+            color: var(--ra-text);
+            font-size: 1.06rem;
+            line-height: 1.92;
+            max-width: 760px;
+        }
+
+        .ra-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-top: 1.5rem;
+        }
+
+        .ra-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: .56rem .95rem;
+            border-radius: 999px;
+            border: 1px solid var(--ra-line);
+            background: #fff;
+            color: #24324a;
+            font-weight: 650;
+        }
+
+        .ra-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .8rem;
+            margin-top: 1.7rem;
+        }
+
+        .ra-stat {
+            border: 1px solid var(--ra-line);
+            border-radius: 20px;
+            background: rgba(255,255,255,.94);
+            padding: .95rem 1rem;
+        }
+
+        .ra-stat-value {
+            font-size: 1.6rem;
+            font-weight: 780;
+            line-height: 1;
+            margin-bottom: .35rem;
+        }
+
+        .ra-stat-label {
+            color: var(--ra-text);
+            font-size: .92rem;
+            line-height: 1.5;
+        }
+
+        .ra-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .9rem;
+            margin-top: 1.8rem;
+        }
+
+        .btn-ra-primary,
+        .btn-ra-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            border-radius: 999px;
+            padding: 0 1.15rem;
+            font-weight: 700;
+            text-decoration: none !important;
+        }
+
+        .btn-ra-primary {
+            color: #fff !important;
+            background: var(--ra-blue);
+            box-shadow: 0 12px 24px rgba(47,107,255,.18);
+        }
+
+        .btn-ra-secondary {
+            color: #263652 !important;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+        }
+
+        .ra-hero-map {
+            padding: 1.6rem;
+        }
+
+        .ra-panel-title {
+            font-size: 1.3rem;
+            font-weight: 760;
+            margin-bottom: 1rem;
+        }
+
+        .ra-map-shell {
+            min-height: 100%;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+        }
+
+        .ra-map-core {
+            position: relative;
+            width: min(100%, 420px);
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(47,107,255,.08), transparent 48%), radial-gradient(circle at center, rgba(103,201,208,.08), transparent 64%);
+        }
+
+        .ra-map-center {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            transform: translate(-50%, -50%);
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+            box-shadow: var(--ra-shadow-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+            font-weight: 760;
+            line-height: 1.4;
+        }
+
+        .ra-map-node {
+            position: absolute;
+            width: 160px;
+            min-height: 84px;
+            border-radius: 20px;
+            background: rgba(255,255,255,.96);
+            border: 1px solid var(--ra-line);
+            box-shadow: var(--ra-shadow-card);
+            padding: .8rem .9rem;
+            font-size: .92rem;
+            font-weight: 650;
+            line-height: 1.55;
+            color: #253654;
+        }
+
+        .ra-node-1 {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .ra-node-2 {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ra-node-3 {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .ra-node-4 {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ra-node-line {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(47,107,255,.16), rgba(103,201,208,.16));
+            z-index: 0;
+        }
+
+        .ra-line-v-top {
+            width: 2px;
+            height: 82px;
+            left: 50%;
+            top: 84px;
+            transform: translateX(-50%);
+        }
+
+        .ra-line-v-bottom {
+            width: 2px;
+            height: 82px;
+            left: 50%;
+            bottom: 84px;
+            transform: translateX(-50%);
+        }
+
+        .ra-line-h-left {
+            height: 2px;
+            width: 82px;
+            left: 84px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ra-line-h-right {
+            height: 2px;
+            width: 82px;
+            right: 84px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .ra-split {
+            display: grid;
+            grid-template-columns: 1.1fr .9fr;
+            gap: 2rem;
+        }
+
+        .ra-block {
+            padding: 2rem;
+        }
+
+        .ra-section-kicker {
+            color: var(--ra-blue);
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin-bottom: .75rem;
+        }
+
+        .ra-section-title {
+            font-size: clamp(1.9rem, 3vw, 3rem);
+            line-height: 1.08;
+            font-weight: 770;
+            letter-spacing: -.03em;
+            margin-bottom: .85rem;
+        }
+
+        .ra-section-desc {
+            color: var(--ra-text);
+            font-size: 1.01rem;
+            line-height: 1.9;
+        }
+
+        .ra-module-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.4rem;
+        }
+
+        .ra-module-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 22px;
+            background: rgba(255,255,255,.94);
+            padding: 1rem;
+            cursor: pointer;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+            .ra-module-card:hover,
+            .ra-module-card.is-active {
+                transform: translateY(-2px);
+                border-color: rgba(47,107,255,.35);
+                box-shadow: 0 12px 26px rgba(47,107,255,.08);
+            }
+
+        .ra-module-title {
+            font-size: 1.04rem;
+            font-weight: 740;
+            margin-bottom: .45rem;
+        }
+
+        .ra-module-desc {
+            color: var(--ra-text);
+            font-size: .95rem;
+            line-height: 1.75;
+            margin-bottom: .75rem;
+        }
+
+        .ra-mini-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+        }
+
+        .ra-mini-tag {
+            font-size: .78rem;
+            padding: .28rem .62rem;
+            border-radius: 999px;
+            background: rgba(47,107,255,.06);
+            color: #2e4e9b;
+            border: 1px solid rgba(47,107,255,.12);
+        }
+
+        .ra-module-detail {
+            margin-top: 1rem;
+            border: 1px solid var(--ra-line);
+            border-radius: 24px;
+            background: rgba(255,255,255,.94);
+            padding: 1.15rem 1.1rem;
+        }
+
+        .ra-module-detail-title {
+            font-size: 1.08rem;
+            font-weight: 760;
+            margin-bottom: .55rem;
+        }
+
+        .ra-module-detail-text {
+            color: var(--ra-text);
+            line-height: 1.82;
+            margin-bottom: .8rem;
+        }
+
+        .ra-step-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 22px;
+            background: rgba(255,255,255,.94);
+            padding: 1.1rem 1.1rem 1rem;
+            box-shadow: var(--ra-shadow-card);
+        }
+
+            .ra-step-card + .ra-step-card {
+                margin-top: 1rem;
+            }
+
+        .ra-step-kicker {
+            color: var(--ra-blue);
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: .5rem;
+        }
+
+        .ra-step-title {
+            font-size: 1.2rem;
+            font-weight: 750;
+            margin-bottom: .45rem;
+        }
+
+        .ra-step-desc {
+            color: var(--ra-text);
+            line-height: 1.8;
+            margin-bottom: .55rem;
+        }
+
+        .ra-step-why {
+            color: #23456a;
+            font-size: .95rem;
+            font-weight: 600;
+        }
+
+        .ra-principle {
+            margin-top: 1rem;
+            padding: .9rem 1rem;
+            border-radius: 18px;
+            background: rgba(47,107,255,.06);
+            color: #23456a;
+            border: 1px solid rgba(47,107,255,.10);
+            font-weight: 650;
+            line-height: 1.7;
+        }
+
+        .ra-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.4rem;
+        }
+
+        .ra-feature-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 22px;
+            background: rgba(255,255,255,.94);
+            padding: 1rem;
+        }
+
+        .ra-feature-title {
+            font-size: 1rem;
+            font-weight: 740;
+            margin-bottom: .45rem;
+        }
+
+        .ra-feature-text {
+            color: var(--ra-text);
+            font-size: .94rem;
+            line-height: 1.76;
+        }
+
+        .ra-preview-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .ra-view-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .35rem;
+            border-radius: 999px;
+            background: rgba(47,107,255,.06);
+            border: 1px solid rgba(47,107,255,.08);
+        }
+
+        .ra-toggle-btn {
+            border: 0;
+            background: transparent;
+            color: #30508f;
+            font-weight: 700;
+            border-radius: 999px;
+            min-height: 38px;
+            padding: 0 .95rem;
+            cursor: pointer;
+        }
+
+            .ra-toggle-btn.is-active {
+                background: #fff;
+                box-shadow: 0 6px 14px rgba(20, 44, 84, .06);
+                color: #1f2c44;
+            }
+
+        .ra-preview-panel {
+            margin-top: 1.5rem;
+        }
+
+        .ra-card-view {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .ra-protein-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 24px;
+            background: rgba(255,255,255,.95);
+            overflow: hidden;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+            .ra-protein-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 14px 28px rgba(20, 44, 84, .07);
+            }
+
+        .ra-protein-thumb {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            display: block;
+            background: #eef3fa;
+        }
+
+        .ra-protein-body {
+            padding: 1rem;
+        }
+
+        .ra-protein-title {
+            font-size: 1.05rem;
+            font-weight: 740;
+            margin-bottom: .45rem;
+        }
+
+        .ra-protein-meta {
+            color: var(--ra-text);
+            line-height: 1.75;
+            font-size: .94rem;
+            margin-bottom: .9rem;
+        }
+
+        .ra-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+            margin-bottom: .9rem;
+        }
+
+        .ra-badge {
+            font-size: .76rem;
+            padding: .28rem .6rem;
+            border-radius: 999px;
+            border: 1px solid rgba(47,107,255,.12);
+            background: rgba(47,107,255,.06);
+            color: #2e4e9b;
+            font-weight: 650;
+        }
+
+        .ra-link-row {
+            display: flex;
+            gap: .7rem;
+            flex-wrap: wrap;
+        }
+
+            .ra-link-row a {
+                font-size: .92rem;
+                font-weight: 700;
+                color: var(--ra-blue);
+                text-decoration: none;
+            }
+
+        .ra-list-view {
+            display: none;
+        }
+
+        .ra-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,.96);
+            border: 1px solid var(--ra-line);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+            .ra-list-table th,
+            .ra-list-table td {
+                padding: .9rem .95rem;
+                border-bottom: 1px solid var(--ra-line);
+                text-align: left;
+                vertical-align: middle;
+            }
+
+            .ra-list-table th {
+                font-size: .88rem;
+                color: #34517c;
+                background: rgba(47,107,255,.05);
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+            }
+
+            .ra-list-table tr:last-child td {
+                border-bottom: 0;
+            }
+
+        .ra-tags-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            margin-top: 1.25rem;
+        }
+
+        .ra-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: .52rem .88rem;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+            color: #2f405e;
+            font-size: .9rem;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .ra-feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .ra-card-view {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .ra-hero,
+            .ra-split {
+                grid-template-columns: 1fr;
+            }
+
+            .ra-module-grid,
+            .ra-feature-grid,
+            .ra-card-view,
+            .ra-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .ra-hero-copy,
+            .ra-block,
+            .ra-hero-map {
+                padding: 1.5rem;
+            }
+
+            .ra-map-core {
+                width: 100%;
+                max-width: 420px;
+            }
+
+            .ra-map-node {
+                position: static;
+                transform: none !important;
+                width: 100%;
+                margin-top: .85rem;
+            }
+
+            .ra-node-line {
+                display: none;
+            }
+
+            .ra-map-center {
+                position: static;
+                transform: none;
+                width: 100%;
+                height: auto;
+                min-height: 120px;
+                margin-bottom: .85rem;
+            }
+        }
+    </style>
+}
+
+<div class="ra-workspace-page">
+    <!-- Section 1: Hero -->
+    <section class="ra-section ra-hero">
+        <div class="ra-card ra-hero-copy">
+            <div class="ra-kicker">Curated • Mechanism-aware • Docking-connected</div>
+
+            <h1 class="ra-title">
+                RA workspace for curated target knowledge and docking-oriented exploration
+            </h1>
+
+            <p class="ra-desc">
+                This workspace introduces a rheumatoid arthritis-focused protein collection built from curated evidence,
+                disease-relevant selection logic, and application-oriented organization. It helps users understand why
+                these proteins matter in RA before entering the full database and downstream docking workflow.
+            </p>
+
+            <div class="ra-pill-row">
+                <span class="ra-pill">Curated RA proteins</span>
+                <span class="ra-pill">Mechanism-aware selection</span>
+                <span class="ra-pill">Database-connected</span>
+                <span class="ra-pill">Docking-ready workflow</span>
+            </div>
+
+            <div class="ra-stats">
+                <div class="ra-stat">
+                    <div class="ra-stat-value">@workspaceProteinCount</div>
+                    <div class="ra-stat-label">Curated proteins in the current RA workspace</div>
+                </div>
+                <div class="ra-stat">
+                    <div class="ra-stat-value">@workspaceModuleCount</div>
+                    <div class="ra-stat-label">Major functional modules used to organize interpretation</div>
+                </div>
+                <div class="ra-stat">
+                    <div class="ra-stat-value">@workspaceStepCount</div>
+                    <div class="ra-stat-label">Curation stages from candidate pool to final panel</div>
                 </div>
             </div>
 
-            <div class="hero-panel">
-                <div class="panel-title">Curation overview</div>
+            <div class="ra-actions">
+                <a class="btn-ra-primary" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">
+                    Open Protein Database
+                </a>
+                <a class="btn-ra-secondary" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">
+                    Continue to Docking
+                </a>
+            </div>
+        </div>
 
-                <div class="flow-mini">
-                    <div class="flow-item">
-                        <span class="flow-step">Version 1</span>
-                        <h4>Broad inflammatory candidate pool</h4>
-                        <p>
-                            Wide coverage of inflammatory and immune-related molecules to preserve pathway completeness and avoid premature information loss.
-                        </p>
+        <div class="ra-card ra-hero-map">
+            <div class="ra-panel-title">Workspace map</div>
+
+            <div class="ra-map-shell">
+                <div class="ra-map-core">
+                    <div class="ra-node-line ra-line-v-top"></div>
+                    <div class="ra-node-line ra-line-v-bottom"></div>
+                    <div class="ra-node-line ra-line-h-left"></div>
+                    <div class="ra-node-line ra-line-h-right"></div>
+
+                    <div class="ra-map-center">
+                        RA Workspace<br />
+                        Knowledge → Database → Docking
                     </div>
 
-                    <div class="flow-item">
-                        <span class="flow-step">Version 2</span>
-                        <h4>RA Core / RA Drug branching</h4>
-                        <p>
-                            Mechanistic separation into disease-specific pathology and pharmacologically interpretable inflammatory pathways.
-                        </p>
+                    <div class="ra-map-node ra-node-1">
+                        Knowledge structure<br />
+                        Modules and curation logic
                     </div>
 
-                    <div class="flow-item">
-                        <span class="flow-step">Final</span>
-                        <h4>Integrated 64-protein knowledge base</h4>
-                        <p>
-                            A compact final panel balancing disease mechanism, interpretability, and downstream docking utility.
-                        </p>
+                    <div class="ra-map-node ra-node-2">
+                        Protein collection<br />
+                        Browse targets in database
+                    </div>
+
+                    <div class="ra-map-node ra-node-3">
+                        Docking entry<br />
+                        Submit ligand exploration
+                    </div>
+
+                    <div class="ra-map-node ra-node-4">
+                        Result context<br />
+                        Support later interpretation
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="workflow" class="section workflow">
-        <div class="container-custom">
-            <div class="section-head">
-                <span class="kicker">Curation workflow</span>
-                <h2>How the knowledge base was built</h2>
-                <p>
-                    A three-stage workflow was used to distinguish broad inflammatory signals, RA-specific disease mechanisms, and application-ready targets. The goal was not maximum inclusion, but meaningful biological structure.
-                </p>
+    <!-- Section 2: Biological architecture + curation logic -->
+    <section class="ra-section ra-split">
+        <div class="ra-card ra-block">
+            <div class="ra-section-kicker">Biological architecture</div>
+            <h2 class="ra-section-title">How the protein collection is biologically organized</h2>
+            <p class="ra-section-desc">
+                The curated RA panel is grouped into functional modules so that users can understand disease structure
+                rather than read an isolated flat list of target names.
+            </p>
+
+            <div class="ra-module-grid" id="raModuleGrid">
+                @for (var i = 0; i < modules.Length; i++)
+                {
+                    var module = modules[i];
+                    <article class="ra-module-card @(i == 0 ? "is-active" : null)"
+                             data-module="@module.Id"
+                             data-title="@module.Title"
+                             data-detail="@module.Detail"
+                             data-proteins="@string.Join(", ", module.Proteins)">
+                        <div class="ra-module-title">@module.Title</div>
+                        <div class="ra-module-desc">@module.Desc</div>
+                        <div class="ra-mini-tags">
+                            @foreach (var protein in module.Proteins)
+                            {
+                                <span class="ra-mini-tag">@protein</span>
+                            }
+                        </div>
+                    </article>
+                }
             </div>
 
-            <div class="workflow-grid">
-                <div class="workflow-card">
-                    <div class="num">1</div>
-                    <h3>Version 1 — Broad candidate pool</h3>
-                    <p>
-                        A wide set of inflammatory and immune-related molecules was retained to capture upstream activation, signaling amplification, immune participation, and feedback regulation.
-                    </p>
-                </div>
-
-                <div class="workflow-card">
-                    <div class="num">2</div>
-                    <h3>Version 2 — Mechanistic branching</h3>
-                    <p>
-                        The collection was separated into two directions: <strong>RA Core</strong> for disease pathology and <strong>RA Drug</strong> for pharmacologically interpretable inflammatory pathways.
-                    </p>
-                </div>
-
-                <div class="workflow-card">
-                    <div class="num">3</div>
-                    <h3>Final — Integrated 64-protein panel</h3>
-                    <p>
-                        The final set recombines disease-core proteins with key drug-relevant nodes, producing a compact and explainable RA protein framework for docking and analysis.
-                    </p>
+            <div class="ra-module-detail" id="raModuleDetail">
+                <div class="ra-module-detail-title">@modules[0].Title</div>
+                <div class="ra-module-detail-text">@modules[0].Detail</div>
+                <div class="ra-mini-tags" id="raModuleDetailTags">
+                    @foreach (var protein in modules[0].Proteins)
+                    {
+                        <span class="ra-mini-tag">@protein</span>
+                    }
                 </div>
             </div>
+        </div>
 
-            <div class="workflow-note">
-                <strong>Key idea:</strong> this platform is not built by simply collecting proteins. It is built by preserving what is biologically informative, disease-relevant, and practically useful.
+        <div class="ra-card ra-block">
+            <div class="ra-section-kicker">Curation logic</div>
+            <h2 class="ra-section-title">Why these proteins were retained</h2>
+            <p class="ra-section-desc">
+                The current RA workspace is grounded in a three-stage curation process that refines broad inflammatory
+                candidates into a compact and interpretable disease-oriented panel.
+            </p>
+
+            <div style="margin-top:1.35rem;">
+                @foreach (var step in curationSteps)
+                {
+                    <div class="ra-step-card">
+                        <div class="ra-step-kicker">@step.Step</div>
+                        <div class="ra-step-title">@step.Title</div>
+                        <div class="ra-step-desc">@step.Desc</div>
+                        <div class="ra-step-why">@step.Why</div>
+                    </div>
+                }
+            </div>
+
+            <div class="ra-principle">
+                Selection principle: disease relevance + mechanistic clarity + downstream utility.
             </div>
         </div>
     </section>
 
-    <section id="modules" class="section modules">
-        <div class="container-custom">
-            <div class="section-head">
-                <span class="kicker">Knowledge framework</span>
-                <h2>The 64-protein RA knowledge framework</h2>
-                <p>
-                    The final collection is organized by biological function so users can understand RA as a structured disease system rather than a flat list of molecular names.
-                </p>
-            </div>
+    <!-- Section 3: database value -->
+    <section class="ra-section ra-card ra-block">
+        <div class="ra-section-kicker">Workspace content</div>
+        <h2 class="ra-section-title">What users can explore in this RA workspace</h2>
+        <p class="ra-section-desc">
+            The workspace is designed to bridge curated protein knowledge and downstream computational use.
+            Users can inspect target identity, module-level biological context, and then continue toward docking-oriented workflows.
+        </p>
 
-            <div class="module-grid">
-                <div class="module-card">
-                    <div class="module-chip chip-blue">Module 01</div>
-                    <h3>Inflammatory signaling</h3>
-                    <p>
-                        Core inflammatory drivers that connect immune activation to downstream cytokine release, pathway amplification, and therapeutic interpretation.
-                    </p>
-                    <div class="protein-list">
-                        <span class="protein-tag">TNFA</span>
-                        <span class="protein-tag">IL6</span>
-                        <span class="protein-tag">JAK1</span>
-                        <span class="protein-tag">JAK2</span>
-                        <span class="protein-tag">TYK2</span>
-                        <span class="protein-tag">NFKB1</span>
-                        <span class="protein-tag">TF65</span>
-                        <span class="protein-tag">TLR7</span>
-                        <span class="protein-tag">CASP1</span>
-                    </div>
+        <div class="ra-feature-grid">
+            <article class="ra-feature-card">
+                <div class="ra-feature-title">Protein identity</div>
+                <div class="ra-feature-text">
+                    Browse target names, gene symbols, UniProt references, and associated structural information.
                 </div>
+            </article>
 
-                <div class="module-card">
-                    <div class="module-chip chip-green">Module 02</div>
-                    <h3>Synovial invasion &amp; matrix degradation</h3>
-                    <p>
-                        Proteins associated with synovial aggressiveness, extracellular matrix breakdown, angiogenesis, and persistent tissue damage in RA.
-                    </p>
-                    <div class="protein-list">
-                        <span class="protein-tag">MMP2</span>
-                        <span class="protein-tag">MMP8</span>
-                        <span class="protein-tag">MMP9</span>
-                        <span class="protein-tag">FAK1</span>
-                        <span class="protein-tag">RHOA</span>
-                        <span class="protein-tag">HGF</span>
-                        <span class="protein-tag">MET</span>
-                        <span class="protein-tag">VGFR2</span>
-                    </div>
+            <article class="ra-feature-card">
+                <div class="ra-feature-title">Mechanism context</div>
+                <div class="ra-feature-text">
+                    Understand how proteins fit into inflammatory signaling, tissue invasion, autoimmune regulation,
+                    and broader support context.
                 </div>
+            </article>
 
-                <div class="module-card">
-                    <div class="module-chip chip-purple">Module 03</div>
-                    <h3>Autoimmune regulation</h3>
-                    <p>
-                        Immune-regulatory and RA-associated molecules linked to adaptive immunity, autoimmune susceptibility, and sustained pathogenic signaling.
-                    </p>
-                    <div class="protein-list">
-                        <span class="protein-tag">IL2</span>
-                        <span class="protein-tag">IL2RB</span>
-                        <span class="protein-tag">DRB1</span>
-                        <span class="protein-tag">PADI4</span>
-                        <span class="protein-tag">PTN22</span>
-                        <span class="protein-tag">SYK</span>
-                        <span class="protein-tag">HCK</span>
-                        <span class="protein-tag">SRC</span>
-                    </div>
+            <article class="ra-feature-card">
+                <div class="ra-feature-title">Curation interpretation</div>
+                <div class="ra-feature-text">
+                    Learn why the panel was refined in stages and why a compact RA-oriented collection was retained.
                 </div>
+            </article>
 
-                <div class="module-card">
-                    <div class="module-chip chip-red">Module 04</div>
-                    <h3>Regulatory / background support</h3>
-                    <p>
-                        Contextual and modulatory proteins that support network completeness, biological interpretation, and broader pathway context.
-                    </p>
-                    <div class="protein-list">
-                        <span class="protein-tag">AHR</span>
-                        <span class="protein-tag">ABCG2</span>
-                        <span class="protein-tag">PPARA</span>
-                        <span class="protein-tag">PPARG</span>
-                        <span class="protein-tag">PPIA</span>
-                        <span class="protein-tag">XCT</span>
-                    </div>
+            <article class="ra-feature-card">
+                <div class="ra-feature-title">Docking connection</div>
+                <div class="ra-feature-text">
+                    Move from curated target understanding into docking submission and later result interpretation.
                 </div>
-            </div>
-
-            <div class="modules-summary">
-                The 64-protein collection is designed as a disease-aware framework rather than a flat molecular inventory.
-            </div>
+            </article>
         </div>
+
+        @if (tags.Any())
+        {
+            <div class="ra-tags-cloud">
+                @foreach (var tag in tags.Take(10))
+                {
+                    <span class="ra-chip">@tag.Name</span>
+                }
+            </div>
+        }
     </section>
 
-    <section class="section value">
-        <div class="container-custom">
-            <div class="section-head">
-                <span class="kicker">Platform value</span>
-                <h2>Why this platform matters</h2>
-                <p>
-                    The purpose of this platform is to turn protein collection into explainable disease knowledge, and connect that knowledge to docking and downstream analysis.
+    <!-- Section 4: preview -->
+    <section class="ra-section ra-card ra-block">
+        <div class="ra-preview-head">
+            <div>
+                <div class="ra-section-kicker">Collection preview</div>
+                <h2 class="ra-section-title" style="margin-bottom:.6rem;">Preview the curated RA protein collection</h2>
+                <p class="ra-section-desc" style="margin-bottom:0;">
+                    This preview introduces representative proteins in the workspace before users enter the full database view.
                 </p>
             </div>
 
-            <div class="value-grid">
-                <div class="value-card">
-                    <h3>Curated biological relevance</h3>
-                    <p>
-                        Proteins are retained based on disease significance, mechanistic contribution, and interpretability rather than simple inclusion.
-                    </p>
-                </div>
+            <div class="ra-view-toggle">
+                <button class="ra-toggle-btn is-active" type="button" data-view="card">Card view</button>
+                <button class="ra-toggle-btn" type="button" data-view="list">Compact list</button>
+            </div>
+        </div>
 
-                <div class="value-card">
-                    <h3>Explainable RA structure</h3>
-                    <p>
-                        The platform preserves not only inflammatory markers, but also the pathological architecture of RA, including invasion, degradation, angiogenesis, and autoimmune regulation.
-                    </p>
-                </div>
+        <div class="ra-preview-panel">
+            <div class="ra-card-view" id="raCardView">
+                @foreach (var item in featuredProteins)
+                {
+                    <article class="ra-protein-card">
+                        <img class="ra-protein-thumb" src="@item.ImageUrl" alt="@item.ProteinName" />
 
-                <div class="value-card">
-                    <h3>Application-ready design</h3>
-                    <p>
-                        The final protein panel is structured for direct integration with SMILES-based docking, result interpretation, and table-driven analysis workflows.
-                    </p>
-                </div>
+                        <div class="ra-protein-body">
+                            <div class="ra-protein-title">@item.ProteinName</div>
+
+                            <div class="ra-protein-meta">
+                                <div><strong>Gene:</strong> @item.Gene</div>
+                                <div><strong>Symbol:</strong> @item.Symbol</div>
+                                @if (!string.IsNullOrWhiteSpace(item.BindingSite))
+                                {
+                                    <div><strong>Binding site:</strong> @item.BindingSite</div>
+                                }
+                            </div>
+
+                            <div class="ra-badge-row">
+                                <span class="ra-badge">Workspace preview</span>
+                                <span class="ra-badge">RA-oriented</span>
+                                <span class="ra-badge">Docking-ready</span>
+                            </div>
+
+                            <div class="ra-link-row">
+                                <a asp-controller="Protein"
+                                   asp-action="Details"
+                                   asp-route-domainId="@item.DomainId"
+                                   asp-route-cavityId="@item.CavityId">
+                                    View details
+                                </a>
+
+                                <a asp-controller="Home"
+                                   asp-action="Targets"
+                                   asp-route-domainId="@Model.Id">
+                                    Open in database
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                }
             </div>
 
-            <div class="value-quote">
-                We do not simply collect proteins. We organize rheumatoid arthritis into a searchable, interpretable, docking-connected knowledge system.
+            <div class="ra-list-view" id="raListView">
+                <table class="ra-list-table">
+                    <thead>
+                        <tr>
+                            <th>Protein</th>
+                            <th>Gene</th>
+                            <th>Symbol</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in featuredProteins)
+                        {
+                            <tr>
+                                <td>@item.ProteinName</td>
+                                <td>@item.Gene</td>
+                                <td>@item.Symbol</td>
+                                <td>
+                                    <a asp-controller="Protein"
+                                       asp-action="Details"
+                                       asp-route-domainId="@item.DomainId"
+                                       asp-route-cavityId="@item.CavityId">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
+        </div>
+
+        <div class="ra-actions">
+            <a class="btn-ra-primary" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">
+                Browse Full Protein Database
+            </a>
+            <a class="btn-ra-secondary" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">
+                Continue to Docking
+            </a>
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Module detail interaction
+            const moduleCards = document.querySelectorAll(".ra-module-card");
+            const detailTitle = document.querySelector("#raModuleDetail .ra-module-detail-title");
+            const detailText = document.querySelector("#raModuleDetail .ra-module-detail-text");
+            const detailTags = document.getElementById("raModuleDetailTags");
+
+            moduleCards.forEach(card => {
+                card.addEventListener("click", function () {
+                    moduleCards.forEach(x => x.classList.remove("is-active"));
+                    this.classList.add("is-active");
+
+                    const title = this.getAttribute("data-title");
+                    const detail = this.getAttribute("data-detail");
+                    const proteins = (this.getAttribute("data-proteins") || "").split(",");
+
+                    detailTitle.textContent = title;
+                    detailText.textContent = detail;
+
+                    detailTags.innerHTML = "";
+                    proteins.forEach(p => {
+                        const txt = p.trim();
+                        if (!txt) return;
+                        const span = document.createElement("span");
+                        span.className = "ra-mini-tag";
+                        span.textContent = txt;
+                        detailTags.appendChild(span);
+                    });
+                });
+            });
+
+            // Preview view switch
+            const toggleButtons = document.querySelectorAll(".ra-toggle-btn");
+            const cardView = document.getElementById("raCardView");
+            const listView = document.getElementById("raListView");
+
+            toggleButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    toggleButtons.forEach(x => x.classList.remove("is-active"));
+                    this.classList.add("is-active");
+
+                    const view = this.getAttribute("data-view");
+                    if (view === "list") {
+                        cardView.style.display = "none";
+                        listView.style.display = "block";
+                    } else {
+                        cardView.style.display = "grid";
+                        listView.style.display = "none";
+                    }
+                });
+            });
+        });
+    </script>
+}

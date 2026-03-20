@@ -4,6 +4,7 @@
 
 @{
     ViewData["Title"] = "RA-KDB Platform";
+
     var raDomain = Model.Domains.FirstOrDefault(o =>
         o.IsPublic &&
         string.Equals(o.Id, "RA", StringComparison.OrdinalIgnoreCase));
@@ -12,18 +13,18 @@
     {
         new
         {
-            Title = "Curated disease targets",
-            Desc = "The database is grounded in rheumatoid arthritis-related protein targets that are selected and organized with disease relevance in mind, so the platform begins from biologically meaningful entries rather than raw unfiltered records."
+            Title = "Disease-oriented target curation",
+            Desc = "The database begins from rheumatoid arthritis-relevant targets rather than generic records, so the knowledge layer already reflects disease context, target significance, and research usefulness."
         },
         new
         {
-            Title = "Structured biological annotation",
-            Desc = "Each record is organized with reusable biological description, target identity, and disease-linked interpretation, making the database readable for users and usable for downstream computational work."
+            Title = "Structured interpretation for each record",
+            Desc = "Protein entries are organized as readable records with annotations, summaries, and linked biological meaning, making them appropriate for both expert review and downstream computational work."
         },
         new
         {
-            Title = "Literature and context support",
-            Desc = "The knowledge layer is designed to reflect evidence-oriented interpretation, where target records can carry supporting disease context, mechanism hints, and explanatory structure rather than acting as simple labels."
+            Title = "Continuity from knowledge to analysis",
+            Desc = "The platform is designed so that users do not move between disconnected tools. Target interpretation, protein exploration, and docking preparation all remain within one research environment."
         }
     };
 
@@ -31,1028 +32,203 @@
     {
         new
         {
-            Title = "Refined protein cards",
-            Desc = "Users can browse refined protein cards that summarize target identity, annotations, and rheumatoid arthritis context in a compact and readable format.",
-            Tags = new[] { "Protein records", "RA context" }
+            Eyebrow = "Protein records",
+            Title = "Interpretable target cards",
+            Desc = "Researchers can review structured protein cards that summarize target identity, rheumatoid arthritis relevance, and supporting annotations before moving into docking-related work."
         },
         new
         {
-            Title = "Docking operations",
-            Desc = "The platform supports molecular docking workflows, allowing researchers to organize target-ligand tasks, submit jobs, and review outputs inside one disease-aware environment.",
-            Tags = new[] { "Docking jobs", "Workflow execution" }
+            Eyebrow = "Docking workflows",
+            Title = "Computational investigation",
+            Desc = "The docking module extends the knowledge layer into practical analysis, allowing users to organize target-ligand work and interpret outputs in the same disease-aware setting."
         }
     };
 
-    var featuredProteinSlides = Model.FeaturedProteins
-       .Select((protein, index) => new { protein, index })
-       .GroupBy(x => x.index / 1)
-       .Select(group => group.Select(x => x.protein).ToList())
-       .ToList();
+    var featuredProteins = Model.FeaturedProteins.Take(3).ToList();
+    var overviewBanner = Url.Content("~/images/ra-hero-1.jpg");
+    var knowledgeBanner = Url.Content("~/images/ra-hero-2.jpg");
+    var dockingBanner = featuredProteins.Skip(1).FirstOrDefault()?.ImageUrl ?? featuredProteins.FirstOrDefault()?.ImageUrl ?? Url.Content("~/images/ra-hero-1.jpg");
 }
 
-@section Menu
-    {
+@section Menu {
     <li class="nav-item"><a class="nav-link" href="#about">Overview</a></li>
     <li class="nav-item"><a class="nav-link" href="#knowledge">Knowledge Base</a></li>
     <li class="nav-item"><a class="nav-link" href="#capabilities">Docking</a></li>
     <li class="nav-item ml-2">
-        <a class="btn btn-primary" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">Enter RA Workspace</a>
+        <a class="btn btn-primary" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">
+            Enter RA Workspace
+        </a>
     </li>
 }
 
-@section Styles
-    {
-    <style>
-        :root {
-            --ra-bg: #f7fafc;
-            --ra-bg-soft: #fbfdff;
-            --ra-surface: rgba(255,255,255,.72);
-            --ra-surface-strong: rgba(255,255,255,.88);
-            --ra-title: #1d2937;
-            --ra-text: #607184;
-            --ra-text-strong: #425467;
-            --ra-line: rgba(208, 222, 236, .9);
-            --ra-line-soft: rgba(208, 222, 236, .55);
-            --ra-blue: #4d8dff;
-            --ra-blue-deep: #2d62cc;
-            --ra-blue-soft: rgba(77,141,255,.10);
-            --ra-teal: #69c7bd;
-            --ra-coral: #e98c7b;
-            --ra-shadow-soft: 0 16px 42px rgba(28, 60, 96, .05);
-            --ra-shadow-card: 0 12px 28px rgba(26, 52, 84, .045);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background: radial-gradient(circle at top left, rgba(77,141,255,.06), transparent 28%), radial-gradient(circle at 85% 16%, rgba(105,199,189,.06), transparent 26%), linear-gradient(180deg, #fbfdff 0%, #f7fafc 48%, #f4f8fb 100%);
-            color: var(--ra-title);
-        }
-
-        .ra-page-wrap {
-            position: relative;
-            width: min(1560px, calc(100vw - 2.5rem));
-            max-width: none;
-            margin: 0 auto;
-            padding: 1.5rem 0 5rem;
-        }
-
-            .ra-page-wrap::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                pointer-events: none;
-                background-image: linear-gradient(rgba(77,141,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(77,141,255,.03) 1px, transparent 1px);
-                background-size: 32px 32px;
-                mask-image: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.02));
-                opacity: .55;
-            }
-
-        .ra-section {
-            position: relative;
-            z-index: 1;
-            scroll-margin-top: 104px;
-        }
-
-            .ra-section + .ra-section {
-                margin-top: 4.5rem;
-                padding-top: 4.5rem;
-            }
-
-                .ra-section + .ra-section::before {
-                    content: "";
-                    position: absolute;
-                    left: 0;
-                    right: 0;
-                    top: 0;
-                    height: 1px;
-                    background: linear-gradient(90deg, rgba(77,141,255,.14), rgba(105,199,189,.10), transparent 82%);
-                }
-
-        .ra-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: .45rem;
-            padding: .38rem .85rem;
-            border-radius: 999px;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(214,228,245,.88);
-            color: var(--ra-blue);
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            font-size: .74rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-            .ra-kicker::before {
-                content: "";
-                width: .48rem;
-                height: .48rem;
-                border-radius: 50%;
-                background: linear-gradient(135deg, var(--ra-blue), var(--ra-teal));
-                box-shadow: 0 0 0 4px rgba(77,141,255,.10);
-            }
-
-        .ra-section-title {
-            color: var(--ra-title);
-            font-weight: 760;
-            font-size: clamp(1.85rem, 3.2vw, 3.1rem);
-            line-height: 1.08;
-            letter-spacing: -.025em;
-            margin-bottom: 1rem;
-            max-width: 1040px;
-        }
-
-        .ra-section-desc {
-            color: var(--ra-text);
-            font-size: 1.05rem;
-            line-height: 1.9;
-            max-width: 1060px;
-            margin-bottom: 0;
-        }
-
-        .ra-mini-title {
-            font-size: .84rem;
-            font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--ra-blue-deep);
-            margin-bottom: .95rem;
-        }
-
-        .ra-body {
-            color: var(--ra-text);
-            line-height: 1.86;
-            font-size: 1rem;
-        }
-
-        .ra-pill {
-            display: inline-block;
-            margin: .22rem .4rem .22rem 0;
-            padding: .3rem .66rem;
-            border-radius: 999px;
-            font-size: .75rem;
-            color: #31465d;
-            background: rgba(238,245,255,.82);
-            border: 1px solid rgba(215,229,255,.95);
-        }
-
-        /* Hero */
-        .ra-hero {
-            padding-top: 1rem;
-        }
-
-        .ra-hero-shell {
-            position: relative;
-            padding: 2.5rem 0 1rem;
-        }
-
-        .ra-hero-grid {
-            position: absolute;
-            inset: 0 2% auto 2%;
-            height: 78%;
-            opacity: .12;
-            background-image: linear-gradient(rgba(77,141,255,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(77,141,255,.18) 1px, transparent 1px);
-            background-size: 28px 28px;
-            mask-image: linear-gradient(180deg, rgba(0,0,0,.40), transparent 85%);
-            pointer-events: none;
-        }
-
-        .ra-hero-copy,
-        .ra-hero-visual {
-            position: relative;
-            z-index: 2;
-        }
-
-        .ra-hero-title {
-            color: var(--ra-title);
-            font-weight: 780;
-            font-size: clamp(2.8rem, 5vw, 5rem);
-            line-height: 1.01;
-            letter-spacing: -.035em;
-            margin-bottom: 1rem;
-            max-width: 760px;
-        }
-
-        .ra-hero-desc {
-            color: var(--ra-text);
-            font-size: 1.12rem;
-            line-height: 1.9;
-            max-width: 720px;
-            margin-bottom: 1.35rem;
-        }
-
-        .ra-hero-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .7rem;
-            margin-bottom: 0;
-        }
-
-        .ra-meta-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: .48rem .84rem;
-            border-radius: 999px;
-            font-size: .84rem;
-            color: #38506a;
-            background: rgba(255,255,255,.75);
-            border: 1px solid rgba(216,228,243,.9);
-        }
-
-        .ra-hero-visual-frame {
-            position: relative;
-            min-height: 480px;
-            border-radius: 28px;
-            overflow: hidden;
-            background: linear-gradient(135deg, rgba(242,247,253,.94), rgba(233,240,248,.9));
-            box-shadow: var(--ra-shadow-soft);
-            isolation: isolate;
-        }
-
-            .ra-hero-visual-frame::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 18% 18%, rgba(255,255,255,.32), transparent 22%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
-                z-index: 2;
-                pointer-events: none;
-            }
-
-        .ra-hero-carousel {
-            position: absolute;
-            inset: 0;
-        }
-
-        .ra-hero-slide {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transform: scale(1.02);
-            transition: opacity .9s ease, transform 1.3s ease;
-            pointer-events: none;
-        }
-
-            .ra-hero-slide.is-active {
-                opacity: 1;
-                transform: scale(1);
-                z-index: 2;
-                pointer-events: auto;
-            }
-
-            .ra-hero-slide img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                object-position: center;
-                display: block;
-                filter: saturate(.95) contrast(1.01) brightness(.99);
-                transform: scale(1);
-            }
-
-        .ra-hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(16,30,48,.04) 0%, rgba(16,30,48,.16) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .ra-hero-caption {
-            position: absolute;
-            left: 1rem;
-            bottom: 1rem;
-            z-index: 4;
-            background: rgba(255,255,255,.90);
-            border: 1px solid rgba(220,232,248,.95);
-            border-radius: 999px;
-            padding: .36rem .72rem;
-            font-size: .8rem;
-            color: #29465d;
-            backdrop-filter: blur(6px);
-        }
-
-        .ra-hero-controls {
-            position: absolute;
-            right: 1rem;
-            bottom: 1rem;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-        }
-
-        .ra-hero-nav-btn {
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: 999px;
-            border: 1px solid rgba(220,232,248,.95);
-            background: rgba(255,255,255,.88);
-            color: #28445d;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(6px);
-            transition: transform .18s ease, background .18s ease, border-color .18s ease;
-        }
-
-            .ra-hero-nav-btn:hover {
-                transform: translateY(-1px);
-                background: rgba(255,255,255,.98);
-                border-color: rgba(77,141,255,.28);
-            }
-
-            .ra-hero-nav-btn:focus {
-                outline: none;
-                box-shadow: 0 0 0 3px rgba(77,141,255,.14);
-            }
-
-        .ra-hero-dots {
-            position: absolute;
-            left: 1.2rem;
-            top: 1.2rem;
-            z-index: 5;
-            display: flex;
-            gap: .45rem;
-        }
-
-        .ra-hero-dot {
-            width: .62rem;
-            height: .62rem;
-            border-radius: 999px;
-            border: 0;
-            padding: 0;
-            cursor: pointer;
-            background: rgba(255,255,255,.55);
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
-            transition: transform .18s ease, background .18s ease, width .18s ease;
-        }
-
-            .ra-hero-dot.is-active {
-                width: 1.4rem;
-                background: rgba(255,255,255,.92);
-            }
-
-        /* Knowledge */
-        .ra-knowledge-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1.22fr) minmax(420px, .92fr);
-            gap: 2.25rem;
-            align-items: start;
-            margin-top: 2.2rem;
-        }
-
-        .ra-evidence-list {
-            display: grid;
-            gap: 1.25rem;
-        }
-
-        .ra-evidence-item {
-            padding-bottom: 1.15rem;
-            border-bottom: 1px solid var(--ra-line-soft);
-        }
-
-            .ra-evidence-item:last-child {
-                border-bottom: 0;
-                padding-bottom: 0;
-            }
-
-        .ra-evidence-title {
-            font-size: 1.08rem;
-            font-weight: 700;
-            color: var(--ra-title);
-            margin-bottom: .45rem;
-        }
-
-        .ra-coverage-panel {
-            position: relative;
-            padding: 1.75rem 1.6rem;
-            border-radius: 28px;
-            background: linear-gradient(180deg, rgba(255,255,255,.78) 0%, rgba(247,251,255,.72) 100%);
-            box-shadow: var(--ra-shadow-card);
-            border: 1px solid rgba(218,230,243,.72);
-        }
-
-            .ra-coverage-panel::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                border-radius: inherit;
-                background: radial-gradient(circle at top right, rgba(77,141,255,.10), transparent 34%);
-                pointer-events: none;
-            }
-
-        .ra-coverage-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-            .ra-coverage-list li {
-                display: flex;
-                align-items: flex-start;
-                gap: .8rem;
-                color: var(--ra-text-strong);
-                line-height: 1.72;
-                padding: .75rem 0;
-                border-bottom: 1px solid var(--ra-line-soft);
-            }
-
-                .ra-coverage-list li:last-child {
-                    border-bottom: 0;
-                    padding-bottom: 0;
-                }
-
-                .ra-coverage-list li::before {
-                    content: "";
-                    flex: 0 0 .62rem;
-                    width: .62rem;
-                    height: .62rem;
-                    margin-top: .42rem;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, var(--ra-blue), var(--ra-teal));
-                    box-shadow: 0 0 0 5px rgba(77,141,255,.10);
-                }
-
-        .ra-protein-panel {
-            display: grid;
-            gap: 1rem;
-            margin-top: -.35rem;
-        }
-
-        .ra-protein-panel-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .ra-protein-panel-desc {
-            margin: -.4rem 0 0;
-            color: var(--ra-text);
-            line-height: 1.7;
-            font-size: .96rem;
-        }
-
-        .ra-protein-carousel-shell {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .ra-protein-carousel {
-            position: relative;
-            min-height: 280px;
-        }
-
-        .ra-protein-slide {
-            position: absolute;
-            inset: 0;
-            display: grid;
-            gap: .95rem;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(8px);
-            transition: opacity .35s ease, transform .35s ease;
-        }
-
-            .ra-protein-slide.is-active {
-                opacity: 1;
-                pointer-events: auto;
-                transform: translateY(0);
-            }
-
-        .ra-protein-card {
-            display: grid;
-            grid-template-columns: 88px minmax(0, 1fr);
-            gap: .95rem;
-            align-items: start;
-            padding: .95rem;
-            border-radius: 20px;
-            background: rgba(255,255,255,.82);
-            border: 1px solid rgba(220,231,245,.88);
-            box-shadow: 0 8px 22px rgba(24,52,86,.05);
-        }
-
-        .ra-protein-thumb {
-            width: 88px;
-            height: 88px;
-            object-fit: contain;
-            border-radius: 18px;
-            background: linear-gradient(180deg, rgba(244,248,252,.95), rgba(234,241,249,.88));
-            border: 1px solid rgba(217,229,241,.9);
-            padding: .4rem;
-        }
-
-        .ra-protein-card-body {
-            min-width: 0;
-        }
-
-        .ra-protein-card-title {
-            margin: 0 0 .35rem;
-            font-size: 1rem;
-            line-height: 1.35;
-            font-weight: 700;
-            color: var(--ra-title);
-        }
-
-            .ra-protein-card-title a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-                .ra-protein-card-title a:hover {
-                    color: var(--ra-blue-deep);
-                }
-
-        .ra-protein-card-meta {
-            display: grid;
-            gap: .22rem;
-            margin-bottom: .6rem;
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.55;
-        }
-
-            .ra-protein-card-meta strong {
-                color: var(--ra-text-strong);
-            }
-
-        .ra-protein-link-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .45rem .8rem;
-            margin-bottom: .7rem;
-            font-size: .9rem;
-        }
-
-            .ra-protein-link-row a {
-                color: var(--ra-blue-deep);
-                text-decoration: none;
-            }
-
-        .ra-protein-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .45rem .8rem;
-            border-radius: 999px;
-            border: 1px solid rgba(77,141,255,.22);
-            background: rgba(77,141,255,.08);
-            color: var(--ra-blue-deep);
-            font-size: .88rem;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-            .ra-protein-action:hover {
-                text-decoration: none;
-                background: rgba(77,141,255,.14);
-            }
-
-        .ra-protein-empty {
-            padding: 1rem;
-            border-radius: 18px;
-            color: var(--ra-text);
-            background: rgba(255,255,255,.7);
-            border: 1px dashed rgba(208, 222, 236, .9);
-            line-height: 1.7;
-        }
-
-        .ra-protein-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .8rem;
-            margin-top: .25rem;
-        }
-
-        .ra-protein-nav {
-            display: flex;
-            gap: .55rem;
-        }
-
-        .ra-protein-nav-btn {
-            width: 2.2rem;
-            height: 2.2rem;
-            border-radius: 999px;
-            border: 1px solid rgba(220,232,248,.95);
-            background: rgba(255,255,255,.88);
-            color: #28445d;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .ra-protein-dots {
-            display: flex;
-            gap: .42rem;
-        }
-
-        .ra-protein-dot {
-            width: .62rem;
-            height: .62rem;
-            border-radius: 999px;
-            border: 0;
-            padding: 0;
-            cursor: pointer;
-            background: rgba(133,160,192,.35);
-            transition: transform .18s ease, background .18s ease, width .18s ease;
-        }
-
-            .ra-protein-dot.is-active {
-                width: 1.35rem;
-                background: rgba(77,141,255,.9);
-            }
-        /* Capabilities */
-        .ra-cap-layout {
-            display: grid;
-            grid-template-columns: 1fr 1.1fr;
-            gap: 3rem;
-            align-items: start;
-            margin-top: 2.4rem;
-        }
-
-        .ra-cap-copy {
-            padding-right: .5rem;
-        }
-
-            .ra-cap-copy .ra-section-title {
-                font-size: clamp(1.8rem, 2.8vw, 2.9rem);
-                max-width: 680px;
-            }
-
-        .ra-cap-copy-block {
-            margin-top: 1.6rem;
-            color: var(--ra-text);
-            line-height: 1.88;
-            font-size: 1rem;
-        }
-
-            .ra-cap-copy-block p {
-                margin-bottom: 1rem;
-            }
-
-                .ra-cap-copy-block p:last-child {
-                    margin-bottom: 0;
-                }
-
-        .ra-cap-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.1rem;
-        }
-
-        .ra-cap-card {
-            height: 100%;
-            padding: 1.25rem 1.2rem 1.15rem;
-            border-radius: 22px;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(220,231,245,.82);
-            box-shadow: var(--ra-shadow-card);
-            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-        }
-
-            .ra-cap-card:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 16px 34px rgba(24,52,86,.08);
-                border-color: rgba(77,141,255,.24);
-            }
-
-        .ra-cap-card-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .8rem;
-            margin-bottom: .8rem;
-        }
-
-        .ra-cap-card-title {
-            font-weight: 700;
-            font-size: 1.06rem;
-            color: var(--ra-title);
-            margin: 0;
-        }
-
-        .ra-cap-icon {
-            flex: 0 0 auto;
-            width: 2.35rem;
-            height: 2.35rem;
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(77,141,255,.14), rgba(105,199,189,.18));
-            border: 1px solid rgba(77,141,255,.12);
-            position: relative;
-        }
-
-            .ra-cap-icon::before {
-                content: "";
-                position: absolute;
-                inset: .62rem;
-                border-radius: 8px;
-                background: linear-gradient(135deg, var(--ra-blue), var(--ra-teal));
-            }
-
-        .ra-cap-card-desc {
-            color: var(--ra-text);
-            line-height: 1.76;
-            margin-bottom: .8rem;
-        }
-
-        .ra-research-band {
-            margin-top: 1.35rem;
-            padding: 1.35rem 1.4rem;
-            border-top: 1px solid var(--ra-line-soft);
-            background: linear-gradient(90deg, rgba(77,141,255,.06), rgba(105,199,189,.04), transparent 85%);
-            border-radius: 18px;
-        }
-
-        .ra-research-band-title {
-            font-size: .84rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            color: var(--ra-blue-deep);
-            margin-bottom: .7rem;
-        }
-
-        .ra-research-band p {
-            margin: 0;
-            color: var(--ra-text-strong);
-            line-height: 1.8;
-        }
-
-        @@media (max-width: 1199.98px) {
-            .ra-page-wrap {
-                width: min(1320px, calc(100vw - 2rem));
-            }
-
-            .ra-knowledge-layout,
-            .ra-cap-layout {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-
-            .ra-section-title,
-            .ra-section-desc,
-            .ra-cap-copy .ra-section-title {
-                max-width: none;
-            }
-
-            .ra-protein-panel {
-                margin-top: 0;
-            }
-        }
-    </style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/page1.css" asp-append-version="true" />
 }
 
-<div class="ra-page-wrap">
-    <section class="ra-section ra-hero" id="about">
-        <div class="ra-hero-shell">
-            <div class="ra-hero-grid"></div>
-
-            <div class="row align-items-center">
-                <div class="col-lg-6 mb-4 mb-lg-0">
-                    <div class="ra-hero-copy">
-                        <div class="ra-kicker">Rheumatoid Arthritis Computational Research Platform</div>
-
-                        <h1 class="ra-hero-title">
-                            A unified platform for RA knowledge, and docking
-                        </h1>
-
-                        <p class="ra-hero-desc">
-                            RA-KDB is designed as a rheumatoid arthritis-oriented research environment that brings together
-                            curated knowledge records, refined protein target cards, and molecular docking workflows. 
-                            It helps users move from target understanding to computational
-                            research and biological explanation inside one continuous platform experience.
-                        </p>
-
-                        <div class="ra-hero-meta">
-                            <span class="ra-meta-pill">Knowledge database</span>
-                            <span class="ra-meta-pill">Protein cards</span>
-                            <span class="ra-meta-pill">Docking workflows</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="ra-hero-visual">
-                        <div class="ra-hero-visual-frame">
-                            <div class="ra-hero-dots" id="raHeroDots">
-                                <button class="ra-hero-dot is-active" type="button" aria-label="Show slide 1" data-slide="0"></button>
-                                <button class="ra-hero-dot" type="button" aria-label="Show slide 2" data-slide="1"></button>
-                            </div>
-
-                            <div class="ra-hero-carousel" id="raHeroCarousel">
-                                <div class="ra-hero-slide is-active" data-caption="RA target and docking landscape">
-                                    <img src="~/images/ra-hero-1.jpg" alt="RA docking and molecular landscape" />
-                                    <div class="ra-hero-overlay"></div>
-                                </div>
-
-                                <div class="ra-hero-slide" data-caption="Protein–ligand and disease context">
-                                    <img src="~/images/ra-hero-2.jpg" alt="Protein ligand and disease interpretation" />
-                                    <div class="ra-hero-overlay"></div>
-                                </div>
-                            </div>
-
-                            <div class="ra-hero-caption" id="raHeroCaption">RA target and docking landscape</div>
-
-                            <div class="ra-hero-controls">
-                                <button class="ra-hero-nav-btn" id="raHeroPrev" type="button" aria-label="Previous slide">
-                                    <span aria-hidden="true">&#8592;</span>
-                                </button>
-                                <button class="ra-hero-nav-btn" id="raHeroNext" type="button" aria-label="Next slide">
-                                    <span aria-hidden="true">&#8594;</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+<div class="ra-platform-home">
+    <section class="ra-overview ra-module ra-module--dark" id="about">
+        <div class="ra-banner">
+            <img src="@overviewBanner" alt="Rheumatoid arthritis computational research" />
+            <div class="ra-banner-overlay"></div>
+            <div class="ra-banner-inner ra-container">
+                <div class="ra-kicker">Overview</div>
+                <h1 class="ra-hero-title">A research platform for rheumatoid arthritis target interpretation and docking</h1>
+                <p class="ra-hero-desc">
+                    RA-KDB brings together curated disease-relevant targets, structured protein records, and docking workflows in one research setting, allowing users to move from target understanding to computational investigation without leaving the same scholarly environment.
+                </p>
+                <div class="ra-overview-points">
+                    <span>Curated target knowledge</span>
+                    <span>Structured protein records</span>
+                    <span>Docking-oriented workflows</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="ra-section" id="knowledge">
-        <div class="ra-kicker">Knowledge Database</div>
-        <h2 class="ra-section-title">What the knowledge database is based on and what it is designed to cover</h2>
-        <p class="ra-section-desc">
-            The knowledge database is the conceptual foundation of the platform,explaining both 
-            where the records come from and how they are organized so researchers can move from
-            disease-related target understanding into later analysis with continuity.
-        </p>
+    <section class="ra-knowledge ra-module ra-module--light" id="knowledge">
+        <div class="ra-banner ra-banner--section">
+            <img src="@knowledgeBanner" alt="Knowledge base and rheumatoid arthritis context" />
+            <div class="ra-banner-overlay ra-banner-overlay--light"></div>
+            <div class="ra-banner-inner ra-container ra-banner-inner--compact">
+                <div class="ra-kicker">Knowledge Base</div>
+                <h2 class="ra-section-title">A disease-oriented knowledge layer designed to support interpretation</h2>
+            </div>
+        </div>
 
-        <div class="ra-knowledge-layout">
-            <div>
-                <div class="ra-mini-title">Foundation and rationale</div>
+        <div class="ra-module-body ra-container">
+            <div class="ra-editorial-head">
+                <p class="ra-section-desc">
+                    The knowledge base is the platform's foundation. It explains where the records come from, how they are structured, and why they are suitable for rheumatoid arthritis-oriented interpretation before any docking step begins.
+                </p>
+            </div>
+
+            <div class="ra-knowledge-grid">
                 <div class="ra-evidence-list">
                     @foreach (var item in knowledgeEvidence)
                     {
-                        <div class="ra-evidence-item">
-                            <div class="ra-evidence-title">@item.Title</div>
-                            <div class="ra-body">@item.Desc</div>
-                        </div>
+                        <article class="ra-evidence-item">
+                            <h3 class="ra-evidence-title">@item.Title</h3>
+                            <p class="ra-body">@item.Desc</p>
+                        </article>
                     }
                 </div>
+
+                <aside class="ra-side-note">
+                    <div class="ra-side-note-label">Research framing</div>
+                    <p>
+                        Instead of behaving like a raw protein list, the knowledge layer presents records as interpretable research objects. This gives the platform a clearer academic identity and helps users move from biological context to computational work with less fragmentation.
+                    </p>
+                </aside>
             </div>
 
-            <div class="ra-coverage-panel ra-protein-panel">
-                <div class="ra-protein-panel-head">
+            <div class="ra-featured-block">
+                <div class="ra-featured-head">
                     <div>
-                        <div class="ra-mini-title">Featured protein cards</div>
-                        <p class="ra-protein-panel-desc">
-                            Example proteins are shown here as reusable cards. Click any card to open the full protein detail panel with annotations, external resources, and local structure visualization.
-                        </p>
+                        <div class="ra-side-note-label">Selected records</div>
+                        <h3 class="ra-featured-title">Featured protein cards</h3>
                     </div>
+                    <p class="ra-featured-desc">
+                        A small set of cards is shown below as examples of how the knowledge base surfaces interpretable records for later exploration.
+                    </p>
                 </div>
 
-                @if (featuredProteinSlides.Count > 0)
+                @if (featuredProteins.Count > 0)
                 {
-                    <div class="ra-protein-carousel-shell">
-                        <div class="ra-protein-carousel" id="raProteinCarousel">
-                            @for (var i = 0; i < featuredProteinSlides.Count; i++)
-                            {
-                                var slide = featuredProteinSlides[i];
-                                <div class="ra-protein-slide @(i == 0 ? "is-active" : null)" data-slide="@i">
-                                    @foreach (var protein in slide)
-                                    {
-                                        <article class="ra-protein-card">
-                                            <img class="ra-protein-thumb" src="@protein.ImageUrl" alt="@protein.ProteinName" />
+                    <div class="ra-protein-grid">
+                        @foreach (var protein in featuredProteins)
+                        {
+                            <article class="ra-protein-card">
+                                <img class="ra-protein-thumb" src="@protein.ImageUrl" alt="@protein.ProteinName" />
+                                <div class="ra-protein-card-body">
+                                    <h3 class="ra-protein-card-title">
+                                        <a data-toggle="modal"
+                                           data-target="#proteinInfo"
+                                           data-pname="@protein.ProteinName"
+                                           asp-controller="Protein"
+                                           asp-action="Details"
+                                           asp-route-domainId="@protein.DomainId"
+                                           asp-route-cavityId="@protein.CavityId">
+                                            @protein.ProteinName
+                                        </a>
+                                    </h3>
 
-                                            <div class="ra-protein-card-body">
-                                                <h3 class="ra-protein-card-title">
-                                                    <a data-toggle="modal"
-                                                       data-target="#proteinInfo"
-                                                       data-pname="@protein.ProteinName"
-                                                       asp-controller="Protein"
-                                                       asp-action="Details"
-                                                       asp-route-domainId="@protein.DomainId"
-                                                       asp-route-cavityId="@protein.CavityId">
-                                                        @protein.ProteinName
-                                                    </a>
-                                                </h3>
+                                    <div class="ra-protein-card-meta">
+                                        <div><strong>Organism:</strong> @protein.Organism</div>
+                                        <div><strong>Symbol:</strong> @protein.Symbol</div>
+                                        <div><strong>Gene:</strong> @protein.Gene</div>
+                                    </div>
 
-                                                <div class="ra-protein-card-meta">
-                                                    <div><strong>Organism:</strong> @protein.Organism</div>
-                                                    <div><strong>Symbol:</strong> @protein.Symbol</div>
-                                                    <div><strong>Gene:</strong> @protein.Gene</div>
-                                                </div>
+                                    <div class="ra-protein-link-row">
+                                        @if (!string.IsNullOrWhiteSpace(protein.UniProtUrl))
+                                        {
+                                            <a href="@protein.UniProtUrl" target="_blank" rel="noopener noreferrer">@protein.UniProtId</a>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(protein.ChemblUrl))
+                                        {
+                                            <a href="@protein.ChemblUrl" target="_blank" rel="noopener noreferrer">@protein.ChemblId</a>
+                                        }
+                                    </div>
 
-                                                <div class="ra-protein-link-row">
-                                                    @if (!string.IsNullOrWhiteSpace(protein.UniProtUrl))
-                                                    {
-                                                        <a href="@protein.UniProtUrl" target="_blank">@protein.UniProtId</a>
-                                                    }
-                                                    @if (!string.IsNullOrWhiteSpace(protein.ChemblUrl))
-                                                    {
-                                                        <a href="@protein.ChemblUrl" target="_blank">@protein.ChemblId</a>
-                                                    }
-                                                </div>
-
-                                                <a class="ra-protein-action"
-                                                   data-toggle="modal"
-                                                   data-target="#proteinInfo"
-                                                   data-pname="@protein.ProteinName"
-                                                   asp-controller="Protein"
-                                                   asp-action="Details"
-                                                   asp-route-domainId="@protein.DomainId"
-                                                   asp-route-cavityId="@protein.CavityId">
-                                                    View details
-                                                </a>
-                                            </div>
-                                        </article>
-                                    }
+                                    <a class="ra-protein-action"
+                                       data-toggle="modal"
+                                       data-target="#proteinInfo"
+                                       data-pname="@protein.ProteinName"
+                                       asp-controller="Protein"
+                                       asp-action="Details"
+                                       asp-route-domainId="@protein.DomainId"
+                                       asp-route-cavityId="@protein.CavityId">
+                                        View details
+                                    </a>
                                 </div>
-                            }
-                        </div>
+                            </article>
+                        }
                     </div>
-
-                    @if (featuredProteinSlides.Count > 1)
-                    {
-                        <div class="ra-protein-controls">
-                            <div class="ra-protein-nav">
-                                <button class="ra-protein-nav-btn" id="raProteinPrev" type="button" aria-label="Previous protein cards">
-                                    <span aria-hidden="true">&#8592;</span>
-                                </button>
-                                <button class="ra-protein-nav-btn" id="raProteinNext" type="button" aria-label="Next protein cards">
-                                    <span aria-hidden="true">&#8594;</span>
-                                </button>
-                            </div>
-
-                            <div class="ra-protein-dots" id="raProteinDots">
-                                @for (var i = 0; i < featuredProteinSlides.Count; i++)
-                                {
-                                    <button class="ra-protein-dot @(i == 0 ? "is-active" : null)" type="button" aria-label="Show protein slide @(i + 1)" data-slide="@i"></button>
-                                }
-                            </div>
-                        </div>
-                    }
                 }
                 else
                 {
                     <div class="ra-protein-empty">
-                        No sample protein cards are available yet. Once featured proteins are configured for the RA domain, they will rotate here as reusable examples.
+                        No featured protein cards are available yet. Once sample entries are configured for the RA domain, they will appear here.
                     </div>
                 }
             </div>
         </div>
     </section>
 
-    <section class="ra-section" id="capabilities">
-        <div class="ra-cap-layout">
-            <div class="ra-cap-copy">
-                <div class="ra-kicker">Docking and Protein Cards</div>
-                <h2 class="ra-section-title">Beyond refined protein cards, the platform also supports docking-oriented research work</h2>
-                <p class="ra-section-desc">
-                    This part of the platform connects readable target knowledge with actual computational action.
-                    Users can inspect refined protein cards, continue into molecular docking operations, and then
-                    interpret outputs as research evidence rather than isolated numerical results.
-                </p>
+    <section class="ra-capabilities ra-module ra-module--paper" id="capabilities">
+        <div class="ra-banner ra-banner--section ra-banner--warm">
+            <img src="@dockingBanner" alt="Docking workflow and computational analysis" />
+            <div class="ra-banner-overlay ra-banner-overlay--warm"></div>
+            <div class="ra-banner-inner ra-container ra-banner-inner--compact">
+                <div class="ra-kicker">Docking</div>
+                <h2 class="ra-section-title">A computational module that extends knowledge records into practical analysis</h2>
+            </div>
+        </div>
 
-                <div class="ra-cap-copy-block">
-                    <p>
-                        The protein cards provide a clean way to understand rheumatoid arthritis-related targets through
-                        structured annotations and disease context. They are intended to reduce information fragmentation
-                        at the beginning of the research process.
+        <div class="ra-module-body ra-container">
+            <div class="ra-cap-layout">
+                <div class="ra-cap-copy">
+                    <p class="ra-section-desc">
+                        The docking module gives the platform operational value. It allows researchers to continue from readable target records into actual computational investigation while preserving the biological and disease-oriented context established by the knowledge base.
                     </p>
-                    <p>
-                        On top of that, the docking workflow gives the platform practical research value. It allows users
-                        to explore target-ligand interactions computationally, compare candidates, and support mechanism-oriented
-                        study with more explicit analytical steps.
-                    </p>
+                </div>
+
+                <div class="ra-cap-editorial">
+                    @foreach (var card in capabilityCards)
+                    {
+                        <article class="ra-cap-item">
+                            <div class="ra-side-note-label">@card.Eyebrow</div>
+                            <h3 class="ra-cap-title">@card.Title</h3>
+                            <p>@card.Desc</p>
+                        </article>
+                    }
                 </div>
             </div>
 
-            <div>
-                <div class="ra-cap-grid">
-                    @foreach (var card in capabilityCards)
-                    {
-                        <div class="ra-cap-card">
-                            <div class="ra-cap-card-head">
-                                <h3 class="ra-cap-card-title">@card.Title</h3>
-                                <div class="ra-cap-icon" aria-hidden="true"></div>
-                            </div>
-
-                            <p class="ra-cap-card-desc">@card.Desc</p>
-
-                            @foreach (var tag in card.Tags)
-                            {
-                                <span class="ra-pill">@tag</span>
-                            }
-                        </div>
-                    }
-                </div>
-
-                <div class="ra-research-band">
-                    <div class="ra-research-band-title">Research value</div>
-                    <p>
-                        Docking operations can help researchers inspect potential interaction patterns, compare candidate compounds,
-                        and carry computational results forward into broader biological interpretation. In this sense, the platform
-                        supports not only target browsing, but also hypothesis-oriented rheumatoid arthritis research.
-                    </p>
-                </div>
+            <div class="ra-research-band">
+                <div class="ra-side-note-label">Research value</div>
+                <p>
+                    In this design, docking is not presented as an isolated utility. It is positioned as the next analytical layer after interpretation, so the homepage reads more like an academic platform with clear module transitions than a generic product landing page.
+                </p>
             </div>
         </div>
     </section>
@@ -1067,13 +243,12 @@
                     <a class="close ml-2" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </a>
-                    <a href="" target="_blank" class="close maximizeBtn">
+                    <a href="" target="_blank" class="close maximizeBtn" rel="noopener noreferrer">
                         <span aria-hidden="true"><i class="fa fa-window-maximize"></i></span>
                     </a>
                 </div>
             </div>
-            <div class="modal-body">
-            </div>
+            <div class="modal-body"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
             </div>
@@ -1081,14 +256,14 @@
     </div>
 </div>
 
-@section Scripts
-    {
+@section Scripts {
     <script src="~/lib/ngl/ngl.js"></script>
     <script>
         (() => {
             if (typeof setupProteinInfoModal === 'function') {
                 setupProteinInfoModal();
             }
+
             const anchorLinks = Array.from(document.querySelectorAll('a[href^="#"]'));
             anchorLinks.forEach((link) => {
                 const targetId = link.getAttribute('href');
@@ -1112,170 +287,6 @@
                     });
                 });
             });
-
-            const carousel = document.getElementById('raHeroCarousel');
-            if (carousel) {
-                const slides = Array.from(carousel.querySelectorAll('.ra-hero-slide'));
-                const dotsWrap = document.getElementById('raHeroDots');
-                const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ra-hero-dot')) : [];
-                const caption = document.getElementById('raHeroCaption');
-                const prevBtn = document.getElementById('raHeroPrev');
-                const nextBtn = document.getElementById('raHeroNext');
-
-                let activeIndex = 0;
-                let timer = null;
-                const intervalMs = 5200;
-
-                const render = (index) => {
-                    slides.forEach((slide, i) => {
-                        slide.classList.toggle('is-active', i === index);
-                    });
-
-                    dots.forEach((dot, i) => {
-                        dot.classList.toggle('is-active', i === index);
-                    });
-
-                    if (caption) {
-                        caption.textContent = slides[index].getAttribute('data-caption') || '';
-                    }
-
-                    activeIndex = index;
-                };
-
-                const goTo = (index) => {
-                    const nextIndex = (index + slides.length) % slides.length;
-                    render(nextIndex);
-                };
-
-                const next = () => goTo(activeIndex + 1);
-                const prev = () => goTo(activeIndex - 1);
-
-                const restartAuto = () => {
-                    if (timer) {
-                        clearInterval(timer);
-                    }
-                    if (slides.length > 1) {
-                        timer = setInterval(next, intervalMs);
-                    }
-                };
-
-                dots.forEach((dot) => {
-                    dot.addEventListener('click', () => {
-                        const index = parseInt(dot.getAttribute('data-slide'), 10);
-                        if (!Number.isNaN(index)) {
-                            goTo(index);
-                            restartAuto();
-                        }
-                    });
-                });
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', () => {
-                        prev();
-                        restartAuto();
-                    });
-                }
-
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', () => {
-                        next();
-                        restartAuto();
-                    });
-                }
-
-                carousel.addEventListener('mouseenter', () => {
-                    if (timer) {
-                        clearInterval(timer);
-                    }
-                });
-
-                carousel.addEventListener('mouseleave', () => {
-                    restartAuto();
-                });
-
-                render(0);
-                restartAuto();
-            }
-
-            const proteinCarousel = document.getElementById('raProteinCarousel');
-            if (proteinCarousel) {
-                const slides = Array.from(proteinCarousel.querySelectorAll('.ra-protein-slide'));
-                const dotsWrap = document.getElementById('raProteinDots');
-                const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ra-protein-dot')) : [];
-                const prevBtn = document.getElementById('raProteinPrev');
-                const nextBtn = document.getElementById('raProteinNext');
-
-                let activeIndex = 0;
-                let timer = null;
-                const intervalMs = 6400;
-
-                const render = (index) => {
-                    slides.forEach((slide, i) => {
-                        slide.classList.toggle('is-active', i === index);
-                    });
-
-                    dots.forEach((dot, i) => {
-                        dot.classList.toggle('is-active', i === index);
-                    });
-
-                    activeIndex = index;
-                };
-
-                const goTo = (index) => {
-                    const nextIndex = (index + slides.length) % slides.length;
-                    render(nextIndex);
-                };
-
-                const next = () => goTo(activeIndex + 1);
-                const prev = () => goTo(activeIndex - 1);
-
-                const restartAuto = () => {
-                    if (timer) {
-                        clearInterval(timer);
-                    }
-
-                    if (slides.length > 1) {
-                        timer = setInterval(next, intervalMs);
-                    }
-                };
-
-                dots.forEach((dot) => {
-                    dot.addEventListener('click', () => {
-                        const index = parseInt(dot.getAttribute('data-slide'), 10);
-                        if (!Number.isNaN(index)) {
-                            goTo(index);
-                            restartAuto();
-                        }
-                    });
-                });
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', () => {
-                        prev();
-                        restartAuto();
-                    });
-                }
-
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', () => {
-                        next();
-                        restartAuto();
-                    });
-                }
-
-                proteinCarousel.addEventListener('mouseenter', () => {
-                    if (timer) {
-                        clearInterval(timer);
-                    }
-                });
-
-                proteinCarousel.addEventListener('mouseleave', () => {
-                    restartAuto();
-                });
-
-                render(0);
-                restartAuto();
-            }
         })();
     </script>
 }

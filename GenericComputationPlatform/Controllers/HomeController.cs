@@ -98,6 +98,41 @@ public partial class HomeController : Controller
         IReadOnlyList<ProteinTag> tags = await _proteinClient.GetTagsAsync(domainId);
         ViewBag.Tags = tags;
 
+        IReadOnlyList<Protein> proteins = await _proteinClient.ListByDomainAsync(domainId, null);
+
+        var allCavities = proteins
+            .SelectMany(o => o.Cavities ?? new List<Cavity>())
+            .Where(o => o.Protein != null)
+            .ToList();
+
+        ViewBag.WorkspaceProteinCount = proteins.Count;
+        ViewBag.WorkspaceModuleCount = 4;
+        ViewBag.WorkspaceStepCount = 3;
+
+        List<FeaturedProteinCardViewModel> featuredWorkspaceProteins = allCavities
+            .OrderBy(o => o.Protein.ProteinName)
+            .ThenBy(o => o.BindingSite)
+            .Take(6)
+            .Select(o => new FeaturedProteinCardViewModel
+            {
+                DomainId = domainId,
+                CavityId = o.Id.StringifyId(),
+                ProteinId = o.ProteinId,
+                ProteinName = o.Protein.ProteinName,
+                Organism = o.Protein.Organism?.Replace(";", "; "),
+                Symbol = $"{o.Protein.ProteinSymbol}_{o.Protein.OrganismSymbol}",
+                Gene = o.Protein.GeneSymbol,
+                BindingSite = o.BindingSite,
+                ImageUrl = $"/images/s/{o.ProteinId}-{o.BindingSite}-model_1.png",
+                UniProtId = o.Protein.Properties?.UniProt?.Id,
+                UniProtUrl = o.Protein.Properties?.UniProt?.Url,
+                ChemblId = o.Protein.Properties?.Chembl?.Id,
+                ChemblUrl = o.Protein.Properties?.Chembl?.TargetUrl,
+            })
+            .ToList();
+
+        ViewBag.FeaturedWorkspaceProteins = featuredWorkspaceProteins;
+
         return View(domain);
     }
 
