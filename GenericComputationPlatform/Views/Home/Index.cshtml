@@ -1,1082 +1,251 @@
-﻿@section Menu {
-<li class="nav-item active"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">Home</a></li>
-<li class="nav-item">
-    <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">
-        All Jobs
-        <span class="badge badge-light">@ViewData["Badge"]</span>
-    </a>
-</li>
-<li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Targets</a></li>
-<li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a></li>
+﻿@{
+    ViewData["Title"] = "RA Protein Knowledge Platform";
 }
 
-@{
-    ViewData["Title"] = "Rheumatoid Arthritis Research";
+@section Styles {
+    <link rel="stylesheet" href="~/css/page2.css" asp-append-version="true" />
 }
 
-<section class="ra-page" id="raPage">
-    <div class="mouse-glow" id="mouseGlow"></div>
-    <div class="hero-grid-overlay"></div>
+@section Menu {
+    <li class="nav-item">
+        <a class="nav-link" href="#workflow">Method</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#modules">Knowledge Framework</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/KnowledgeBase">Database</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/Docking">Docking</a>
+    </li>
+}
 
-    <section class="hero-section">
-        <div class="hero-content">
-            <div class="hero-badge">Rheumatoid Arthritis Research Platform</div>
+<div class="ra-platform-page">
+    <section class="hero">
+        <div class="container-custom hero-grid">
+            <div class="hero-copy">
+                <div class="eyebrow">Curated • Mechanism-aware • Docking-ready</div>
 
-            <h1 class="hero-title">
-                Advancing Research in
-                <span>Rheumatoid Arthritis</span>
-            </h1>
+                <h1>
+                    A curated RA protein knowledge platform for mechanism interpretation and docking-guided exploration
+                </h1>
 
-            <p class="hero-subtitle">
-                探索炎症机制、免疫网络、关节损伤进展与临床生物标志物，
-                以清晰、交互化的方式呈现类风湿疾病研究的知识结构。
-            </p>
-
-            <div class="hero-actions">
-                <a href="#research-focus" class="btn btn-primary ripple-btn">Explore Research</a>
-                <a href="#publications" class="btn btn-secondary ripple-btn">View Publications</a>
-            </div>
-
-            <div class="hero-metrics">
-                <div class="metric-card">
-                    <div class="metric-value">05</div>
-                    <div class="metric-label">Research Themes</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">24+</div>
-                    <div class="metric-label">Selected Publications</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">12</div>
-                    <div class="metric-label">Interactive Mechanism Nodes</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="hero-visual">
-            <div class="hero-visual-card magnetic-card" id="jointCard">
-                <div class="visual-backdrop"></div>
-
-                <svg class="joint-visual" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" aria-label="Abstract rheumatoid arthritis joint visualization">
-                    <defs>
-                        <radialGradient id="softBlue" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#dff3fb" stop-opacity="0.95" />
-                            <stop offset="100%" stop-color="#f7fbfd" stop-opacity="0.1" />
-                        </radialGradient>
-
-                        <radialGradient id="warmInflammation" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#e8877d" stop-opacity="0.55" />
-                            <stop offset="100%" stop-color="#e8877d" stop-opacity="0" />
-                        </radialGradient>
-
-                        <linearGradient id="lineBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#4A90E2" />
-                            <stop offset="100%" stop-color="#73C7B8" />
-                        </linearGradient>
-
-                        <filter id="blurGlow">
-                            <feGaussianBlur stdDeviation="16" />
-                        </filter>
-                    </defs>
-
-                    <!-- soft background layers -->
-                    <circle cx="360" cy="350" r="230" fill="url(#softBlue)" opacity="0.75"></circle>
-                    <circle cx="475" cy="250" r="90" fill="#d8f0ee" opacity="0.55"></circle>
-                    <circle cx="245" cy="455" r="75" fill="#e9f3fe" opacity="0.8"></circle>
-
-                    <!-- layered joint-inspired forms -->
-                    <g class="joint-shell">
-                        <path d="M210 365
-                                 C225 250, 315 190, 405 205
-                                 C490 219, 548 289, 534 379
-                                 C520 474, 440 525, 352 515
-                                 C267 505, 195 454, 210 365Z"
-                              fill="#ffffff" opacity="0.95" stroke="#dbe9f2" stroke-width="2"></path>
-
-                        <path d="M250 363
-                                 C260 286, 321 242, 394 251
-                                 C458 259, 500 311, 493 383
-                                 C486 448, 428 485, 363 478
-                                 C297 470, 240 432, 250 363Z"
-                              fill="#f8fbfc" stroke="#d8e9ee" stroke-width="2"></path>
-
-                        <path d="M284 363
-                                 C292 312, 336 278, 390 286
-                                 C438 293, 469 329, 465 380
-                                 C461 427, 420 456, 376 451
-                                 C327 446, 279 417, 284 363Z"
-                              fill="#eef8fa" stroke="#d2e6ec" stroke-width="2"></path>
-                    </g>
-
-                    <!-- inflammation zones -->
-                    <g id="hotspots">
-                        <circle class="hotspot hotspot-1" cx="374" cy="335" r="55" fill="url(#warmInflammation)"></circle>
-                        <circle class="hotspot hotspot-2" cx="435" cy="390" r="40" fill="url(#warmInflammation)" opacity="0.6"></circle>
-                        <circle class="hotspot hotspot-3" cx="314" cy="405" r="34" fill="url(#warmInflammation)" opacity="0.45"></circle>
-                    </g>
-
-                    <!-- rings -->
-                    <g class="pulse-rings">
-                        <circle cx="374" cy="335" r="78" fill="none" stroke="#ebb4ab" stroke-width="2" opacity="0.28"></circle>
-                        <circle cx="374" cy="335" r="108" fill="none" stroke="#f0c9c2" stroke-width="1.5" opacity="0.2"></circle>
-                    </g>
-
-                    <!-- network lines -->
-                    <g class="network-lines">
-                        <line x1="120" y1="188" x2="255" y2="286" stroke="url(#lineBlue)" stroke-width="2" opacity="0.5" />
-                        <line x1="180" y1="505" x2="303" y2="423" stroke="url(#lineBlue)" stroke-width="2" opacity="0.42" />
-                        <line x1="520" y1="173" x2="448" y2="292" stroke="url(#lineBlue)" stroke-width="2" opacity="0.45" />
-                        <line x1="568" y1="472" x2="460" y2="410" stroke="url(#lineBlue)" stroke-width="2" opacity="0.42" />
-                        <line x1="605" y1="315" x2="475" y2="350" stroke="url(#lineBlue)" stroke-width="2" opacity="0.35" />
-                    </g>
-
-                    <!-- nodes -->
-                    <g class="network-nodes">
-                        <circle class="node" cx="120" cy="188" r="10" fill="#ffffff" stroke="#73C7B8" stroke-width="2"></circle>
-                        <circle class="node" cx="180" cy="505" r="10" fill="#ffffff" stroke="#4A90E2" stroke-width="2"></circle>
-                        <circle class="node" cx="520" cy="173" r="10" fill="#ffffff" stroke="#73C7B8" stroke-width="2"></circle>
-                        <circle class="node" cx="568" cy="472" r="10" fill="#ffffff" stroke="#4A90E2" stroke-width="2"></circle>
-                        <circle class="node" cx="605" cy="315" r="10" fill="#ffffff" stroke="#A7A4D5" stroke-width="2"></circle>
-                        <circle class="node active-node" cx="255" cy="286" r="8" fill="#73C7B8"></circle>
-                        <circle class="node active-node" cx="303" cy="423" r="8" fill="#4A90E2"></circle>
-                        <circle class="node active-node" cx="448" cy="292" r="8" fill="#73C7B8"></circle>
-                        <circle class="node active-node" cx="460" cy="410" r="8" fill="#E8877D"></circle>
-                        <circle class="node active-node" cx="475" cy="350" r="8" fill="#A7A4D5"></circle>
-                    </g>
-
-                    <!-- labels -->
-                    <g class="visual-labels">
-                        <g class="label" transform="translate(62, 160)">
-                            <rect x="0" y="0" rx="12" ry="12" width="120" height="38" fill="#ffffff" opacity="0.95"></rect>
-                            <text x="18" y="24" fill="#2c4b63" font-size="15" font-weight="600">Immune network</text>
-                        </g>
-
-                        <g class="label" transform="translate(500, 132)">
-                            <rect x="0" y="0" rx="12" ry="12" width="112" height="38" fill="#ffffff" opacity="0.95"></rect>
-                            <text x="18" y="24" fill="#2c4b63" font-size="15" font-weight="600">Synovium</text>
-                        </g>
-
-                        <g class="label" transform="translate(510, 458)">
-                            <rect x="0" y="0" rx="12" ry="12" width="120" height="38" fill="#ffffff" opacity="0.95"></rect>
-                            <text x="18" y="24" fill="#2c4b63" font-size="15" font-weight="600">Inflammation</text>
-                        </g>
-                    </g>
-
-                    <!-- floating blur accents -->
-                    <circle cx="530" cy="220" r="34" fill="#bfe4e7" opacity="0.45" filter="url(#blurGlow)"></circle>
-                    <circle cx="245" cy="502" r="30" fill="#c9dcfb" opacity="0.42" filter="url(#blurGlow)"></circle>
-                </svg>
-
-                <div class="visual-legend">
-                    <div class="legend-item">
-                        <span class="legend-dot dot-blue"></span>
-                        <span>Immune signaling</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot dot-green"></span>
-                        <span>Synovial response</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot dot-coral"></span>
-                        <span>Inflammatory activity</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="content-section" id="research-focus">
-        <div class="section-heading">
-            <span class="section-kicker">Research Focus</span>
-            <h2>Key Directions in Rheumatoid Arthritis Research</h2>
-            <p>
-                以机制研究、疾病进展、信号通路与临床关联为核心，构建清晰的学术展示框架。
-            </p>
-        </div>
-
-        <div class="focus-grid">
-            <article class="focus-card magnetic-card">
-                <div class="focus-icon">01</div>
-                <h3>Synovial Inflammation</h3>
-                <p>聚焦滑膜炎症反应、组织增生、局部微环境变化及其与疾病活动度的关系。</p>
-            </article>
-
-            <article class="focus-card magnetic-card">
-                <div class="focus-icon">02</div>
-                <h3>Immune Signaling</h3>
-                <p>研究细胞因子网络、免疫细胞互作以及自身免疫激活过程中的关键信号节点。</p>
-            </article>
-
-            <article class="focus-card magnetic-card">
-                <div class="focus-icon">03</div>
-                <h3>Cartilage Damage</h3>
-                <p>探讨关节软骨与骨结构损伤路径，分析炎症反应与不可逆损害之间的联系。</p>
-            </article>
-
-            <article class="focus-card magnetic-card">
-                <div class="focus-icon">04</div>
-                <h3>Biomarker Discovery</h3>
-                <p>整合实验室指标、临床特征与分子层面数据，支持疾病分层与风险评估研究。</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="content-section mechanism-section">
-        <div class="section-heading narrow">
-            <span class="section-kicker">Knowledge Map</span>
-            <h2>Disease Mechanism Overview</h2>
-            <p>
-                从免疫激活到关节损伤，将关键过程转译为简洁、可阅读的知识路径。
-            </p>
-        </div>
-
-        <div class="mechanism-map">
-            <div class="mechanism-node magnetic-card">
-                <span class="node-tag">01</span>
-                <h3>Immune Activation</h3>
-                <p>自身免疫反应驱动异常炎症信号的产生。</p>
-            </div>
-            <div class="mechanism-link"></div>
-            <div class="mechanism-node magnetic-card">
-                <span class="node-tag">02</span>
-                <h3>Synovial Hyperplasia</h3>
-                <p>滑膜增生与局部炎性微环境持续放大。</p>
-            </div>
-            <div class="mechanism-link"></div>
-            <div class="mechanism-node magnetic-card">
-                <span class="node-tag">03</span>
-                <h3>Cytokine Pathways</h3>
-                <p>多种细胞因子共同参与炎症维持与传播。</p>
-            </div>
-            <div class="mechanism-link"></div>
-            <div class="mechanism-node magnetic-card">
-                <span class="node-tag">04</span>
-                <h3>Joint Damage</h3>
-                <p>长期炎症导致软骨、骨和功能层面的损害。</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="content-section" id="publications">
-        <div class="section-heading">
-            <span class="section-kicker">Selected Publications</span>
-            <h2>Recent Findings and Academic Outputs</h2>
-            <p>
-                用更清晰的方式展示论文、关键词和研究主题的关联。
-            </p>
-        </div>
-
-        <div class="publication-grid">
-            <article class="publication-card magnetic-card">
-                <div class="publication-year">2026</div>
-                <h3>Synovial Immune Dynamics in Early Rheumatoid Arthritis</h3>
-                <p class="publication-meta">Journal of Translational Immunology</p>
-                <div class="publication-tags">
-                    <span>Synovium</span>
-                    <span>Immune response</span>
-                    <span>Early RA</span>
-                </div>
-            </article>
-
-            <article class="publication-card magnetic-card">
-                <div class="publication-year">2025</div>
-                <h3>Cytokine Signaling Patterns and Structural Joint Damage</h3>
-                <p class="publication-meta">Clinical Rheumatology Research</p>
-                <div class="publication-tags">
-                    <span>Cytokines</span>
-                    <span>Cartilage</span>
-                    <span>Progression</span>
-                </div>
-            </article>
-
-            <article class="publication-card magnetic-card">
-                <div class="publication-year">2025</div>
-                <h3>Biomarker Stratification for Inflammatory Disease Activity</h3>
-                <p class="publication-meta">Immunology & Biomarker Systems</p>
-                <div class="publication-tags">
-                    <span>Biomarkers</span>
-                    <span>Disease activity</span>
-                    <span>Clinical data</span>
-                </div>
-            </article>
-        </div>
-    </section>
-
-    <section class="content-section team-section">
-        <div class="team-panel magnetic-card">
-            <div class="team-copy">
-                <span class="section-kicker">Research Platform</span>
-                <h2>Built for Academic Clarity and Exploratory Insight</h2>
-                <p>
-                    面向研究团队、专题项目与学术平台的展示场景，以清晰结构、明亮医学视觉和轻量交互反馈，
-                    支持疾病机制、成果输出与合作信息的统一表达。
+                <p class="lead">
+                    From broad inflammatory candidates to a refined 64-protein knowledge base, this platform transforms biological complexity into a structured, disease-aware, and application-ready resource for rheumatoid arthritis research.
                 </p>
 
-                <div class="hero-actions">
-                    <a href="#" class="btn btn-primary ripple-btn">Access Platform</a>
-                    <a href="#" class="btn btn-secondary ripple-btn">Contact Group</a>
+                <p class="hero-cn">
+                    该平台并非简单收集蛋白，而是通过三阶段筛选流程，将炎症候选、RA核心机制与药理相关节点整合为一个可解释、可追溯、可用于对接分析的知识系统。
+                </p>
+
+                <div class="hero-tags">
+                    <span class="hero-tag">Mechanism-aware</span>
+                    <span class="hero-tag">Disease-oriented</span>
+                    <span class="hero-tag">Structured knowledge</span>
+                    <span class="hero-tag">Docking-connected</span>
                 </div>
             </div>
 
-            <div class="team-side">
-                <div class="mini-stat">
-                    <strong>Immune</strong>
-                    <span>Pathways</span>
-                </div>
-                <div class="mini-stat">
-                    <strong>Clinical</strong>
-                    <span>Correlation</span>
-                </div>
-                <div class="mini-stat">
-                    <strong>Mechanism</strong>
-                    <span>Visualization</span>
+            <div class="hero-panel">
+                <div class="panel-title">Curation overview</div>
+
+                <div class="flow-mini">
+                    <div class="flow-item">
+                        <span class="flow-step">Version 1</span>
+                        <h4>Broad inflammatory candidate pool</h4>
+                        <p>
+                            Wide coverage of inflammatory and immune-related molecules to preserve pathway completeness and avoid premature information loss.
+                        </p>
+                    </div>
+
+                    <div class="flow-item">
+                        <span class="flow-step">Version 2</span>
+                        <h4>RA Core / RA Drug branching</h4>
+                        <p>
+                            Mechanistic separation into disease-specific pathology and pharmacologically interpretable inflammatory pathways.
+                        </p>
+                    </div>
+
+                    <div class="flow-item">
+                        <span class="flow-step">Final</span>
+                        <h4>Integrated 64-protein knowledge base</h4>
+                        <p>
+                            A compact final panel balancing disease mechanism, interpretability, and downstream docking utility.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-</section>
 
-<style>
-    :root {
-        --bg-main: #f8fbfc;
-        --bg-soft: #f5f9fa;
-        --bg-card: rgba(255, 255, 255, 0.82);
-        --line-soft: rgba(95, 142, 174, 0.14);
-        --text-main: #18354b;
-        --text-soft: #567188;
-        --text-muted: #7b93a6;
-        --blue: #4A90E2;
-        --cyan: #5BAFCF;
-        --green: #73C7B8;
-        --coral: #E8877D;
-        --purple: #A7A4D5;
-        --sand: #E8DCC8;
-        --shadow-lg: 0 20px 60px rgba(90, 128, 155, 0.14);
-        --shadow-md: 0 14px 36px rgba(90, 128, 155, 0.10);
-        --radius-xl: 28px;
-        --radius-lg: 20px;
-        --radius-md: 16px;
-        --transition-soft: 0.35s ease;
-    }
-
-    * {
-        box-sizing: border-box;
-    }
-
-    html {
-        scroll-behavior: smooth;
-    }
-
-    body {
-        background: radial-gradient(circle at top left, rgba(115, 199, 184, 0.08), transparent 28%), radial-gradient(circle at top right, rgba(74, 144, 226, 0.08), transparent 25%), linear-gradient(180deg, #fbfdff 0%, #f7fbfc 100%);
-        color: var(--text-main);
-        font-family: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .ra-page {
-        position: relative;
-        overflow: hidden;
-        min-height: 100vh;
-        padding: 36px 0 80px;
-        background: radial-gradient(circle at 20% 20%, rgba(115, 199, 184, 0.06), transparent 20%), radial-gradient(circle at 80% 15%, rgba(74, 144, 226, 0.06), transparent 20%), linear-gradient(180deg, var(--bg-main) 0%, #fbfdff 100%);
-    }
-
-    .mouse-glow {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 340px;
-        height: 340px;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 0;
-        background: radial-gradient(circle, rgba(91, 175, 207, 0.12) 0%, rgba(115, 199, 184, 0.09) 35%, rgba(255,255,255,0) 70%);
-        transform: translate(-50%, -50%);
-        transition: transform 0.08s linear;
-        filter: blur(10px);
-        opacity: 1;
-    }
-
-    .hero-grid-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        opacity: 0.32;
-        pointer-events: none;
-        background-image: linear-gradient(rgba(108, 149, 180, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(108, 149, 180, 0.08) 1px, transparent 1px);
-        background-size: 48px 48px;
-        mask-image: linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(0,0,0,0));
-    }
-
-    .hero-section,
-    .content-section {
-        position: relative;
-        z-index: 1;
-        width: min(1200px, calc(100% - 48px));
-        margin: 0 auto;
-    }
-
-    .hero-section {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 42px;
-        align-items: center;
-        min-height: calc(100vh - 120px);
-        padding: 24px 0 36px;
-    }
-
-    .hero-content {
-        animation: fadeUp 0.8s ease both;
-    }
-
-    .hero-badge,
-    .section-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
-        border: 1px solid rgba(108, 149, 180, 0.14);
-        color: var(--cyan);
-        font-size: 0.88rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        box-shadow: 0 8px 22px rgba(87, 130, 160, 0.06);
-        backdrop-filter: blur(10px);
-    }
-
-    .hero-title {
-        margin: 22px 0 18px;
-        font-size: clamp(2.8rem, 5vw, 5.2rem);
-        line-height: 1.06;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: var(--text-main);
-        max-width: 720px;
-    }
-
-        .hero-title span {
-            display: inline-block;
-            color: var(--blue);
-            position: relative;
-        }
-
-            .hero-title span::after {
-                content: "";
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 8px;
-                height: 16px;
-                background: rgba(115, 199, 184, 0.16);
-                z-index: -1;
-                border-radius: 999px;
-            }
-
-    .hero-subtitle {
-        max-width: 640px;
-        color: var(--text-soft);
-        font-size: 1.08rem;
-        line-height: 1.9;
-        margin-bottom: 28px;
-    }
-
-    .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-bottom: 30px;
-    }
-
-    .btn {
-        position: relative;
-        overflow: hidden;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 50px;
-        padding: 0 22px;
-        border-radius: 999px;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 0.98rem;
-        transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
-        border: 1px solid transparent;
-        will-change: transform;
-    }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-    .btn-primary {
-        color: #fff;
-        background: linear-gradient(135deg, var(--blue), var(--cyan));
-        box-shadow: 0 12px 28px rgba(74, 144, 226, 0.24);
-    }
-
-    .btn-secondary {
-        color: var(--text-main);
-        background: rgba(255,255,255,0.82);
-        border-color: rgba(108, 149, 180, 0.16);
-        box-shadow: 0 10px 24px rgba(84, 120, 149, 0.08);
-        backdrop-filter: blur(10px);
-    }
-
-    .hero-metrics {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        max-width: 760px;
-    }
-
-    .metric-card {
-        padding: 18px 18px;
-        border-radius: var(--radius-md);
-        background: rgba(255,255,255,0.78);
-        border: 1px solid rgba(108, 149, 180, 0.12);
-        box-shadow: 0 12px 26px rgba(84, 120, 149, 0.06);
-        backdrop-filter: blur(10px);
-    }
-
-    .metric-value {
-        font-size: 1.65rem;
-        font-weight: 800;
-        color: var(--text-main);
-        margin-bottom: 6px;
-    }
-
-    .metric-label {
-        font-size: 0.92rem;
-        color: var(--text-muted);
-        line-height: 1.5;
-    }
-
-    .hero-visual {
-        animation: fadeUp 1s ease 0.12s both;
-    }
-
-    .hero-visual-card {
-        position: relative;
-        border-radius: 34px;
-        padding: 24px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.66));
-        border: 1px solid rgba(116, 153, 181, 0.15);
-        box-shadow: var(--shadow-lg);
-        backdrop-filter: blur(12px);
-        transform-style: preserve-3d;
-        transition: transform 0.22s ease, box-shadow 0.22s ease;
-    }
-
-    .visual-backdrop {
-        position: absolute;
-        inset: 18px;
-        border-radius: 28px;
-        background: radial-gradient(circle at 70% 30%, rgba(115, 199, 184, 0.11), transparent 20%), radial-gradient(circle at 32% 72%, rgba(74, 144, 226, 0.10), transparent 22%), linear-gradient(180deg, rgba(244,250,252,0.96), rgba(248,251,252,0.78));
-        pointer-events: none;
-    }
-
-    .joint-visual {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
-    .hotspot,
-    .pulse-rings circle,
-    .network-nodes .node,
-    .network-lines line,
-    .visual-labels .label {
-        transition: transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease;
-        transform-origin: center;
-    }
-
-    .hero-visual-card:hover .hotspot-1 {
-        transform: scale(1.08);
-        opacity: 0.9;
-    }
-
-    .hero-visual-card:hover .hotspot-2 {
-        transform: scale(1.14);
-        opacity: 0.82;
-    }
-
-    .hero-visual-card:hover .hotspot-3 {
-        transform: scale(1.12);
-        opacity: 0.76;
-    }
-
-    .hero-visual-card:hover .pulse-rings circle {
-        opacity: 0.36;
-        transform: scale(1.04);
-    }
-
-    .hero-visual-card:hover .network-nodes .node {
-        transform: translateY(-2px);
-    }
-
-    .hero-visual-card:hover .visual-labels .label {
-        transform: translateY(-3px);
-    }
-
-    .visual-legend {
-        position: relative;
-        z-index: 1;
-        margin-top: 8px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .legend-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.76);
-        border: 1px solid rgba(108, 149, 180, 0.14);
-        color: var(--text-soft);
-        font-size: 0.92rem;
-        font-weight: 600;
-    }
-
-    .legend-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-    }
-
-    .dot-blue {
-        background: var(--blue);
-    }
-
-    .dot-green {
-        background: var(--green);
-    }
-
-    .dot-coral {
-        background: var(--coral);
-    }
-
-    .content-section {
-        padding: 54px 0 18px;
-    }
-
-    .section-heading {
-        margin-bottom: 26px;
-    }
-
-        .section-heading.narrow {
-            max-width: 860px;
-            margin: 0 auto 26px;
-            text-align: center;
-        }
-
-        .section-heading h2 {
-            margin: 16px 0 10px;
-            font-size: clamp(2rem, 3vw, 3.1rem);
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            color: var(--text-main);
-        }
-
-        .section-heading p {
-            max-width: 760px;
-            color: var(--text-soft);
-            font-size: 1rem;
-            line-height: 1.85;
-            margin: 0;
-        }
-
-    .focus-grid,
-    .publication-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
-    }
-
-    .focus-card,
-    .publication-card,
-    .mechanism-node,
-    .team-panel,
-    .mini-stat {
-        background: var(--bg-card);
-        border: 1px solid rgba(108, 149, 180, 0.13);
-        box-shadow: var(--shadow-md);
-        backdrop-filter: blur(10px);
-    }
-
-    .focus-card,
-    .publication-card {
-        border-radius: var(--radius-lg);
-        padding: 22px;
-        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-    }
-
-        .focus-card:hover,
-        .publication-card:hover,
-        .mechanism-node:hover {
-            box-shadow: 0 20px 46px rgba(90, 128, 155, 0.13);
-            border-color: rgba(91, 175, 207, 0.28);
-        }
-
-    .focus-icon {
-        width: 42px;
-        height: 42px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(74, 144, 226, 0.14), rgba(115, 199, 184, 0.16));
-        color: var(--blue);
-        font-weight: 800;
-        margin-bottom: 18px;
-    }
-
-    .focus-card h3,
-    .publication-card h3,
-    .mechanism-node h3 {
-        margin: 0 0 12px;
-        font-size: 1.16rem;
-        line-height: 1.4;
-        color: var(--text-main);
-    }
-
-    .focus-card p,
-    .publication-card p,
-    .mechanism-node p {
-        margin: 0;
-        color: var(--text-soft);
-        line-height: 1.8;
-        font-size: 0.96rem;
-    }
-
-    .mechanism-section {
-        padding-top: 68px;
-    }
-
-    .mechanism-map {
-        display: grid;
-        grid-template-columns: 1fr 70px 1fr 70px 1fr 70px 1fr;
-        align-items: center;
-        gap: 10px;
-        margin-top: 26px;
-    }
-
-    .mechanism-node {
-        border-radius: var(--radius-lg);
-        padding: 22px;
-        min-height: 190px;
-        transition: transform 0.22s ease, box-shadow 0.22s ease;
-    }
-
-    .node-tag {
-        display: inline-flex;
-        min-width: 38px;
-        height: 38px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        background: rgba(115, 199, 184, 0.12);
-        color: var(--green);
-        font-size: 0.86rem;
-        font-weight: 700;
-        margin-bottom: 16px;
-    }
-
-    .mechanism-link {
-        height: 2px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, rgba(74, 144, 226, 0.18), rgba(115, 199, 184, 0.35), rgba(74, 144, 226, 0.18));
-        position: relative;
-    }
-
-        .mechanism-link::after {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 50%;
-            width: 10px;
-            height: 10px;
-            background: rgba(115, 199, 184, 0.5);
-            border-radius: 50%;
-            transform: translateY(-50%);
-        }
-
-    .publication-card {
-        min-height: 240px;
-    }
-
-    .publication-year {
-        display: inline-flex;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(232, 220, 200, 0.28);
-        color: #8d7b63;
-        font-size: 0.88rem;
-        font-weight: 700;
-        margin-bottom: 16px;
-    }
-
-    .publication-meta {
-        margin-top: -2px;
-        color: var(--text-muted);
-        font-size: 0.94rem;
-    }
-
-    .publication-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 18px;
-    }
-
-        .publication-tags span {
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(74, 144, 226, 0.08);
-            color: var(--blue);
-            font-size: 0.84rem;
-            font-weight: 600;
-        }
-
-    .team-section {
-        padding-top: 72px;
-    }
-
-    .team-panel {
-        border-radius: 30px;
-        padding: 30px;
-        display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 24px;
-        align-items: center;
-    }
-
-    .team-copy h2 {
-        margin: 16px 0 14px;
-        font-size: clamp(1.9rem, 2.6vw, 3rem);
-        line-height: 1.18;
-        color: var(--text-main);
-    }
-
-    .team-copy p {
-        margin: 0 0 24px;
-        color: var(--text-soft);
-        line-height: 1.9;
-        font-size: 1rem;
-        max-width: 680px;
-    }
-
-    .team-side {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .mini-stat {
-        border-radius: 20px;
-        padding: 20px 22px;
-    }
-
-        .mini-stat strong {
-            display: block;
-            font-size: 1.12rem;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-
-        .mini-stat span {
-            color: var(--text-soft);
-            font-size: 0.96rem;
-        }
-
-    .magnetic-card {
-        transform: translate3d(0, 0, 0);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-        will-change: transform;
-    }
-
-    .ripple {
-        position: absolute;
-        border-radius: 50%;
-        transform: scale(0);
-        animation: rippleEffect 0.7s ease-out forwards;
-        background: rgba(255, 255, 255, 0.45);
-        pointer-events: none;
-    }
-
-    @@keyframes rippleEffect {
-        to {
-            transform: scale(4);
-            opacity: 0;
-        }
-    }
-
-    @@keyframes fadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(24px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@media (max-width: 1100px) {
-        .hero-section {
-            grid-template-columns: 1fr;
-            gap: 28px;
-            min-height: auto;
-            padding-top: 18px;
-        }
-
-        .hero-metrics,
-        .focus-grid,
-        .publication-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .mechanism-map {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
-        .mechanism-link {
-            width: 2px;
-            height: 36px;
-            margin: 0 auto;
-            background: linear-gradient(180deg, rgba(74, 144, 226, 0.18), rgba(115, 199, 184, 0.35), rgba(74, 144, 226, 0.18));
-        }
-
-            .mechanism-link::after {
-                left: 50%;
-                top: auto;
-                bottom: 0;
-                transform: translateX(-50%);
-            }
-
-        .team-panel {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .hero-section,
-        .content-section {
-            width: min(100% - 24px, 1200px);
-        }
-
-        .ra-page {
-            padding-top: 20px;
-        }
-
-        .hero-title {
-            font-size: 2.4rem;
-        }
-
-        .hero-subtitle {
-            font-size: 1rem;
-        }
-
-        .hero-metrics,
-        .focus-grid,
-        .publication-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .hero-visual-card {
-            padding: 16px;
-            border-radius: 24px;
-        }
-
-        .team-panel {
-            padding: 22px;
-        }
-
-        .mouse-glow {
-            width: 240px;
-            height: 240px;
-        }
-    }
-</style>
-
-<script>
-    (function () {
-        const page = document.getElementById("raPage");
-        const glow = document.getElementById("mouseGlow");
-        const magneticCards = document.querySelectorAll(".magnetic-card");
-        const rippleButtons = document.querySelectorAll(".ripple-btn");
-        const jointCard = document.getElementById("jointCard");
-
-        if (page && glow) {
-            page.addEventListener("mousemove", function (e) {
-                glow.style.transform = `translate(${e.clientX - glow.offsetWidth / 2}px, ${e.clientY - glow.offsetHeight / 2}px)`;
-            });
-        }
-
-        magneticCards.forEach(card => {
-            card.addEventListener("mousemove", function (e) {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                const moveX = (x - centerX) / centerX * 6;
-                const moveY = (y - centerY) / centerY * 6;
-
-                card.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
-            });
-
-            card.addEventListener("mouseleave", function () {
-                card.style.transform = "translate3d(0, 0, 0)";
-            });
-        });
-
-        rippleButtons.forEach(button => {
-            button.addEventListener("click", function (e) {
-                const ripple = document.createElement("span");
-                ripple.classList.add("ripple");
-
-                const rect = button.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-
-                ripple.style.width = ripple.style.height = `${size}px`;
-                ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-                ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
-
-                button.appendChild(ripple);
-
-                setTimeout(() => {
-                    ripple.remove();
-                }, 700);
-            });
-        });
-
-        if (jointCard) {
-            jointCard.addEventListener("mousemove", function (e) {
-                const rect = jointCard.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const rotateY = ((x / rect.width) - 0.5) * 5;
-                const rotateX = ((y / rect.height) - 0.5) * -5;
-
-                jointCard.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0,0,0)`;
-            });
-
-            jointCard.addEventListener("mouseleave", function () {
-                jointCard.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
-            });
-        }
-    })();
-</script>
+    <section id="workflow" class="section workflow">
+        <div class="container-custom">
+            <div class="section-head">
+                <span class="kicker">Curation workflow</span>
+                <h2>How the knowledge base was built</h2>
+                <p>
+                    A three-stage workflow was used to distinguish broad inflammatory signals, RA-specific disease mechanisms, and application-ready targets. The goal was not maximum inclusion, but meaningful biological structure.
+                </p>
+            </div>
+
+            <div class="workflow-grid">
+                <div class="workflow-card">
+                    <div class="num">1</div>
+                    <h3>Version 1 — Broad candidate pool</h3>
+                    <p>
+                        A wide set of inflammatory and immune-related molecules was retained to capture upstream activation, signaling amplification, immune participation, and feedback regulation.
+                    </p>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="num">2</div>
+                    <h3>Version 2 — Mechanistic branching</h3>
+                    <p>
+                        The collection was separated into two directions: <strong>RA Core</strong> for disease pathology and <strong>RA Drug</strong> for pharmacologically interpretable inflammatory pathways.
+                    </p>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="num">3</div>
+                    <h3>Final — Integrated 64-protein panel</h3>
+                    <p>
+                        The final set recombines disease-core proteins with key drug-relevant nodes, producing a compact and explainable RA protein framework for docking and analysis.
+                    </p>
+                </div>
+            </div>
+
+            <div class="workflow-note">
+                <strong>Key idea:</strong> this platform is not built by simply collecting proteins. It is built by preserving what is biologically informative, disease-relevant, and practically useful.
+            </div>
+        </div>
+    </section>
+
+    <section id="modules" class="section modules">
+        <div class="container-custom">
+            <div class="section-head">
+                <span class="kicker">Knowledge framework</span>
+                <h2>The 64-protein RA knowledge framework</h2>
+                <p>
+                    The final collection is organized by biological function so users can understand RA as a structured disease system rather than a flat list of molecular names.
+                </p>
+            </div>
+
+            <div class="module-grid">
+                <div class="module-card">
+                    <div class="module-chip chip-blue">Module 01</div>
+                    <h3>Inflammatory signaling</h3>
+                    <p>
+                        Core inflammatory drivers that connect immune activation to downstream cytokine release, pathway amplification, and therapeutic interpretation.
+                    </p>
+                    <div class="protein-list">
+                        <span class="protein-tag">TNFA</span>
+                        <span class="protein-tag">IL6</span>
+                        <span class="protein-tag">JAK1</span>
+                        <span class="protein-tag">JAK2</span>
+                        <span class="protein-tag">TYK2</span>
+                        <span class="protein-tag">NFKB1</span>
+                        <span class="protein-tag">TF65</span>
+                        <span class="protein-tag">TLR7</span>
+                        <span class="protein-tag">CASP1</span>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-chip chip-green">Module 02</div>
+                    <h3>Synovial invasion &amp; matrix degradation</h3>
+                    <p>
+                        Proteins associated with synovial aggressiveness, extracellular matrix breakdown, angiogenesis, and persistent tissue damage in RA.
+                    </p>
+                    <div class="protein-list">
+                        <span class="protein-tag">MMP2</span>
+                        <span class="protein-tag">MMP8</span>
+                        <span class="protein-tag">MMP9</span>
+                        <span class="protein-tag">FAK1</span>
+                        <span class="protein-tag">RHOA</span>
+                        <span class="protein-tag">HGF</span>
+                        <span class="protein-tag">MET</span>
+                        <span class="protein-tag">VGFR2</span>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-chip chip-purple">Module 03</div>
+                    <h3>Autoimmune regulation</h3>
+                    <p>
+                        Immune-regulatory and RA-associated molecules linked to adaptive immunity, autoimmune susceptibility, and sustained pathogenic signaling.
+                    </p>
+                    <div class="protein-list">
+                        <span class="protein-tag">IL2</span>
+                        <span class="protein-tag">IL2RB</span>
+                        <span class="protein-tag">DRB1</span>
+                        <span class="protein-tag">PADI4</span>
+                        <span class="protein-tag">PTN22</span>
+                        <span class="protein-tag">SYK</span>
+                        <span class="protein-tag">HCK</span>
+                        <span class="protein-tag">SRC</span>
+                    </div>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-chip chip-red">Module 04</div>
+                    <h3>Regulatory / background support</h3>
+                    <p>
+                        Contextual and modulatory proteins that support network completeness, biological interpretation, and broader pathway context.
+                    </p>
+                    <div class="protein-list">
+                        <span class="protein-tag">AHR</span>
+                        <span class="protein-tag">ABCG2</span>
+                        <span class="protein-tag">PPARA</span>
+                        <span class="protein-tag">PPARG</span>
+                        <span class="protein-tag">PPIA</span>
+                        <span class="protein-tag">XCT</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modules-summary">
+                The 64-protein collection is designed as a disease-aware framework rather than a flat molecular inventory.
+            </div>
+        </div>
+    </section>
+
+    <section class="section value">
+        <div class="container-custom">
+            <div class="section-head">
+                <span class="kicker">Platform value</span>
+                <h2>Why this platform matters</h2>
+                <p>
+                    The purpose of this platform is to turn protein collection into explainable disease knowledge, and connect that knowledge to docking and downstream analysis.
+                </p>
+            </div>
+
+            <div class="value-grid">
+                <div class="value-card">
+                    <h3>Curated biological relevance</h3>
+                    <p>
+                        Proteins are retained based on disease significance, mechanistic contribution, and interpretability rather than simple inclusion.
+                    </p>
+                </div>
+
+                <div class="value-card">
+                    <h3>Explainable RA structure</h3>
+                    <p>
+                        The platform preserves not only inflammatory markers, but also the pathological architecture of RA, including invasion, degradation, angiogenesis, and autoimmune regulation.
+                    </p>
+                </div>
+
+                <div class="value-card">
+                    <h3>Application-ready design</h3>
+                    <p>
+                        The final protein panel is structured for direct integration with SMILES-based docking, result interpretation, and table-driven analysis workflows.
+                    </p>
+                </div>
+            </div>
+
+            <div class="value-quote">
+                We do not simply collect proteins. We organize rheumatoid arthritis into a searchable, interpretable, docking-connected knowledge system.
+            </div>
+        </div>
+    </section>
+</div>
