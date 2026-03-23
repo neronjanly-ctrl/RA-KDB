@@ -154,24 +154,40 @@
 }
 
 @section Menu {
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">
+            RA Workspace
+        </a>
+    </li>
+
+    <li class="nav-item active">
+        <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId" asp-route-tagId="">
+            Protein Database
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@domainId">
+            Docking
+        </a>
+    </li>
+
     @if (jobId > 0)
     {
-        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
-        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
-        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@domainId" asp-route-jobId="@jobId">Job</a></li>
-        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domainId" asp-route-jobId="@jobId">BBB</a></li>
-        <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = domainId, jobId = jobId, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = domainId, jobId = jobId }))">Output</a></li>
-        <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@domainId" asp-route-jobId="@jobId">Spider Plot</a></li>
-        <li class="nav-item active bg-info"><a class="nav-link" asp-controller="Protein" asp-action="JobDetails" asp-route-domainId="@domainId" asp-route-jobId="@jobId" asp-route-cavityId="@cavityId">Protein</a></li>
-        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId">Targets</a></li>
-        <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">Help</a></li>
+        <li class="nav-item">
+            <a class="nav-link"
+               asp-controller="Job"
+               asp-action="Details"
+               asp-route-domainId="@domainId"
+               asp-route-jobId="@jobId">
+                Back to Job
+            </a>
+        </li>
     }
-    else
-    {
-        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
-        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
-        <li class="nav-item active bg-info"><a class="nav-link" asp-controller="Protein" asp-action="Details" asp-route-domainId="@domainId" asp-route-cavityId="@cavityId">Protein</a></li>
-        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId">Targets</a></li>
-        <li class="nav-item d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">Help</a></li>
-    }
+
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">
+            Help
+        </a>
+    </li>
 }

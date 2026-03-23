@@ -54,9 +54,14 @@
     <li class="nav-item"><a class="nav-link" href="#about">Overview</a></li>
     <li class="nav-item"><a class="nav-link" href="#knowledge">Knowledge Base</a></li>
     <li class="nav-item"><a class="nav-link" href="#capabilities">Docking</a></li>
-    <li class="nav-item ml-2">
-        <a class="btn btn-primary" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">
             Enter RA Workspace
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Help", "Home", new { domainId = raDomain?.Id ?? "RA" })">
+            Help
         </a>
     </li>
 }
@@ -134,51 +139,45 @@
 
                 @if (featuredProteins.Count > 0)
                 {
-                    <div class="ra-protein-grid">
+                    <div class="ra-card-view">
                         @foreach (var protein in featuredProteins)
                         {
                             <article class="ra-protein-card">
                                 <img class="ra-protein-thumb" src="@protein.ImageUrl" alt="@protein.ProteinName" />
-                                <div class="ra-protein-card-body">
-                                    <h3 class="ra-protein-card-title">
-                                        <a data-toggle="modal"
+
+                                <div class="ra-protein-body">
+                                    <h3 class="ra-protein-title">
+                                        @protein.ProteinName
+                                    </h3>
+
+                                    <div class="ra-protein-meta">
+                                        <div><strong>Organism:</strong> @protein.Organism</div>
+                                        <div><strong>Symbol:</strong> @protein.Symbol</div>
+                                        <div><strong>Gene:</strong> @protein.Gene</div>
+                                        @if (!string.IsNullOrWhiteSpace(protein.BindingSite))
+                                        {
+                                            <div><strong>Binding site:</strong> @protein.BindingSite</div>
+                                        }
+                                    </div>
+
+                                    <div class="ra-badge-row">
+                                        <span class="ra-badge">Knowledge base</span>
+                                        <span class="ra-badge">RA-oriented</span>
+                                        <span class="ra-badge">Research-ready</span>
+                                    </div>
+
+                                    <div class="ra-link-row">
+                                        <a class="ra-protein-action"
+                                           data-toggle="modal"
                                            data-target="#proteinInfo"
                                            data-pname="@protein.ProteinName"
                                            asp-controller="Protein"
                                            asp-action="Details"
                                            asp-route-domainId="@protein.DomainId"
                                            asp-route-cavityId="@protein.CavityId">
-                                            @protein.ProteinName
+                                            View details
                                         </a>
-                                    </h3>
-
-                                    <div class="ra-protein-card-meta">
-                                        <div><strong>Organism:</strong> @protein.Organism</div>
-                                        <div><strong>Symbol:</strong> @protein.Symbol</div>
-                                        <div><strong>Gene:</strong> @protein.Gene</div>
-                                    </div>
-
-                                    <div class="ra-protein-link-row">
-                                        @if (!string.IsNullOrWhiteSpace(protein.UniProtUrl))
-                                        {
-                                            <a href="@protein.UniProtUrl" target="_blank" rel="noopener noreferrer">@protein.UniProtId</a>
-                                        }
-                                        @if (!string.IsNullOrWhiteSpace(protein.ChemblUrl))
-                                        {
-                                            <a href="@protein.ChemblUrl" target="_blank" rel="noopener noreferrer">@protein.ChemblId</a>
-                                        }
-                                    </div>
-
-                                    <a class="ra-protein-action"
-                                       data-toggle="modal"
-                                       data-target="#proteinInfo"
-                                       data-pname="@protein.ProteinName"
-                                       asp-controller="Protein"
-                                       asp-action="Details"
-                                       asp-route-domainId="@protein.DomainId"
-                                       asp-route-cavityId="@protein.CavityId">
-                                        View details
-                                    </a>
+                                    </div>                   
                                 </div>
                             </article>
                         }

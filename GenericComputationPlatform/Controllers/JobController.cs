@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 
 namespace GenericComputationPlatform.Controllers;
 
+
 [Route("/{domainId:required}/job")]
 public partial class JobController : Controller
 {
@@ -106,6 +107,49 @@ public partial class JobController : Controller
         });
 
         return job.Id;
+    }
+    [HttpPost("rename/{jobId:int}")]
+    public virtual async Task<IActionResult> Rename(string domainId, int jobId, [FromForm] string newName)
+    {
+        Domain domain = await _domainClient.GetOneAsync(domainId);
+        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
+            return NotFound();
+
+        Job job = await _jobClient.GetOneAsync(jobId);
+        if (job == null)
+            return NotFound();
+
+        if (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower())
+            return Forbid();
+
+        if (string.IsNullOrWhiteSpace(newName))
+            return RedirectToAction(nameof(List), new { domainId });
+
+        await _jobClient.RenameAsync(jobId, new RenameJobModel
+        {
+            NewName = newName.Trim()
+        });
+
+        return RedirectToAction(nameof(List), new { domainId });
+    }
+
+    [HttpPost("delete/{jobId:int}")]
+    public virtual async Task<IActionResult> Delete(string domainId, int jobId)
+    {
+        Domain domain = await _domainClient.GetOneAsync(domainId);
+        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
+            return NotFound();
+
+        Job job = await _jobClient.GetOneAsync(jobId);
+        if (job == null)
+            return NotFound();
+
+        if (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower())
+            return Forbid();
+
+        await _jobClient.DeleteAsync(jobId);
+
+        return RedirectToAction(nameof(List), new { domainId });
     }
 
     [HttpGet("w{jobId:int}")]

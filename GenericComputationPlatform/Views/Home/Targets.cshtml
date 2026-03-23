@@ -1,205 +1,1024 @@
 ﻿@model TargetListModel
-@inject IOptions<AppSettings> _appSettings
+@using System.Linq
+@using System.Collections.Generic
+@using DockingDataModels
+
 @{
-    var propFields = _appSettings.Value.TargetList.PropFields;
-    if (Model.TagName == null)
-        ViewData["Title"] = "Protein Targets";
-    else
-        ViewData["Title"] = $"Protein Targets - {Model.TagName}";
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.TagName)
+        ? "RA Protein Database"
+        : $"RA Protein Database - {Model.TagName}";
+
+    var cavities = Model.Targets
+        .SelectMany(o => o.Cavities ?? new List<Cavity>())
+        .Where(o => o.Protein != null)
+        .OrderBy(o => o.Protein.ProteinName)
+        .ThenBy(o => o.BindingSite)
+        .ToList();
+
+    var totalProteins = cavities
+        .Select(o => o.ProteinId)
+        .Distinct()
+        .Count();
+
+    var totalCavities = cavities.Count;
+
+    var allTags = Model.Targets
+        .SelectMany(o => o.Tags ?? new List<ProteinTag>())
+        .GroupBy(o => o.Id)
+        .Select(g => g.First())
+        .OrderBy(o => o.Name)
+        .ToList();
 }
-<h2>@ViewData["Title"]</h2>
 
-@if (Model.HasDocument)
-{
-    <div class="small text-muted mb-2">
-        <span class="bg-info mr-2">&nbsp;</span>
-        <span>
-            Alternately, the targets and drugs in Word document (.docx) can also be downloaded <a href="~/@(Model.Domain.Id).docx">here</a>.
-        </span>
-    </div>
+@section Menu {
+    @{
+        ViewData["ActiveMenu"] = "database";
+    }
+    <partial name="_RaWorkspaceMenu" />
 }
 
-<hr />
-
-<table class="table table-striped table-hover table-maxwidth mt-3 w-100">
-    <thead>
-        <tr>
-            <th scope="col">Protein</th>
-            <th scope="col">Protein name</th>
-            <th scope="col">Organism</th>
-            <th scope="col">Symbol</th>
-            <th scope="col">Gene</th>
-            @foreach (var field in propFields)
-            {
-                <th scope="col">@field</th>
-            }
-            <th scope="col">Compounds</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cavity in Model.Targets.SelectMany(o => o.Cavities))
-        {
-            var protein = cavity.Protein;
-            <tr>
-                <th scope="row"><img style="width:102.4px" src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png" alt="" /></th>
-                <td>
-                    <a data-toggle="modal" data-target="#proteinInfo" data-proteinId="@protein.Id"
-                       asp-controller="Protein" asp-action="Details" asp-route-domainId="@Model.Domain.Id" asp-route-cavityId="@cavity.Id.StringifyId()">
-                        @protein.ProteinName
-                        <i class="fas fa-external-link-alt"></i>
-                    </a>
-                </td>
-                <td>@protein.Organism.Replace(";", "; ")</td>
-                <td>
-                    @(protein.ProteinSymbol)_@(protein.OrganismSymbol)
-                </td>
-                <td>@protein.GeneSymbol</td>
-                @foreach (var field in propFields)
-                {
-                    <td>
-                        @switch (field.ToLower())
-                        {
-                            case "uniprot":
-                                @if (protein.Properties.UniProt != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.UniProt.Url">@protein.Properties.UniProt.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            case "chembl":
-                                @if (protein.Properties.Chembl != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.Chembl.TargetUrl">@protein.Properties.Chembl.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            case "ensembl":
-                                @if (protein.Properties.Ensembl != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.Ensembl.Url">@protein.Properties.Ensembl.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            case "genbank":
-                                @if (protein.Properties.GenBank != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.GenBank.Url">@protein.Properties.GenBank.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            case "ncbi":
-                            case "refseq":
-                                @if (protein.Properties.Ncbi != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.Ncbi.RefSeqUrl">@protein.Properties.Ncbi.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            case "hgnc":
-                            case "genename":
-                                @if (protein.Properties.Hgnc != null)
-                                {
-                                    <a class="text-nowrap" target="_blank" href="@protein.Properties.Hgnc.GeneNamesUrl">HGNC:@protein.Properties.Hgnc.Id <i class="fas fa-external-link-alt"></i></a>
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    </td>
-                }
-                <td>
-                    @if (protein.BioactivityCount != 0 || protein.RawBioactivityCount != 0)
-                    {
-                        <a class="text-nowrap" target="_blank" href="https://www.ebi.ac.uk/chembl/g/#browse/activities/filter/target_chembl_id%3A@(protein.Properties.Chembl.Id)" title="@protein.BioactivityCount ChEMBL bioactivities, @protein.RawBioactivityCount ChEMBL compounds">@protein.BioactivityCount / @protein.RawBioactivityCount <i class="fas fa-external-link-alt"></i></a>
-                    }
-                </td>
-            </tr>
+@section Styles {
+    <style>
+        :root {
+            --ra-bg: #f7f9fc;
+            --ra-surface: rgba(255,255,255,.85);
+            --ra-surface-strong: rgba(255,255,255,.96);
+            --ra-title: #162033;
+            --ra-text: #627089;
+            --ra-line: #dde6f2;
+            --ra-blue: #2f6bff;
+            --ra-blue-soft: rgba(47,107,255,.08);
+            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
+            --ra-shadow-card: 0 14px 28px rgba(20, 44, 84, .05);
         }
-    </tbody>
-</table>
 
-<!-- Protein Info Modal -->
-<div class="modal fade" id="proteinInfo" tabindex="-1" role="dialog" aria-labelledby="proteinName" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="proteinName"></h5>
-                <div class="text-nowrap col-auto">
-                    <a class="close ml-2" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </a>
-                    <a href="" target="_blank" class="close maximizeBtn">
-                        <span aria-hidden="true"><i class="fa fa-window-maximize"></i></span>
-                    </a>
+        body {
+            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(104,200,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
+            color: var(--ra-title);
+        }
+
+        .ra-db-page {
+            width: min(1460px, calc(100vw - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 5rem;
+        }
+
+        .ra-section + .ra-section {
+            margin-top: 1.8rem;
+        }
+
+        .ra-card-shell {
+            background: var(--ra-surface);
+            border: 1px solid var(--ra-line);
+            border-radius: 28px;
+            box-shadow: var(--ra-shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .ra-header {
+            padding: 2rem;
+        }
+
+        .ra-kicker {
+            display: inline-flex;
+            align-items: center;
+            padding: .42rem .95rem;
+            border-radius: 999px;
+            background: var(--ra-blue-soft);
+            color: var(--ra-blue);
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .ra-title {
+            font-size: clamp(2.1rem, 3.6vw, 3.8rem);
+            line-height: 1.04;
+            font-weight: 800;
+            letter-spacing: -.04em;
+            margin-bottom: .9rem;
+        }
+
+        .ra-desc {
+            color: var(--ra-text);
+            font-size: 1.02rem;
+            line-height: 1.9;
+            max-width: 980px;
+        }
+
+        .ra-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .9rem;
+            margin-top: 1.4rem;
+        }
+
+        .ra-stat {
+            border: 1px solid var(--ra-line);
+            border-radius: 20px;
+            background: rgba(255,255,255,.96);
+            padding: 1rem;
+        }
+
+        .ra-stat-value {
+            font-size: 1.5rem;
+            font-weight: 780;
+            line-height: 1;
+            margin-bottom: .35rem;
+        }
+
+        .ra-stat-label {
+            color: var(--ra-text);
+            font-size: .92rem;
+            line-height: 1.6;
+        }
+
+        .ra-toolbar {
+            padding: 1.25rem 1.25rem 1rem;
+        }
+
+        .ra-toolbar-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .ra-search-wrap {
+            flex: 1 1 420px;
+        }
+
+        .ra-search {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 999px;
+            border: 1px solid var(--ra-line);
+            background: #fff;
+            padding: 0 1rem;
+            color: #24324a;
+            outline: none;
+        }
+
+        .ra-controls {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .ra-view-toggle,
+        .ra-page-size {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .35rem;
+            border-radius: 999px;
+            background: rgba(47,107,255,.06);
+            border: 1px solid rgba(47,107,255,.08);
+        }
+
+        .ra-toggle-btn {
+            border: 0;
+            background: transparent;
+            color: #30508f;
+            font-weight: 700;
+            border-radius: 999px;
+            min-height: 38px;
+            padding: 0 .95rem;
+            cursor: pointer;
+        }
+
+            .ra-toggle-btn.is-active {
+                background: #fff;
+                box-shadow: 0 6px 14px rgba(20, 44, 84, .06);
+                color: #1f2c44;
+            }
+
+        .ra-size-btn {
+            border: 0;
+            background: transparent;
+            color: #30508f;
+            font-weight: 700;
+            border-radius: 999px;
+            min-height: 38px;
+            min-width: 56px;
+            padding: 0 .8rem;
+            cursor: pointer;
+        }
+
+            .ra-size-btn.is-active {
+                background: #fff;
+                box-shadow: 0 6px 14px rgba(20, 44, 84, .06);
+                color: #1f2c44;
+            }
+
+        .ra-toolbar-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .ra-tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+        }
+
+        .ra-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 .85rem;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+            color: #2f405e;
+            text-decoration: none !important;
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+            .ra-chip.is-active {
+                background: rgba(47,107,255,.08);
+                border-color: rgba(47,107,255,.2);
+                color: var(--ra-blue);
+            }
+
+        .ra-result-meta {
+            color: var(--ra-text);
+            font-size: .95rem;
+            font-weight: 600;
+        }
+
+        .ra-results {
+            padding: 1.25rem;
+        }
+
+        .ra-card-view {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .ra-target-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 24px;
+            background: rgba(255,255,255,.97);
+            overflow: hidden;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+            .ra-target-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--ra-shadow-card);
+            }
+
+        .ra-target-thumb-btn {
+            display: block;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .ra-target-thumb {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            object-fit: cover;
+            display: block;
+            background: #eef3fa;
+        }
+
+        .ra-target-body {
+            padding: .95rem 1rem 1rem;
+        }
+
+        .ra-target-title {
+            font-size: 1.02rem;
+            font-weight: 740;
+            line-height: 1.45;
+            margin-bottom: .35rem;
+        }
+
+            .ra-target-title a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .ra-target-title a:hover {
+                    color: var(--ra-blue);
+                    text-decoration: none;
+                }
+
+        .ra-target-sub {
+            color: var(--ra-text);
+            font-size: .92rem;
+            line-height: 1.7;
+            margin-bottom: .8rem;
+        }
+
+        .ra-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .45rem;
+            margin-bottom: .9rem;
+        }
+
+        .ra-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 .62rem;
+            border-radius: 999px;
+            background: rgba(47,107,255,.06);
+            color: #2e4e9b;
+            border: 1px solid rgba(47,107,255,.12);
+            font-size: .76rem;
+            font-weight: 650;
+        }
+
+        .ra-target-actions {
+            display: flex;
+            gap: .55rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-ra-primary,
+        .btn-ra-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            border-radius: 999px;
+            padding: 0 .9rem;
+            text-decoration: none !important;
+            font-weight: 700;
+            font-size: .9rem;
+        }
+
+        .btn-ra-primary {
+            color: #fff !important;
+            background: var(--ra-blue);
+        }
+
+        .btn-ra-secondary {
+            color: #24324a !important;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+        }
+
+        .ra-table-view {
+            display: none;
+        }
+
+        .ra-table-shell {
+            border: 1px solid var(--ra-line);
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(255,255,255,.97);
+        }
+
+        .ra-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .ra-table thead th {
+                background: rgba(47,107,255,.05);
+                color: #32517c;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                font-size: .84rem;
+                font-weight: 800;
+                padding: .95rem 1rem;
+                border-bottom: 1px solid var(--ra-line);
+            }
+
+            .ra-table tbody td {
+                padding: 1rem;
+                border-bottom: 1px solid var(--ra-line);
+                vertical-align: middle;
+            }
+
+            .ra-table tbody tr:last-child td {
+                border-bottom: 0;
+            }
+
+        .ra-table-thumb-btn {
+            display: inline-block;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .ra-table-thumb {
+            width: 78px;
+            border-radius: 14px;
+            display: block;
+        }
+
+        .ra-table-name {
+            font-weight: 740;
+            line-height: 1.55;
+        }
+
+            .ra-table-name a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+                .ra-table-name a:hover {
+                    color: var(--ra-blue);
+                }
+
+        .ra-table-meta {
+            color: var(--ra-text);
+            font-size: .92rem;
+            line-height: 1.7;
+        }
+
+        .ra-ref-links a {
+            display: inline-block;
+            color: var(--ra-blue);
+            text-decoration: none;
+            font-size: .92rem;
+            font-weight: 700;
+            margin-right: .75rem;
+            margin-bottom: .3rem;
+        }
+
+        .ra-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.2rem;
+        }
+
+        .ra-page-info {
+            color: var(--ra-text);
+            font-size: .95rem;
+            font-weight: 600;
+        }
+
+        .ra-page-actions {
+            display: flex;
+            gap: .6rem;
+        }
+
+        .ra-page-btn {
+            min-width: 96px;
+            min-height: 40px;
+            border-radius: 999px;
+            border: 1px solid var(--ra-line);
+            background: #fff;
+            color: #24324a;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+            .ra-page-btn:disabled {
+                opacity: .45;
+                cursor: not-allowed;
+            }
+
+        .ra-footer-actions {
+            display: flex;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-top: 1.2rem;
+        }
+
+        .ra-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--ra-text);
+            border: 1px dashed var(--ra-line);
+            border-radius: 22px;
+            background: rgba(255,255,255,.75);
+        }
+
+        @@media (max-width: 1399.98px) {
+            .ra-card-view {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 1199.98px) {
+            .ra-card-view,
+            .ra-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .ra-card-view,
+            .ra-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .ra-header,
+            .ra-toolbar,
+            .ra-results {
+                padding: 1.25rem;
+            }
+
+            .ra-table-shell {
+                overflow-x: auto;
+            }
+
+            .ra-table {
+                min-width: 940px;
+            }
+        }
+    </style>
+}
+
+<div class="ra-db-page">
+    <!-- Header -->
+    <section class="ra-section ra-card-shell ra-header">
+        <div class="ra-kicker">Curated database • Light cards • Dense table</div>
+
+        <h1 class="ra-title">RA Protein Database</h1>
+
+        <p class="ra-desc">
+            Browse curated RA-related targets through a dual-view database interface: lightweight cards for quick
+            scanning and a denser table for structured comparison and detail access.
+        </p>
+
+        <div class="ra-stats">
+            <div class="ra-stat">
+                <div class="ra-stat-value">@totalProteins</div>
+                <div class="ra-stat-label">Unique proteins currently represented in this database view</div>
+            </div>
+            <div class="ra-stat">
+                <div class="ra-stat-value">@totalCavities</div>
+                <div class="ra-stat-label">Structure / binding-site entries currently displayed</div>
+            </div>
+            <div class="ra-stat">
+                <div class="ra-stat-value">20</div>
+                <div class="ra-stat-label">Default number of records shown per page</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toolbar -->
+    <section class="ra-section ra-card-shell ra-toolbar">
+        <div class="ra-toolbar-top">
+            <div class="ra-search-wrap">
+                <input id="raSearchInput"
+                       class="ra-search"
+                       type="text"
+                       placeholder="Search by protein name, gene symbol, UniProt ID, or tag..." />
+            </div>
+
+            <div class="ra-controls">
+                <div class="ra-view-toggle">
+                    <button class="ra-toggle-btn is-active" type="button" data-view="card">Card view</button>
+                    <button class="ra-toggle-btn" type="button" data-view="table">Table view</button>
+                </div>
+
+                <div class="ra-page-size">
+                    <button class="ra-size-btn is-active" type="button" data-size="20">20</button>
+                    <button class="ra-size-btn" type="button" data-size="50">50</button>
                 </div>
             </div>
-            <div class="modal-body">
+        </div>
+
+        <div class="ra-toolbar-bottom">
+            <div class="ra-tag-row">
+                <a class="ra-chip @(string.IsNullOrWhiteSpace(Model.TagId) ? "is-active" : null)"
+                   asp-controller="Home"
+                   asp-action="Targets"
+                   asp-route-domainId="@Model.Domain.Id"
+                   asp-route-tagId="">
+                    All tags
+                </a>
+
+                @foreach (var tag in allTags)
+                {
+                    <a class="ra-chip @(Model.TagId == tag.Id ? "is-active" : null)"
+                       asp-controller="Home"
+                       asp-action="Targets"
+                       asp-route-domainId="@Model.Domain.Id"
+                       asp-route-tagId="@tag.Id">
+                        @tag.Name
+                    </a>
+                }
             </div>
+
+            <div class="ra-result-meta">
+                <span id="raVisibleCount">@cavities.Count</span> visible records
+                @if (!string.IsNullOrWhiteSpace(Model.TagName))
+                {
+                    <span> • filtered by <strong>@Model.TagName</strong></span>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Results -->
+    <section class="ra-section ra-card-shell ra-results">
+        <!-- Card view -->
+        <div id="raCardView" class="ra-card-view">
+            @foreach (var cavity in cavities)
+            {
+                var protein = cavity.Protein;
+                var proteinTags = protein.Tags ?? new List<ProteinTag>();
+
+                var searchText = string.Join(" ",
+                new[]
+                {
+            protein.ProteinName,
+            protein.GeneSymbol,
+            protein.ProteinSymbol,
+            protein.Properties?.UniProt?.Id,
+            string.Join(" ", proteinTags.Select(t => t.Name))
+                }.Where(s => !string.IsNullOrWhiteSpace(s))
+                );
+
+                <article class="ra-target-card ra-result-item"
+                         data-kind="card"
+                         data-key="@cavity.Id.StringifyId()"
+                         data-search="@searchText">
+
+                    <button type="button"
+                            class="ra-target-thumb-btn"
+                            data-toggle="modal"
+                            data-target="#imagePreviewModal"
+                            data-title="@protein.ProteinName"
+                            data-subtitle="@protein.GeneSymbol"
+                            data-binding="@cavity.BindingSite"
+                            data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
+                        <img class="ra-target-thumb"
+                             src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png"
+                             alt="@protein.ProteinName" />
+                    </button>
+
+                    <div class="ra-target-body">
+                        <div class="ra-target-title">
+                            <a asp-controller="Protein"
+                               asp-action="Details"
+                               asp-route-domainId="@Model.Domain.Id"
+                               asp-route-cavityId="@cavity.Id.StringifyId()">
+                                @protein.ProteinName
+                            </a>
+                        </div>
+
+                        <div class="ra-target-sub">
+                            <div><strong>Gene:</strong> @protein.GeneSymbol</div>
+                            <div><strong>Binding site:</strong> @cavity.BindingSite</div>
+                        </div>
+
+                        <div class="ra-badges">
+                            <span class="ra-badge">RA target</span>
+                            <span class="ra-badge">Docking-ready</span>
+                            @if (protein.Tags != null && protein.Tags.Any())
+                            {
+                                <span class="ra-badge">@protein.Tags.First().Name</span>
+                            }
+                        </div>
+
+                        <div class="ra-target-actions">
+                            <button type="button"
+                                    class="btn-ra-secondary"
+                                    data-toggle="modal"
+                                    data-target="#imagePreviewModal"
+                                    data-title="@protein.ProteinName"
+                                    data-subtitle="@protein.GeneSymbol"
+                                    data-binding="@cavity.BindingSite"
+                                    data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
+                                Preview
+                            </button>
+
+                            <a class="btn-ra-primary"
+                               asp-controller="Protein"
+                               asp-action="Details"
+                               asp-route-domainId="@Model.Domain.Id"
+                               asp-route-cavityId="@cavity.Id.StringifyId()">
+                                View details
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+
+        <!-- Table view -->
+        <div id="raTableView" class="ra-table-view">
+            <div class="ra-table-shell">
+                <table class="ra-table">
+                    <thead>
+                        <tr>
+                            <th>Preview</th>
+                            <th>Protein</th>
+                            <th>Gene / Symbol</th>
+                            <th>Organism</th>
+                            <th>UniProt / ChEMBL</th>
+                            <th>Compounds</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cavity in cavities)
+                        {
+                            var protein = cavity.Protein;
+                            var proteinTags = protein.Tags ?? new List<ProteinTag>();
+
+                            var searchText = string.Join(" ",
+                            new[]
+                            {
+                        protein.ProteinName,
+                        protein.GeneSymbol,
+                        protein.ProteinSymbol,
+                        protein.Properties?.UniProt?.Id,
+                        string.Join(" ", proteinTags.Select(t => t.Name))
+                            }.Where(s => !string.IsNullOrWhiteSpace(s))
+                            );
+
+                            <tr class="ra-result-item"
+                                data-kind="table"
+                                data-key="@cavity.Id.StringifyId()"
+                                data-search="@searchText">
+
+                                <td>
+                                    <button type="button"
+                                            class="ra-table-thumb-btn"
+                                            data-toggle="modal"
+                                            data-target="#imagePreviewModal"
+                                            data-title="@protein.ProteinName"
+                                            data-subtitle="@protein.GeneSymbol"
+                                            data-binding="@cavity.BindingSite"
+                                            data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
+                                        <img class="ra-table-thumb"
+                                             src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png"
+                                             alt="@protein.ProteinName" />
+                                    </button>
+                                </td>
+
+                                <td>
+                                    <div class="ra-table-name">
+                                        <a asp-controller="Protein"
+                                           asp-action="Details"
+                                           asp-route-domainId="@Model.Domain.Id"
+                                           asp-route-cavityId="@cavity.Id.StringifyId()">
+                                            @protein.ProteinName
+                                        </a>
+                                    </div>
+                                    <div class="ra-table-meta">
+                                        Binding site: @cavity.BindingSite
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="ra-table-name">@protein.GeneSymbol</div>
+                                    <div class="ra-table-meta">@(protein.ProteinSymbol)_@(protein.OrganismSymbol)</div>
+                                </td>
+
+                                <td>
+                                    <div class="ra-table-meta">
+                                        @protein.Organism?.Replace(";", "; ")
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="ra-ref-links">
+                                        @if (protein.Properties?.UniProt != null)
+                                        {
+                                            <a target="_blank" href="@protein.Properties.UniProt.Url">
+                                                @protein.Properties.UniProt.Id
+                                            </a>
+                                        }
+                                        @if (protein.Properties?.Chembl != null)
+                                        {
+                                            <a target="_blank" href="@protein.Properties.Chembl.TargetUrl">
+                                                @protein.Properties.Chembl.Id
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="ra-table-meta">
+                                        @if (protein.BioactivityCount != 0 || protein.RawBioactivityCount != 0)
+                                        {
+                                            <span>@protein.BioactivityCount / @protein.RawBioactivityCount</span>
+                                        }
+                                        else
+                                        {
+                                            <span>—</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <a class="btn-ra-primary"
+                                       asp-controller="Protein"
+                                       asp-action="Details"
+                                       asp-route-domainId="@Model.Domain.Id"
+                                       asp-route-cavityId="@cavity.Id.StringifyId()">
+                                        Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (!cavities.Any())
+        {
+            <div class="ra-empty mt-3">
+                No targets are available for the current filter.
+            </div>
+        }
+
+        <div class="ra-pagination">
+            <div class="ra-page-info">
+                Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
+            </div>
+
+            <div class="ra-page-actions">
+                <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
+                <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
+            </div>
+        </div>
+
+        <div class="ra-footer-actions">
+            <a class="btn-ra-secondary"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-route-domainId="@Model.Domain.Id">
+                Back to RA Workspace
+            </a>
+
+            <a class="btn-ra-primary"
+               asp-controller="Job"
+               asp-action="New"
+               asp-route-domainId="@Model.Domain.Id">
+                Continue to Docking
+            </a>
+        </div>
+    </section>
+</div>
+
+<!-- Image preview modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 24px; overflow:hidden;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewTitle">Preview</h5>
+                <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <img id="imagePreviewTarget"
+                     src=""
+                     alt=""
+                     style="width:100%; border-radius:16px; margin-bottom:1rem; background:#eef3fa;" />
+
+                <div style="line-height:1.85;">
+                    <div><strong>Protein:</strong> <span id="imagePreviewProteinName"></span></div>
+                    <div><strong>Gene:</strong> <span id="imagePreviewGene"></span></div>
+                    <div><strong>Binding site:</strong> <span id="imagePreviewBinding"></span></div>
+                </div>
+            </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-@section Menu {
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Domain.Id">Home</a></li>
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Domain.Id">
-            All Jobs
-            <span class="badge badge-light">@Model.RunningCount</span>
-        </a>
-    </li>
-    <li class="nav-item active"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Domain.Id" asp-route-tagId="">Targets</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Domain.Id">Help</a></li>
-}
-
-@section Styles {
-    <environment include="Development">
-        <link rel="stylesheet" href="~/lib/datatables.net-bs4/css/dataTables.bootstrap4.css" />
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="~/lib/datatables.net-bs4/css/dataTables.bootstrap4.min.css" />
-    </environment>
-}
-
 @section Scripts {
-    <environment include="Development">
-        <script src="~/lib/datatables.net/jquery.dataTables.js"></script>
-        <script src="~/lib/datatables.net-bs4/js/dataTables.bootstrap4.js"></script>
-    </environment>
-    <environment exclude="Development">
-        <script src="~/lib/datatables.net/jquery.dataTables.min.js"></script>
-        <script src="~/lib/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>
-    </environment>
-    <script src="~/lib/ngl/ngl.js"></script>
     <script>
-        setupProteinInfoModal();
-        $.fn.dataTable.ext.order["dom-float"] = function (settings, col) {
-            return this.api().column(col, { order: "index" }).nodes().map(function (td, i) {
-                const txt = $(td).text().trim();
-                return txt.match(/\d+/) ? parseFloat(txt) : Infinity;
-            });
-        };
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("raSearchInput");
+            const viewButtons = Array.from(document.querySelectorAll(".ra-view-toggle .ra-toggle-btn"));
+            const sizeButtons = Array.from(document.querySelectorAll(".ra-page-size .ra-size-btn"));
 
-        $.fn.dataTable.ext.order["dom-int-tail"] = function (settings, col) {
-            return this.api().column(col, { order: "index" }).nodes().map(function (td, i) {
-                const txt = $(td).text().match(/\d+/);
-                return txt ? parseInt(txt) : Infinity;
-            });
-        };
+            const cardView = document.getElementById("raCardView");
+            const tableView = document.getElementById("raTableView");
 
-        $(() => $("table").DataTable({
-            "pageLength": 50,
-            "lengthMenu": [[20, 50, 100, -1], [20, 50, 100, "All"]],
-            "columns": [
-                { "orderable": false },
-                null,
-                null,
-                null,
-                null,
-                @foreach (var field in propFields)
-                {
-                    @:null,
+            const visibleCount = document.getElementById("raVisibleCount");
+            const currentPageLabel = document.getElementById("raCurrentPage");
+            const totalPagesLabel = document.getElementById("raTotalPages");
+            const prevPageBtn = document.getElementById("raPrevPage");
+            const nextPageBtn = document.getElementById("raNextPage");
+
+            let currentView = "card";
+            let pageSize = 20;
+            let currentPage = 1;
+
+            function allItems(kind) {
+                return Array.from(document.querySelectorAll('.ra-result-item[data-kind="' + kind + '"]'));
+            }
+
+            function filteredItems(kind) {
+                const query = (searchInput.value || "").trim().toLowerCase();
+                return allItems(kind).filter(item => {
+                    const text = (item.dataset.search || "").toLowerCase();
+                    return !query || text.includes(query);
+                });
+            }
+
+            function applyPagination() {
+                const cardItems = filteredItems("card");
+                const tableItems = filteredItems("table");
+                const total = cardItems.length;
+
+                const totalPages = Math.max(1, Math.ceil(total / pageSize));
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+
+                const visibleKeys = new Set(cardItems.slice(start, end).map(x => x.dataset.key));
+
+                allItems("card").forEach(item => {
+                    const shouldShow = visibleKeys.has(item.dataset.key) && currentView === "card";
+                    item.style.display = shouldShow ? "" : "none";
+                });
+
+                allItems("table").forEach(item => {
+                    const shouldShow = visibleKeys.has(item.dataset.key) && currentView === "table";
+                    item.style.display = shouldShow ? "table-row" : "none";
+                });
+
+                cardView.style.display = currentView === "card" ? "grid" : "none";
+                tableView.style.display = currentView === "table" ? "block" : "none";
+
+                visibleCount.textContent = total.toString();
+                currentPageLabel.textContent = currentPage.toString();
+                totalPagesLabel.textContent = totalPages.toString();
+
+                prevPageBtn.disabled = currentPage <= 1;
+                nextPageBtn.disabled = currentPage >= totalPages;
+            }
+
+            viewButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    viewButtons.forEach(x => x.classList.remove("is-active"));
+                    this.classList.add("is-active");
+                    currentView = this.getAttribute("data-view") || "card";
+                    applyPagination();
+                });
+            });
+
+            sizeButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    sizeButtons.forEach(x => x.classList.remove("is-active"));
+                    this.classList.add("is-active");
+                    pageSize = parseInt(this.getAttribute("data-size") || "20");
+                    currentPage = 1;
+                    applyPagination();
+                });
+            });
+
+            searchInput.addEventListener("input", function () {
+                currentPage = 1;
+                applyPagination();
+            });
+
+            prevPageBtn.addEventListener("click", function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    applyPagination();
                 }
-                { "orderDataType": "dom-int-tail", "type": "numberic" },
-            ],
-            "order": [],
-        }));
+            });
+
+            nextPageBtn.addEventListener("click", function () {
+                currentPage++;
+                applyPagination();
+            });
+
+            // Image preview modal
+            $('#imagePreviewModal').on('show.bs.modal', function (event) {
+                const trigger = $(event.relatedTarget);
+                const title = trigger.data('title') || 'Preview';
+                const subtitle = trigger.data('subtitle') || '';
+                const binding = trigger.data('binding') || '';
+                const image = trigger.data('image') || '';
+
+                $('#imagePreviewTitle').text(title);
+                $('#imagePreviewTarget').attr('src', image).attr('alt', title);
+                $('#imagePreviewProteinName').text(title);
+                $('#imagePreviewGene').text(subtitle);
+                $('#imagePreviewBinding').text(binding);
+            });
+
+            applyPagination();
+        });
     </script>
 }

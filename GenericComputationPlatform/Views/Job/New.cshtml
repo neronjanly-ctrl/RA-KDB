@@ -1,9 +1,12 @@
 ﻿@model Domain
 @inject IOptions<AppSettings> _appSettings
+
 @{
-    ViewData["Title"] = "New Job";
+    ViewData["Title"] = "Docking Workspace";
+
     int maxLigands = _appSettings.Value.Options.MaxInputLigands;
     string userName = "John";
+
     if (User.Identity.IsAuthenticated)
     {
         int idx = User.Identity.Name.IndexOf('@');
@@ -12,76 +15,475 @@
     }
 }
 
-<h2>New Job on @Model.Name</h2>
-<hr />
-
-<form asp-controller="Job" asp-action="Create" asp-route-domainId="@Model.Id" asp-antiforgery="true" method="post">
-    <div class="form-group row job-name-row">
-        <label class="col-sm-2 col-form-label" for="jobName">
-            <span class="bg-info mr-2">&nbsp;</span>
-            <strong>Job Name</strong>
-        </label>
-        <div class="col-sm-10">
-            <input type="text" class="form-control" id="jobName" name="jobName" placeholder="e.g. @userName's drug01-@Model.Id.ToUpper()" />
-            <div class="alert alert-danger fade collapse mt-2" role="alert" id="jobNameRequired">
-                <strong>Job Name</strong> is required.
-            </div>
-            <small class="form-text text-muted">Provide a mnemonic name of the job for your convenience. Visible to the public.</small>
-        </div>
-    </div>
-    @*<div class="form-group row mol-name-row">
-            <label class="col-sm-2 col-form-label" for="LigandName">
-                <span class="bg-info mr-2">&nbsp;</span>
-                <strong>Molecule Name</strong>
-            </label>
-            <div class="col-sm-10">
-                <input type="text" class="form-control d-inline-block" id="LigandName" name="LigandName" />
-                <div class="alert alert-danger fade collapse mt-2" role="alert" id="ligandNameRequired">
-                    <strong>Molecule Name</strong> is required.
-                </div>
-                <small class="form-text text-muted">Provide the name of the molecule to be computed.</small>
-            </div>
-        </div>
-        <div class="form-group row mol-row">
-            <label class="col-sm-2" for="JME">
-                <span class="bg-info mr-2">&nbsp;</span>
-                <strong>Molecule</strong>
-            </label>
-            <div class="col-sm-10">
-                <div code="JME.class" name="JME" id="JME" class="mol-editor" width="100%" height="380px">
-                    You must enable JavaScript for using this site.
-                </div>
-                <div class="alert alert-danger fade collapse mt-2" role="alert" id="moleculeRequired">
-                    <strong>Molecule</strong> is required.
-                </div>
-                <small class="form-text text-muted">Draw a molecule or paste MOL, SDF or SMILES via clicking on the blue double-triangle button on the right of the toolbar.</small>
-            </div>
-        </div>*@
-    <div class="form-group row">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-10">
-            <a asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.Id" asp-route-jobId="0" class="d-none"></a>
-            <button id="create" class="btn btn-warning">Create Job</button>
-            <button id="addmol" class="btn btn-primary">Add Molecule</button>
-            @if (User.Identity.IsAuthenticated)
-            {
-                <input type="checkbox" class="ml-4" id="isPrivate" name="isPrivate" />
-                <label for="isPrivate" title="Only the creator can access the job. Others can only see the job name.">
-                    <strong>Private job</strong>
-                </label>
-            }
-            <small class="form-text text-info" id="formMessage"></small>
-        </div>
-    </div>
-</form>
-
 @section Menu {
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">Home</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">All Jobs</a></li>
-    <li class="nav-item active bg-danger"><a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">New Job</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Targets</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a></li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Id">RA Workspace</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">Protein Database</a>
+    </li>
+    <li class="nav-item active">
+        <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">Docking</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">All Jobs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">Help</a>
+    </li>
 }
+
+@section Styles {
+    <style>
+        :root {
+            --ra-bg: #f7f9fc;
+            --ra-surface: rgba(255,255,255,.86);
+            --ra-surface-strong: rgba(255,255,255,.96);
+            --ra-title: #162033;
+            --ra-text: #627089;
+            --ra-line: #dde6f2;
+            --ra-blue: #2f6bff;
+            --ra-blue-soft: rgba(47,107,255,.08);
+            --ra-cyan: #68c8d0;
+            --ra-warning: #ffb454;
+            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
+            --ra-shadow-card: 0 14px 28px rgba(20, 44, 84, .05);
+        }
+
+        body {
+            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(104,200,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
+            color: var(--ra-title);
+        }
+
+        .ra-docking-page {
+            width: min(1460px, calc(100vw - 2rem));
+            margin: 0 auto;
+            padding: 2rem 0 5rem;
+        }
+
+        .ra-section + .ra-section {
+            margin-top: 1.8rem;
+        }
+
+        .ra-card-shell {
+            background: var(--ra-surface);
+            border: 1px solid var(--ra-line);
+            border-radius: 28px;
+            box-shadow: var(--ra-shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .ra-hero {
+            padding: 2rem;
+        }
+
+        .ra-kicker {
+            display: inline-flex;
+            align-items: center;
+            padding: .42rem .95rem;
+            border-radius: 999px;
+            background: var(--ra-blue-soft);
+            color: var(--ra-blue);
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .ra-title {
+            font-size: clamp(2.2rem, 3.8vw, 4.2rem);
+            line-height: 1.03;
+            font-weight: 800;
+            letter-spacing: -.04em;
+            margin-bottom: .9rem;
+        }
+
+        .ra-desc {
+            color: var(--ra-text);
+            font-size: 1.04rem;
+            line-height: 1.9;
+            max-width: 980px;
+        }
+
+        .ra-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-top: 1.4rem;
+        }
+
+        .ra-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            padding: 0 .9rem;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--ra-line);
+            color: #24324a;
+            font-weight: 650;
+            font-size: .92rem;
+        }
+
+        .ra-grid {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .ra-form-card,
+        .ra-side-card {
+            padding: 1.5rem;
+        }
+
+        .ra-section-title {
+            font-size: 1.45rem;
+            font-weight: 760;
+            margin-bottom: .75rem;
+            line-height: 1.3;
+        }
+
+        .ra-section-desc {
+            color: var(--ra-text);
+            line-height: 1.8;
+            margin-bottom: 1.1rem;
+        }
+
+        .ra-subtitle {
+            font-size: .84rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--ra-blue);
+            margin-bottom: .7rem;
+        }
+
+        .ra-form-shell {
+            border: 1px solid var(--ra-line);
+            border-radius: 24px;
+            background: rgba(255,255,255,.95);
+            padding: 1.2rem;
+        }
+
+        .job-name-row,
+        .mol-name-row,
+        .mol-row {
+            margin-bottom: 1rem;
+            padding: 1rem 1rem .8rem;
+            border: 1px solid var(--ra-line);
+            border-radius: 20px;
+            background: #fff;
+        }
+
+            .job-name-row label,
+            .mol-name-row label,
+            .mol-row label {
+                font-weight: 700;
+                color: #22324a;
+            }
+
+            .job-name-row .form-control,
+            .mol-name-row .form-control {
+                min-height: 46px;
+                border-radius: 14px;
+                border-color: var(--ra-line);
+            }
+
+        .mol-editor {
+            border: 1px solid var(--ra-line);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .ra-action-bar {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-top: 1.1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--ra-line);
+        }
+
+            .ra-action-bar .btn {
+                min-height: 44px;
+                border-radius: 999px;
+                padding: 0 1rem;
+                font-weight: 700;
+            }
+
+        .ra-action-note {
+            color: var(--ra-text);
+            font-size: .93rem;
+            line-height: 1.7;
+        }
+
+        .ra-side-stack {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .ra-info-card {
+            border: 1px solid var(--ra-line);
+            border-radius: 22px;
+            background: rgba(255,255,255,.95);
+            padding: 1.2rem 1.1rem;
+            box-shadow: var(--ra-shadow-card);
+        }
+
+        .ra-info-title {
+            font-size: 1.02rem;
+            font-weight: 740;
+            margin-bottom: .55rem;
+        }
+
+        .ra-info-body {
+            color: var(--ra-text);
+            line-height: 1.82;
+            font-size: .95rem;
+        }
+
+        .ra-info-list {
+            padding-left: 1.1rem;
+            margin-bottom: 0;
+        }
+
+            .ra-info-list li + li {
+                margin-top: .45rem;
+            }
+
+        .ra-footer-actions {
+            display: flex;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-top: 1.2rem;
+        }
+
+        .btn-ra-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            border-radius: 999px;
+            padding: 0 1rem;
+            border: 1px solid var(--ra-line);
+            background: #fff;
+            color: #24324a !important;
+            font-weight: 700;
+            text-decoration: none !important;
+        }
+
+        .btn-ra-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            border-radius: 999px;
+            padding: 0 1rem;
+            background: var(--ra-blue);
+            color: #fff !important;
+            font-weight: 700;
+            text-decoration: none !important;
+        }
+
+        @@media (max-width: 991.98px) {
+            .ra-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ra-hero,
+            .ra-form-card,
+            .ra-side-card {
+                padding: 1.25rem;
+            }
+        }
+    </style>
+}
+
+<div class="ra-docking-page">
+    <!-- Hero -->
+    <section class="ra-section ra-card-shell ra-hero">
+        <div class="ra-kicker">Docking workspace • Multi-ligand submission • RA-focused</div>
+
+        <h1 class="ra-title">Docking workspace for curated RA targets</h1>
+
+        <p class="ra-desc">
+            Submit one or more molecules to the current rheumatoid arthritis target panel and create a new docking job.
+            This workspace is designed as the operational entry point that connects your curated RA protein database
+            with downstream computational exploration and result analysis.
+        </p>
+
+        <div class="ra-pill-row">
+            <span class="ra-pill">@Model.Name target panel</span>
+            <span class="ra-pill">Up to @maxLigands ligands</span>
+            <span class="ra-pill">SMILES / editor-based input</span>
+            <span class="ra-pill">Job-based workflow</span>
+        </div>
+    </section>
+
+    <!-- Main content -->
+    <section class="ra-section ra-grid">
+        <!-- Left: form -->
+        <div class="ra-card-shell ra-form-card">
+            <div class="ra-subtitle">Submission form</div>
+            <h2 class="ra-section-title">Create a new docking job</h2>
+            <p class="ra-section-desc">
+                Provide a job name, add one or more molecules, and submit the job to the current RA domain.
+                The existing create logic is preserved; this page only reorganizes the interface.
+            </p>
+
+            <div class="ra-form-shell">
+                <form asp-controller="Job"
+                      asp-action="Create"
+                      asp-route-domainId="@Model.Id"
+                      asp-antiforgery="true"
+                      method="post">
+
+                    <!-- Keep this class and input for existing JS -->
+                    <div class="form-group row job-name-row">
+                        <label class="col-sm-3 col-form-label" for="jobName">
+                            <strong>Job Name</strong>
+                        </label>
+                        <div class="col-sm-9">
+                            <input type="text"
+                                   class="form-control"
+                                   id="jobName"
+                                   name="jobName"
+                                   placeholder="e.g. @userName's ligand-panel-@Model.Id.ToUpper()" />
+                            <div class="alert alert-danger fade collapse mt-2" role="alert" id="jobNameRequired">
+                                <strong>Job Name</strong> is required.
+                            </div>
+                            <small class="form-text text-muted">
+                                Give the job a meaningful name so you can identify it later in All Jobs.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic ligand rows are inserted by existing JS after .job-name-row -->
+
+                    <div class="ra-action-bar">
+                        <!-- Keep this hidden anchor for existing redirect logic -->
+                        <a asp-controller="Job"
+                           asp-action="Details"
+                           asp-route-domainId="@Model.Id"
+                           asp-route-jobId="0"
+                           class="d-none"></a>
+
+                        <!-- Keep ids for existing JS -->
+                        <button id="create" class="btn btn-warning">Create Job</button>
+                        <button id="addmol" class="btn btn-primary">Add Molecule</button>
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="d-inline-flex align-items-center ml-md-3">
+                                <input type="checkbox" class="mr-2" id="isPrivate" name="isPrivate" />
+                                <label for="isPrivate" class="mb-0" title="Only the creator can access the job. Others can only see the job name.">
+                                    <strong>Private job</strong>
+                                </label>
+                            </div>
+                        }
+
+                        <small class="form-text text-info mb-0" id="formMessage"></small>
+                    </div>
+
+                    <div class="ra-action-note mt-3">
+                        Tip: after you add a molecule block, you can enter a ligand name and draw or paste the structure
+                        in the editor. Duplicate names and duplicate structures are rejected by the existing validation logic.
+                    </div>
+                </form>
+            </div>
+
+            <div class="ra-footer-actions">
+                <a class="btn-ra-secondary"
+                   asp-controller="Home"
+                   asp-action="Targets"
+                   asp-route-domainId="@Model.Id">
+                    Browse Protein Database
+                </a>
+
+                <a class="btn-ra-secondary"
+                   asp-controller="Job"
+                   asp-action="List"
+                   asp-route-domainId="@Model.Id">
+                    View All Jobs
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: helper content -->
+        <div class="ra-card-shell ra-side-card">
+            <div class="ra-subtitle">Workflow guidance</div>
+            <h2 class="ra-section-title">How this docking step fits into the platform</h2>
+            <p class="ra-section-desc">
+                This page is where curated target knowledge becomes a runnable computational task.
+            </p>
+
+            <div class="ra-side-stack">
+                <article class="ra-info-card">
+                    <div class="ra-info-title">How it works</div>
+                    <div class="ra-info-body">
+                        <ul class="ra-info-list">
+                            <li>Create a job name for this submission.</li>
+                            <li>Add one or more molecules to the editor workspace.</li>
+                            <li>Submit the job and continue into job details and outputs.</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <article class="ra-info-card">
+                    <div class="ra-info-title">Submission rules</div>
+                    <div class="ra-info-body">
+                        <ul class="ra-info-list">
+                            <li>You can submit up to <strong>@maxLigands</strong> ligands in one job.</li>
+                            <li>Each molecule needs both a ligand name and a valid structure.</li>
+                            <li>Duplicate ligand names and duplicate SMILES are blocked.</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <article class="ra-info-card">
+                    <div class="ra-info-title">After submission</div>
+                    <div class="ra-info-body">
+                        Once the job is created, you can monitor progress, inspect result tables/cards,
+                        and continue into downstream comparison or interpretation workflows.
+                    </div>
+                </article>
+
+                <article class="ra-info-card">
+                    <div class="ra-info-title">Current domain</div>
+                    <div class="ra-info-body">
+                        <div><strong>Domain:</strong> @Model.Name</div>
+                        <div><strong>Identifier:</strong> @Model.Id</div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <div class="mt-2">@Model.Description</div>
+                        }
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom navigation -->
+    <section class="ra-section">
+        <div class="ra-footer-actions">
+            <a class="btn-ra-secondary"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-route-domainId="@Model.Id">
+                Back to RA Workspace
+            </a>
+
+            <a class="btn-ra-primary"
+               asp-controller="Job"
+               asp-action="List"
+               asp-route-domainId="@Model.Id">
+                Open All Jobs
+            </a>
+        </div>
+    </section>
+</div>
 
 @section Scripts {
     <script src="~/lib/jsme/jsme.nocache.js"></script>
