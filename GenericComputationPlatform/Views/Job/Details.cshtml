@@ -17,6 +17,7 @@
     </p>
     <hr class="my-4">
     <p id="statusDesc"></p>
+    <div id="jobStatusAlert" class="alert alert-warning d-none" role="alert"></div>
     <p class="lead">
         <a class="btn btn-primary btn-lg" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))" role="button">See Detailed Output</a>
         <a class="btn btn-outline-primary btn-lg" asp-controller="Job" asp-action="Report" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Download CSV <i class="fa fa-download"></i></a>
@@ -211,6 +212,11 @@ else
         JobStatusHelper.setStatus("@Model.Job.Status.ToString()", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
         JobProgressHelper.setProgress(@Model.Job.Progress, "@Model.Job.TimeRemainingString", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
         setupJobHubConnection();
+        setupJobStatusMonitor({
+            statusUrl: "@Url.Action("StatusSnapshot", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id })",
+            initialStatus: "@Model.Job.Status.ToString()",
+            initialUpdatedUtms: @Model.Job.Updated.UtcToUnixTimeMilliseconds()
+                });
         setupFingerprintInfoModal();
         loadPreContents();
     </script>

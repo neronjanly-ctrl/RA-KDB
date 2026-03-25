@@ -21,11 +21,6 @@
             Title = "Structured interpretation for each record",
             Desc = "Protein entries are organized as readable records with annotations, summaries, and linked biological meaning, making them appropriate for both expert review and downstream computational work."
         },
-        new
-        {
-            Title = "Continuity from knowledge to analysis",
-            Desc = "The platform is designed so that users do not move between disconnected tools. Target interpretation, protein exploration, and docking preparation all remain within one research environment."
-        }
     };
 
     var capabilityCards = new[]
@@ -45,9 +40,9 @@
     };
 
     var featuredProteins = Model.FeaturedProteins.Take(3).ToList();
-    var overviewBanner = Url.Content("~/images/ra-hero-1.jpg");
-    var knowledgeBanner = Url.Content("~/images/ra-hero-2.jpg");
-    var dockingBanner = featuredProteins.Skip(1).FirstOrDefault()?.ImageUrl ?? featuredProteins.FirstOrDefault()?.ImageUrl ?? Url.Content("~/images/ra-hero-1.jpg");
+    var overviewBanner = Url.Content("~/images/version3/ra_hero1.png");
+    var knowledgeBanner = Url.Content("~/images/version3/ra_hero2.png");
+    var dockingBanner = Url.Content("~/images/version3/ra_hero3.png");
 }
 
 @section Menu {
@@ -77,15 +72,10 @@
             <div class="ra-banner-overlay"></div>
             <div class="ra-banner-inner ra-container">
                 <div class="ra-kicker">Overview</div>
-                <h1 class="ra-hero-title">A research platform for rheumatoid arthritis target interpretation and docking</h1>
+                <h1 class="ra-hero-title">A research platform for rheumatoid arthritis knowledgebase and docking</h1>
                 <p class="ra-hero-desc">
                     RA-KDB brings together curated disease-relevant targets, structured protein records, and docking workflows in one research setting, allowing users to move from target understanding to computational investigation without leaving the same scholarly environment.
                 </p>
-                <div class="ra-overview-points">
-                    <span>Curated target knowledge</span>
-                    <span>Structured protein records</span>
-                    <span>Docking-oriented workflows</span>
-                </div>
             </div>
         </div>
     </section>
@@ -118,14 +108,7 @@
                     }
                 </div>
 
-                <aside class="ra-side-note">
-                    <div class="ra-side-note-label">Research framing</div>
-                    <p>
-                        Instead of behaving like a raw protein list, the knowledge layer presents records as interpretable research objects. This gives the platform a clearer academic identity and helps users move from biological context to computational work with less fragmentation.
-                    </p>
-                </aside>
             </div>
-
             <div class="ra-featured-block">
                 <div class="ra-featured-head">
                     <div>
@@ -139,7 +122,16 @@
 
                 @if (featuredProteins.Count > 0)
                 {
-                    <div class="ra-card-view">
+                    <div class="ra-view-toggle ra-featured-toggle">
+                        <button class="ra-toggle-btn is-active" type="button" data-view="card" data-target="featured">
+                            Card view
+                        </button>
+                        <button class="ra-toggle-btn" type="button" data-view="list" data-target="featured">
+                            Compact list
+                        </button>
+                    </div>
+
+                    <div class="ra-card-view" id="raFeaturedCardView">
                         @foreach (var protein in featuredProteins)
                         {
                             <article class="ra-protein-card">
@@ -151,19 +143,13 @@
                                     </h3>
 
                                     <div class="ra-protein-meta">
-                                        <div><strong>Organism:</strong> @protein.Organism</div>
-                                        <div><strong>Symbol:</strong> @protein.Symbol</div>
+                                        <div><strong>Organism:</strong> @protein.Organism</div>                                       
                                         <div><strong>Gene:</strong> @protein.Gene</div>
-                                        @if (!string.IsNullOrWhiteSpace(protein.BindingSite))
-                                        {
-                                            <div><strong>Binding site:</strong> @protein.BindingSite</div>
-                                        }
                                     </div>
 
                                     <div class="ra-badge-row">
                                         <span class="ra-badge">Knowledge base</span>
-                                        <span class="ra-badge">RA-oriented</span>
-                                        <span class="ra-badge">Research-ready</span>
+                                        <span class="ra-badge">RA-oriented</span> 
                                     </div>
 
                                     <div class="ra-link-row">
@@ -177,10 +163,45 @@
                                            asp-route-cavityId="@protein.CavityId">
                                             View details
                                         </a>
-                                    </div>                   
+                                    </div>
                                 </div>
                             </article>
                         }
+                    </div>
+
+                    <div class="ra-list-view" id="raFeaturedListView" style="display:none;">
+                        <div class="ra-table-wrap">
+                            <table class="ra-list-table">
+                                <thead>
+                                    <tr>
+                                        <th>Protein</th>
+                                        <th>Gene</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var protein in featuredProteins)
+                                    {
+                                        <tr>
+                                            <td>@protein.ProteinName</td>
+                                            <td>@protein.Gene</td>
+                                            <td>
+                                                <a class="ra-protein-action"
+                                                   data-toggle="modal"
+                                                   data-target="#proteinInfo"
+                                                   data-pname="@protein.ProteinName"
+                                                   asp-controller="Protein"
+                                                   asp-action="Details"
+                                                   asp-route-domainId="@protein.DomainId"
+                                                   asp-route-cavityId="@protein.CavityId">
+                                                    View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
                 else
@@ -189,7 +210,7 @@
                         No featured protein cards are available yet. Once sample entries are configured for the RA domain, they will appear here.
                     </div>
                 }
-            </div>
+            </div>      
         </div>
     </section>
 
@@ -226,7 +247,8 @@
             <div class="ra-research-band">
                 <div class="ra-side-note-label">Research value</div>
                 <p>
-                    In this design, docking is not presented as an isolated utility. It is positioned as the next analytical layer after interpretation, so the homepage reads more like an academic platform with clear module transitions than a generic product landing page.
+                    In this part, docking is designed for caculating the scores for different proteins 
+                    with certain drug given by you visitor.
                 </p>
             </div>
         </div>
@@ -258,6 +280,28 @@
 @section Scripts {
     <script src="~/lib/ngl/ngl.js"></script>
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleButtons = document.querySelectorAll('.ra-featured-toggle .ra-toggle-btn');
+            const cardView = document.getElementById('raFeaturedCardView');
+            const listView = document.getElementById('raFeaturedListView');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const view = this.dataset.view;
+
+                    toggleButtons.forEach(btn => btn.classList.remove('is-active'));
+                    this.classList.add('is-active');
+
+                    if (view === 'card') {
+                        cardView.style.display = '';
+                        listView.style.display = 'none';
+                    } else {
+                        cardView.style.display = 'none';
+                        listView.style.display = '';
+                    }
+                });
+            });
+        });
         (() => {
             if (typeof setupProteinInfoModal === 'function') {
                 setupProteinInfoModal();

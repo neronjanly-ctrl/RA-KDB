@@ -35,6 +35,7 @@
     {
         <a href="@(_appSettings.Value.ExternalUrls.JobHub)?jobId=@Model.Id" class="d-none" id="jobhub" aria-hidden="true"></a>
     }
+    <div id="jobStatusAlert" class="alert alert-warning d-none mb-2" role="alert"></div>
     <span class="bg-info mr-2">&nbsp;</span>
     <span id="statusDesc2"></span>
     <br />
@@ -97,6 +98,11 @@
         JobStatusHelper.setStatus("@Model.Status.ToString()", @Model.Updated.UtcToUnixTimeMilliseconds());
         JobProgressHelper.setProgress(@Model.Progress, "@Model.TimeRemainingString", @Model.Updated.UtcToUnixTimeMilliseconds());
         setupJobHubConnection();
+        setupJobStatusMonitor({
+            statusUrl: "@Url.Action("StatusSnapshot", "Job", new { domainId = domainId, jobId = Model.Id })",
+            initialStatus: "@Model.Status.ToString()",
+            initialUpdatedUtms: @Model.Updated.UtcToUnixTimeMilliseconds()
+                });
         var model = @Html.Raw(ViewBag.Data);
         setupViewport(model);
     </script>

@@ -462,7 +462,6 @@ interface Prediction {
     activity: string;
     confidenceLevel: number;
 };
-
 function setupJobHubConnection() {
     const hubUrl = $("a#jobhub").attr("href");
     if (hubUrl === undefined)

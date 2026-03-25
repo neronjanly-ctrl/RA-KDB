@@ -338,6 +338,11 @@ public partial class Job
         Status = RunningStatus.Finished;
         Update();
     }
+    public void Fail()
+    {
+        Status = RunningStatus.Failed;
+        Update();
+    }
 
     #endregion
 }

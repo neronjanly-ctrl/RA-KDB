@@ -608,7 +608,7 @@ public class JobController : ControllerBase
 
         if (job.Status != RunningStatus.Failed)
         {
-            job.Status = RunningStatus.Failed;
+            job.Fail();
             await _ctx.SaveChangesAsync();
         }
 

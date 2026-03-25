@@ -1,6 +1,7 @@
 ﻿using DockingApiService;
 using DockingApiService.DataModels;
 using DockingApiService.Hubs;
+using DockingApiService.Jobs;
 using DockingApiService.Services;
 using Hangfire;
 using Hangfire.SQLite;

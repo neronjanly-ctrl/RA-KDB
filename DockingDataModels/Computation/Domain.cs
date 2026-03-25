@@ -95,7 +95,7 @@ public class Domain
     {
         Id = id;
         Name = name;
-        IsPublic = IsPublic;
+        IsPublic = isPublic;
         Created = DateTime.UtcNow;
         Update();
     }
