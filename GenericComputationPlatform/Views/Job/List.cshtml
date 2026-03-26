@@ -35,23 +35,14 @@
 }
 
 @section Menu {
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.DomainId">RA Workspace</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.DomainId">Protein Database</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.DomainId">Docking</a>
-    </li>
+    @{
+        ViewData["ActiveMenu"] = "docking";
+    }
+    <partial name="_RaWorkspaceMenu" />
     <li class="nav-item active">
         <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.DomainId">Help</a>
-    </li>
 }
-
 @section Styles {
     <style>
         :root {
@@ -693,7 +684,7 @@
         </div>
     </section>
 </div>
-
+}
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {

@@ -80,8 +80,11 @@
 </nav>
 
 @section Menu {
-    <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">Home</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
+    @{
+        ViewData["ActiveMenu"] = "workspace";
+    }
+    <partial name="_RaWorkspaceMenu" />
+    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
     @*<li class="nav-item active"><a class="nav-link" asp-controller="Home" asp-action="Guestbook" asp-route-domainId="@domainId">Guestbook</a></li>*@
 }
 

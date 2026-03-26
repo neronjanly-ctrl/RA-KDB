@@ -197,6 +197,19 @@
         color: #6F42C1;
     }
 
+    .site-navbar .navbar-nav .workspace-nav-item .nav-link {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .site-navbar .navbar-nav .workspace-nav-item + .workspace-nav-item .nav-link::before,
+    .site-navbar .site-auth-link-with-separator::before {
+        content: "|";
+        color: #8B93A3;
+        font-weight: 500;
+        margin: 0 .85rem 0 .15rem;
+    }
+
     .site-navbar .site-auth-link {
         color: #2F3440;
         font-weight: 700;
@@ -421,7 +434,7 @@
             }
             else
             {
-                <a class="site-auth-link"
+                <a class="site-auth-link site-auth-link-with-separator"
                    title="Sign in with your Microsoft work, school, or personal account"
                    asp-controller="User"
                    asp-action="LogIn"

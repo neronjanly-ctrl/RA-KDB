@@ -3,19 +3,19 @@
     var active = ViewData["ActiveMenu"]?.ToString() ?? "";
 }
 
-<li class="nav-item @(active == "workspace" ? "active" : "")">
+<li class="nav-item workspace-nav-item @(active == "workspace" ? "active" : "")">
     <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">
         RA Workspace
     </a>
 </li>
 
-<li class="nav-item @(active == "database" ? "active" : "")">
+<li class="nav-item workspace-nav-item @(active == "database" ? "active" : "")">
     <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId" asp-route-tagId="">
         Protein Database
     </a>
 </li>
 
-<li class="nav-item @(active == "docking" ? "active" : "")">
+<li class="nav-item workspace-nav-item @(active == "docking" ? "active" : "")">
     <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@domainId">
         Docking
     </a>

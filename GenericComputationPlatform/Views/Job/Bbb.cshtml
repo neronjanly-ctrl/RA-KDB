@@ -201,14 +201,15 @@
 }
 
 @section Menu {
-    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.DomainId">Home</a></li>
-    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Job</a></li>
-    <li class="nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">BBB</a></li>
-    <li class="nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))">Output</a></li>
-    <li class="nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Spider Plot</a></li>
-    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.DomainId">Targets</a></li>
-    <li class="nav-item bg-dark d-none d-md-block"><a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.DomainId">Help</a></li>
+     @{
+        ViewData["ActiveMenu"] = "docking";
+    }
+    <partial name="_RaWorkspaceMenu" />
+    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.DomainId">All Jobs</a></li>
+    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Job</a></li>
+    <li class="nav-item workspace-nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">BBB</a></li>
+    <li class="nav-item workspace-nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))">Output</a></li>
+    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Spider Plot</a></li>
 }
 
 @section Scripts {
