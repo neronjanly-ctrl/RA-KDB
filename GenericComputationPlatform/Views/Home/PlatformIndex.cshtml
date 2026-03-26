@@ -46,17 +46,34 @@
 }
 
 @section Menu {
-    <li class="nav-item"><a class="nav-link" href="#about">Overview</a></li>
-    <li class="nav-item"><a class="nav-link" href="#knowledge">Knowledge Base</a></li>
-    <li class="nav-item"><a class="nav-link" href="#capabilities">Docking</a></li>
-    <li class="nav-item">
+    <li class="nav-item dropdown ra-section-dropdown nav-item-with-separator">
+        <a class="nav-link dropdown-toggle ra-section-dropdown-toggle"
+           href="#"
+           id="IntroductionMenu"
+           role="button"
+           data-toggle="dropdown"
+           aria-haspopup="true"
+           aria-expanded="false">
+            <span class="ra-section-dropdown-label">Introduction</span>
+        </a>
+
+        <div class="dropdown-menu dropdown-menu-right ra-section-dropdown-menu"
+             aria-labelledby="IntroductionMenu">
+            <a class="dropdown-item ra-section-dropdown-item" href="#about">Overview</a>
+            <a class="dropdown-item ra-section-dropdown-item" href="#knowledge">Knowledge Base</a>
+            <a class="dropdown-item ra-section-dropdown-item" href="#capabilities">Docking</a>
+        </div>
+    </li>
+
+    <li class="nav-item nav-item-with-separator">
         <a class="nav-link" href="@Url.Action("Index", "Home", new { domainId = raDomain?.Id ?? "RA" })">
             Enter RA Workspace
         </a>
     </li>
-    <li class="nav-item">
+
+    <li class="nav-item nav-item-with-separator">
         <a class="nav-link" href="@Url.Action("Help", "Home", new { domainId = raDomain?.Id ?? "RA" })">
-            Help
+            Guideline
         </a>
     </li>
 }
