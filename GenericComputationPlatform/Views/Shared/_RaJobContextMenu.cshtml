@@ -1,0 +1,73 @@
+﻿﻿@{
+    var domainId = ViewData["JobNavDomainId"]?.ToString();
+    var jobId = ViewData["JobNavJobId"]?.ToString();
+    var active = (ViewData["JobNavActive"]?.ToString() ?? string.Empty).ToLowerInvariant();
+    var outputUrl = ViewData["JobNavOutputUrl"]?.ToString();
+    var outputPageNum = ViewData["JobNavOutputPageNum"];
+    var isJobContextActive = active == "job" || active == "bbb" || active == "output" || active == "plot";
+
+    if (!string.IsNullOrWhiteSpace(domainId) &&
+        !string.IsNullOrWhiteSpace(jobId) &&
+        string.IsNullOrWhiteSpace(outputUrl))
+    {
+        outputUrl = Context.UseCardOutputDisplay()
+            ? Url.Action("CardView", "Job", new { domainId, jobId, pageNum = outputPageNum ?? 1 })
+            : Url.Action("TableViewAll", "Job", new { domainId, jobId });
+    }
+}
+
+@if (!string.IsNullOrWhiteSpace(domainId))
+{
+    <li class="nav-item nav-item-with-separator">
+        <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">
+            All Jobs
+        </a>
+    </li>
+}
+
+@if (!string.IsNullOrWhiteSpace(domainId) && !string.IsNullOrWhiteSpace(jobId))
+{
+    <li class="nav-item dropdown ra-section-dropdown nav-item-with-separator @(isJobContextActive ? "show" : "")">
+        <a class="nav-link dropdown-toggle ra-section-dropdown-toggle @(isJobContextActive ? "active" : "")"
+           href="#"
+           id="JobContextMenu"
+           role="button"
+           data-toggle="dropdown"
+           aria-haspopup="true"
+           aria-expanded="false">
+            <span class="ra-section-dropdown-label">Job View</span>
+        </a>
+
+        <div class="dropdown-menu dropdown-menu-right ra-section-dropdown-menu"
+             aria-labelledby="JobContextMenu">
+            <a class="dropdown-item ra-section-dropdown-item @(active == "job" ? "active" : "")"
+               asp-controller="Job"
+               asp-action="Details"
+               asp-route-domainId="@domainId"
+               asp-route-jobId="@jobId">
+                Job
+            </a>
+
+            <a class="dropdown-item ra-section-dropdown-item @(active == "bbb" ? "active" : "")"
+               asp-controller="Job"
+               asp-action="Bbb"
+               asp-route-domainId="@domainId"
+               asp-route-jobId="@jobId">
+                BBB
+            </a>
+
+            <a class="dropdown-item ra-section-dropdown-item @(active == "output" ? "active" : "")"
+               href="@outputUrl">
+                Output
+            </a>
+
+            <a class="dropdown-item ra-section-dropdown-item @(active == "plot" ? "active" : "")"
+               asp-controller="Job"
+               asp-action="Plot"
+               asp-route-domainId="@domainId"
+               asp-route-jobId="@jobId">
+                Spider Plot
+            </a>
+        </div>
+    </li>
+}

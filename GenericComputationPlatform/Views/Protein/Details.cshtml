@@ -161,7 +161,7 @@
 
     @if (jobId > 0)
     {
-        <li class="nav-item workspace-nav-item">
+        <li class="nav-item nav-item-with-separator">
             <a class="nav-link"
                asp-controller="Job"
                asp-action="Details"
@@ -173,16 +173,11 @@
     }
     else
     {
-        <li class="nav-item workspace-nav-item">
+        <li class="nav-item nav-item-with-separator">
             <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">
                 All Jobs
             </a>
         </li>
     }
 
-    <li class="nav-item workspace-nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@domainId">
-            Help
-        </a>
-    </li>
 }

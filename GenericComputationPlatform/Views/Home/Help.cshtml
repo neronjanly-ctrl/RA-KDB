@@ -55,13 +55,13 @@
         ViewData["ActiveMenu"] = "";
     }
     <partial name="_RaWorkspaceMenu" />
-    <li class="nav-item workspace-nav-item">
+    <li class="nav-item nav-item-with-separator">
         <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">
             All Jobs
             <span class="badge badge-light">@ViewData["Badge"]</span>
         </a>
     </li>
-    <li class="nav-item workspace-nav-item active">
+    <li class="nav-item nav-item-with-separator active">
         <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">
             Help
         </a>

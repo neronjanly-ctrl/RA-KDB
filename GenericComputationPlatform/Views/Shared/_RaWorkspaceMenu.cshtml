@@ -6,12 +6,12 @@
 
 <li class="nav-item dropdown ra-section-dropdown nav-item-with-separator @(workspaceActive ? "show" : "")">
     <a class="nav-link dropdown-toggle ra-section-dropdown-toggle @(workspaceActive ? "active" : "")"
-       href="#"
+       href="javascript:void(0);"
        id="WorkspaceMenu"
        role="button"
        data-toggle="dropdown"
        aria-haspopup="true"
-       aria-expanded="false">
+       aria-expanded="@(workspaceActive ? "true" : "false")">
         <span class="ra-section-dropdown-label">RA Workspace</span>
     </a>
 

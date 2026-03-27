@@ -77,13 +77,12 @@
 @section Menu {
     @{
         ViewData["ActiveMenu"] = "docking";
+        ViewData["JobNavDomainId"] = domainId;
+        ViewData["JobNavJobId"] = Model.Id;
+        ViewData["JobNavActive"] = "plot";
     }
     <partial name="_RaWorkspaceMenu" />
-    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@domainId">All Jobs</a></li>
-    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="Details" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">Job</a></li>
-    <li class="nav-item workspace-nav-item"><a class="nav-link" asp-controller="Job" asp-action="Bbb" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">BBB</a></li>
-    <li class="nav-item workspace-nav-item"><a class="nav-link" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = domainId, jobId = Model.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = domainId, jobId = Model.Id }))">Output</a></li>
-    <li class="nav-item workspace-nav-item active"><a class="nav-link" asp-controller="Job" asp-action="Plot" asp-route-domainId="@domainId" asp-route-jobId="@Model.Id">Spider Plot</a></li>
+    <partial name="_RaJobContextMenu" />
 }
 
 @section Scripts {

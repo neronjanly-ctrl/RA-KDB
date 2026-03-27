@@ -197,18 +197,53 @@
         color: #6F42C1;
     }
 
-    .site-navbar .navbar-nav .workspace-nav-item .nav-link {
-        display: inline-flex;
-        align-items: center;
-    }
+            .site-navbar .navbar-nav .nav-item-with-separator::before,
+            .site-navbar .navbar-nav .nav-item-with-separator::after,
+            .site-navbar .navbar-nav .nav-item-with-separator .nav-link::before,
+            .site-navbar .navbar-nav .nav-item-with-separator .nav-link::after {
+                content: none !important;
+            }
 
-    .site-navbar .navbar-nav .workspace-nav-item + .workspace-nav-item .nav-link::before,
-    .site-navbar .site-auth-link-with-separator::before {
-        content: "|";
-        color: #8B93A3;
-        font-weight: 500;
-        margin: 0 .85rem 0 .15rem;
-    }
+            .site-navbar .navbar-nav .nav-item-with-separator + .nav-item-with-separator::before,
+            .site-navbar .navbar-collapse + .site-auth-link-with-separator::before {
+                content: "|";
+                color: #8B93A3;
+                font-weight: 500;
+                display: inline-block;
+                margin: 0 .85rem 0 .15rem;
+            }
+
+
+        .site-navbar .ra-section-dropdown-toggle {
+            color: #6F42C1 !important;
+        }
+
+        .site-navbar .ra-section-dropdown-menu {
+            min-width: 230px;
+            padding: .45rem 0;
+            border: 1px solid #D6DAE0;
+            border-radius: .55rem;
+            box-shadow: 0 8px 22px rgba(17, 24, 39, 0.08);
+        }
+
+        .site-navbar .ra-section-dropdown-item {
+            font-weight: 600;
+            color: #6F42C1;
+            padding: .58rem 1.2rem;
+        }
+
+            .site-navbar .ra-section-dropdown-item:hover,
+            .site-navbar .ra-section-dropdown-item:focus {
+                color: #6F42C1;
+                background-color: #F1EBFF;
+            }
+
+            .site-navbar .ra-section-dropdown-item.active,
+            .site-navbar .ra-section-dropdown-item:active {
+                color: #FFFFFF;
+                background-color: #1A73E8;
+            }
+
 
     .site-navbar .site-auth-link {
         color: #2F3440;
