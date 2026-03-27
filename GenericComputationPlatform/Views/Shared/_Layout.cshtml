@@ -188,8 +188,15 @@
         text-transform: none;
     }
 
+     .site-navbar .navbar-nav .nav-item {
+        display: flex;
+        align-items: center;
+    }
+
     .site-navbar .navbar-nav .nav-link {
         background: transparent;
+        display: inline-flex;
+        align-items: center;
     }
 
     .site-navbar .navbar-nav .nav-link:hover,
@@ -197,19 +204,19 @@
         color: #6F42C1;
     }
 
-            .site-navbar .navbar-nav .nav-item-with-separator::before,
             .site-navbar .navbar-nav .nav-item-with-separator::after,
             .site-navbar .navbar-nav .nav-item-with-separator .nav-link::before,
             .site-navbar .navbar-nav .nav-item-with-separator .nav-link::after {
                 content: none !important;
             }
 
+
             .site-navbar .navbar-nav .nav-item-with-separator + .nav-item-with-separator::before,
-            .site-navbar .navbar-collapse + .site-auth-link-with-separator::before {
+                .site-navbar .navbar-collapse + .site-auth-link::before{
                 content: "|";
                 color: #8B93A3;
-                font-weight: 500;
                 display: inline-block;
+                font-weight: 500;
                 margin: 0 .85rem 0 .15rem;
             }
 
@@ -469,7 +476,7 @@
             }
             else
             {
-                <a class="site-auth-link site-auth-link-with-separator"
+                <a class="site-auth-link"
                    title="Sign in with your Microsoft work, school, or personal account"
                    asp-controller="User"
                    asp-action="LogIn"
