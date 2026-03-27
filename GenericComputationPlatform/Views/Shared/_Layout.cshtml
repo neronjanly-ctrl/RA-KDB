@@ -4,6 +4,10 @@
     var title = ViewData["Title"] as string;
     var appName = _appSettings.Value.Manifest.AppName;
 
+    var isHomePage =
+    string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Home", StringComparison.OrdinalIgnoreCase) &&
+    string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Index", StringComparison.OrdinalIgnoreCase);
+
     var domainId = ViewContext.RouteData.Values["domainId"]?.ToString();
     if (string.IsNullOrWhiteSpace(domainId))
     {
@@ -490,8 +494,10 @@
 
     <partial name="_CookieConsentPartial" />
 
-    <div class="container">
+    @if (isHomePage)
+    {
         @RenderBody()
+
         <footer class="site-footer">
             <div class="container">
                 <div class="site-footer-panel">
@@ -535,7 +541,57 @@
                 </div>
             </div>
         </footer>
-    </div>
+    }
+    else
+    {
+        <div class="container">
+            @RenderBody()
+
+            <footer class="site-footer">
+                <div class="container">
+                    <div class="site-footer-panel">
+                        <div class="site-footer-top">
+                            <div class="site-footer-logos" aria-label="Affiliated institutions">
+                                @foreach (var item in partnerLogos)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(item.Url) && item.Url != "#")
+                                    {
+                                        <a class="site-footer-logo-card"
+                                           href="@item.Url"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           title="@item.Alt">
+                                            <img class="site-footer-logo" src="~/logos/@item.Image" alt="@item.Alt" />
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <div class="site-footer-logo-card" title="@item.Alt">
+                                            <img class="site-footer-logo" src="~/logos/@item.Image" alt="@item.Alt" />
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            <div class="site-footer-contact" id="contact">
+                                <h5>Contact Us</h5>
+                                <p>
+                                    Using Email: <a href="mailto:@footerEmail">@footerEmail</a>
+                                </p>
+                                <p>
+                                    Address:@string.Join(" ", footerAddress)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="site-footer-bottom">
+                            Copyright © @DateTime.UtcNow.Year - @_appSettings.Value.Manifest.CopyrightLine. All Rights Reserved
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    }
 
     <environment include="Development">
         <script src="~/lib/jquery/jquery.js"></script>

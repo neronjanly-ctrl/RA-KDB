@@ -20,6 +20,14 @@
 
         <a class="dropdown-item ra-section-dropdown-item @(active == "database" ? "active" : "")"
            asp-controller="Home"
+           asp-action="Index"
+           asp-route-domainId="@domainId"
+           asp-route-tagId="">
+            Home
+        </a>
+
+        <a class="dropdown-item ra-section-dropdown-item @(active == "database" ? "active" : "")"
+           asp-controller="Home"
            asp-action="Targets"
            asp-route-domainId="@domainId"
            asp-route-tagId="">

@@ -1,80 +1,7 @@
 ﻿@model Domain
-@using System.Linq
-@using System.Collections.Generic
-@using DockingDataModels
-@using GenericComputationPlatform.ViewModels
 
 @{
-    ViewData["Title"] = "RA Workspace";
-
-    var tags = ViewBag.Tags as IReadOnlyList<ProteinTag> ?? new List<ProteinTag>();
-    var featuredProteins = ViewBag.FeaturedWorkspaceProteins as IReadOnlyList<FeaturedProteinCardViewModel>
-                           ?? new List<FeaturedProteinCardViewModel>();
-
-    int workspaceProteinCount = ViewBag.WorkspaceProteinCount ?? 64;
-    int workspaceModuleCount = ViewBag.WorkspaceModuleCount ?? 4;
-    int workspaceStepCount = ViewBag.WorkspaceStepCount ?? 3;
-
-    var modules = new[]
-    {
-        new
-        {
-            Id = "inflammation",
-            Title = "Inflammatory signaling",
-            Desc = "Core cytokine and pathway nodes that explain inflammatory initiation and amplification in RA.",
-            Detail = "This module captures the inflammatory backbone of the workspace, including cytokine- and pathway-centered targets that help users understand disease activation and pharmacological interpretability.",
-            Proteins = new[] { "TNFA", "IL6", "JAK1", "JAK2", "NFKB1" }
-        },
-        new
-        {
-            Id = "invasion",
-            Title = "Synovial invasion & matrix degradation",
-            Desc = "Targets related to tissue remodeling, invasiveness, and persistent structural damage.",
-            Detail = "This module emphasizes disease persistence and joint destruction, highlighting proteins associated with matrix breakdown, migration, angiogenesis, and invasive synovial behavior.",
-            Proteins = new[] { "MMP2", "MMP9", "FAK1", "HGF", "MET" }
-        },
-        new
-        {
-            Id = "autoimmune",
-            Title = "Autoimmune regulation",
-            Desc = "Molecules linked to adaptive immunity, RA specificity, and sustained pathogenic signaling.",
-            Detail = "This module keeps the workspace RA-oriented by highlighting proteins associated with autoimmune susceptibility, adaptive immune regulation, and disease-specific interpretation.",
-            Proteins = new[] { "IL2", "PADI4", "PTN22", "SYK", "SRC" }
-        },
-        new
-        {
-            Id = "support",
-            Title = "Regulatory / background support",
-            Desc = "Contextual proteins that improve network completeness and biological interpretation.",
-            Detail = "These proteins support broader biological context and pathway completeness, making the final panel more explainable without dominating the disease-core signal.",
-            Proteins = new[] { "AHR", "ABCG2", "PPARA", "PPARG", "PPIA" }
-        }
-    };
-
-    var curationSteps = new[]
-    {
-        new
-        {
-            Step = "Version 1",
-            Title = "Broad inflammatory candidate pool",
-            Desc = "Wide coverage of inflammatory and immune-related molecules to preserve pathway completeness and avoid premature information loss.",
-            Why = "Preserved pathway breadth before specialization."
-        },
-        new
-        {
-            Step = "Version 2",
-            Title = "RA Core / RA Drug branching",
-            Desc = "Mechanistic separation into disease-specific pathology and pharmacologically interpretable inflammatory pathways.",
-            Why = "Separated disease-core interpretation from drug-axis interpretation."
-        },
-        new
-        {
-            Step = "Final",
-            Title = "Integrated RA protein knowledge panel",
-            Desc = "A compact final collection balancing disease mechanism, interpretability, and downstream docking utility.",
-            Why = "Retained a concise panel for explanation and application."
-        }
-    };
+    ViewData["Title"] = "Home";
 }
 
 @section Menu {
@@ -85,407 +12,1024 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/page2.css" asp-append-version="true" />
+    <style>
+        :root {
+            --bio-bg-1: #030816;
+            --bio-bg-2: #071224;
+            --bio-bg-3: #0a1630;
+
+            --bio-text-main: #eaf4ff;
+            --bio-text-dim: rgba(214, 232, 255, 0.72);
+
+            --bio-accent: #4db8ff;
+            --bio-accent-2: #7dd4ff;
+            --bio-accent-3: #0f8cff;
+
+            --bio-card-border: rgba(132, 196, 255, 0.25);
+
+            --bio-drop-size: 44px;
+            --bio-drop-tail-height: 38px;
+
+            --bio-center-x: 50%;
+            --bio-center-y: 50%;
+
+            /* 这里是给你调导航和首屏距离的核心变量 */
+            --bio-top-safe-space: 96px;
+        }
+
+        .bio-home,
+        .bio-home * {
+            box-sizing: border-box;
+        }
+
+        .bio-home {
+            position: relative;
+            width: 100%;
+            min-height: calc(100vh - 1px);
+            overflow: hidden;
+            isolation: isolate;
+            color: var(--bio-text-main);
+            font-family:
+                Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at 50% 10%, rgba(65, 138, 255, 0.12), transparent 30%),
+                radial-gradient(circle at 20% 85%, rgba(48, 149, 255, 0.07), transparent 28%),
+                radial-gradient(circle at 80% 78%, rgba(0, 184, 255, 0.08), transparent 24%),
+                linear-gradient(180deg, var(--bio-bg-2) 0%, var(--bio-bg-1) 42%, #020611 100%);
+        }
+
+        .bio-home::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: radial-gradient(circle at center, black 38%, transparent 88%);
+            opacity: 0.35;
+            animation: bioGridDrift 18s linear infinite;
+            z-index: 0;
+        }
+
+        .bio-home::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 50% 45%, rgba(90, 180, 255, 0.16), transparent 17%),
+                radial-gradient(circle at 50% 45%, rgba(90, 180, 255, 0.08), transparent 30%);
+            filter: blur(30px);
+            opacity: 0.9;
+            z-index: 0;
+        }
+
+        @@keyframes bioGridDrift {
+            0% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(-12px, 8px, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
+
+        .bio-home-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .bio-home-copy {
+            position: absolute;
+            top: calc(var(--bio-top-safe-space) + 5%);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(920px, calc(100vw - 40px));
+            text-align: center;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .bio-home-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 32px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(132, 196, 255, 0.15);
+            background: rgba(12, 22, 45, 0.35);
+            color: rgba(208, 230, 255, 0.76);
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.03);
+        }
+
+        .bio-home-title {
+            margin: 0;
+            font-size: clamp(34px, 5vw, 72px);
+            line-height: 1.06;
+            font-weight: 760;
+            letter-spacing: -0.03em;
+            text-shadow: 0 8px 50px rgba(66, 164, 255, 0.12);
+        }
+
+        .bio-home-title .accent {
+            color: #8edcff;
+            text-shadow:
+                0 0 16px rgba(77, 184, 255, 0.35),
+                0 0 42px rgba(77, 184, 255, 0.18);
+        }
+
+        .bio-home-desc {
+            width: min(760px, 92%);
+            margin: 18px auto 0;
+            font-size: clamp(14px, 1.35vw, 18px);
+            line-height: 1.75;
+            color: var(--bio-text-dim);
+        }
+
+        .bio-stage {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .bio-focus-point {
+            position: absolute;
+            left: var(--bio-center-x);
+            top: var(--bio-center-y);
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(130, 223, 255, 0.95), rgba(77, 184, 255, 0.3) 48%, transparent 70%);
+            opacity: 0;
+            filter: blur(2px);
+            transition: opacity 0.4s ease;
+        }
+
+        .bio-focus-point.active {
+            opacity: 1;
+            animation: bioFocusPulse 2.8s ease-in-out infinite;
+        }
+
+        @@keyframes bioFocusPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.35; }
+            50% { transform: translate(-50%, -50%) scale(1.25); opacity: 0.9; }
+        }
+
+        .bio-droplet {
+            position: absolute;
+            left: 50%;
+            top: calc(var(--bio-top-safe-space) - 8px);
+            width: var(--bio-drop-size);
+            height: calc(var(--bio-drop-size) + var(--bio-drop-tail-height));
+            transform: translateX(-50%) scale(0.08);
+            transform-origin: top center;
+            opacity: 0;
+            filter: drop-shadow(0 0 18px rgba(84, 188, 255, 0.45));
+            z-index: 7;
+            pointer-events: none;
+        }
+
+        .bio-droplet::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 10px;
+            width: var(--bio-drop-size);
+            height: var(--bio-drop-size);
+            transform: translateX(-50%) rotate(45deg);
+            border-radius: 0 70% 70% 70%;
+            background:
+                radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95), rgba(255,255,255,0.24) 18%, transparent 20%),
+                radial-gradient(circle at 40% 38%, rgba(151, 234, 255, 0.95), rgba(79, 181, 255, 0.82) 40%, rgba(12, 111, 255, 0.7) 70%, rgba(5, 42, 82, 0.75) 100%);
+            box-shadow:
+                inset -8px -10px 18px rgba(8, 44, 88, 0.35),
+                inset 8px 8px 18px rgba(255,255,255,0.08),
+                0 0 22px rgba(77, 184, 255, 0.42);
+        }
+
+        .bio-droplet::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 10px;
+            height: calc(var(--bio-drop-tail-height) + 8px);
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(140, 224, 255, 0.08), rgba(77, 184, 255, 0.8));
+            opacity: 0.85;
+        }
+
+        .bio-droplet.forming {
+            opacity: 1;
+            animation: bioDropletForm 1800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .bio-droplet.falling {
+            opacity: 1;
+            animation:
+                bioDropletFall 1500ms cubic-bezier(0.12, 0.66, 0.18, 1) forwards,
+                bioDropletShiver 560ms ease-in-out infinite;
+        }
+
+        @@keyframes bioDropletForm {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) scale(0.06) translateY(-8px);
+            }
+            18% {
+                opacity: 0.9;
+                transform: translateX(-50%) scale(0.22, 0.08) translateY(-1px);
+            }
+            44% {
+                transform: translateX(-50%) scale(0.46, 1.15) translateY(4px);
+            }
+            62% {
+                transform: translateX(-50%) scale(0.92, 1.08) translateY(8px);
+            }
+            82% {
+                transform: translateX(-50%) scale(1.06, 0.96) translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1, 1) translateY(16px);
+            }
+        }
+
+        @@keyframes bioDropletFall {
+            0% {
+                top: calc(var(--bio-top-safe-space) + 8px);
+                transform: translateX(-50%) scale(1, 1);
+            }
+            18% {
+                transform: translateX(-50%) scale(0.94, 1.08);
+            }
+            52% {
+                transform: translateX(-50%) scale(1.08, 0.92);
+            }
+            76% {
+                transform: translateX(-50%) scale(0.96, 1.06);
+            }
+            100% {
+                top: calc(var(--bio-center-y) - 10px);
+                transform: translateX(-50%) scale(1.06, 0.86);
+            }
+        }
+
+        @@keyframes bioDropletShiver {
+            0%, 100% { margin-left: 0; }
+            50% { margin-left: 0.6px; }
+        }
+
+        .bio-trail {
+            position: absolute;
+            left: 50%;
+            top: calc(var(--bio-top-safe-space) + 28px);
+            width: 10px;
+            height: 0;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(155, 231, 255, 0), rgba(77, 184, 255, 0.5), rgba(77, 184, 255, 0));
+            filter: blur(3px);
+            opacity: 0;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .bio-trail.active {
+            animation: bioTrailFall 1500ms cubic-bezier(0.12, 0.66, 0.18, 1) forwards;
+        }
+
+        @@keyframes bioTrailFall {
+            0% {
+                opacity: 0;
+                top: calc(var(--bio-top-safe-space) + 28px);
+                height: 18px;
+            }
+            10% { opacity: 1; }
+            70% { opacity: 0.88; }
+            100% {
+                top: calc(var(--bio-center-y) - 60px);
+                height: 126px;
+                opacity: 0;
+            }
+        }
+
+        .bio-burst {
+            position: absolute;
+            left: var(--bio-center-x);
+            top: var(--bio-center-y);
+            transform: translate(-50%, -50%);
+            width: 22px;
+            height: 22px;
+            pointer-events: none;
+            z-index: 8;
+            opacity: 0;
+        }
+
+        .bio-burst.active {
+            opacity: 1;
+        }
+
+        .bio-core-flash,
+        .bio-ripple,
+        .bio-ripple-2,
+        .bio-energy-ring {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .bio-core-flash {
+            width: 32px;
+            height: 32px;
+            background:
+                radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(130,223,255,0.9) 18%, rgba(77,184,255,0.5) 42%, rgba(77,184,255,0.04) 70%, transparent 100%);
+            filter: blur(4px);
+            opacity: 0;
+        }
+
+        .bio-ripple,
+        .bio-ripple-2,
+        .bio-energy-ring {
+            border: 1px solid rgba(128, 211, 255, 0.45);
+            box-shadow:
+                0 0 22px rgba(77, 184, 255, 0.18),
+                inset 0 0 20px rgba(164, 228, 255, 0.08);
+            opacity: 0;
+        }
+
+        .bio-ripple { width: 20px; height: 20px; }
+        .bio-ripple-2 { width: 20px; height: 20px; }
+        .bio-energy-ring {
+            width: 28px;
+            height: 28px;
+            border-width: 2px;
+            border-color: rgba(130, 223, 255, 0.35);
+        }
+
+        .bio-burst.active .bio-core-flash {
+            animation: bioCoreFlash 1400ms cubic-bezier(0.18, 0.84, 0.22, 1) forwards;
+        }
+
+        .bio-burst.active .bio-ripple {
+            animation: bioRippleWave 1400ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
+        }
+
+        .bio-burst.active .bio-ripple-2 {
+            animation: bioRippleWave2 1660ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
+        }
+
+        .bio-burst.active .bio-energy-ring {
+            animation: bioEnergyRing 1560ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
+        }
+
+        @@keyframes bioCoreFlash {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+            16% { opacity: 1; transform: translate(-50%, -50%) scale(2.8); }
+            38% { opacity: 0.95; transform: translate(-50%, -50%) scale(4.6); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(8.2); }
+        }
+
+        @@keyframes bioRippleWave {
+            0% { opacity: 0; width: 22px; height: 22px; }
+            10% { opacity: 1; }
+            100% { opacity: 0; width: 360px; height: 360px; }
+        }
+
+        @@keyframes bioRippleWave2 {
+            0% { opacity: 0; width: 22px; height: 22px; }
+            20% { opacity: 0.6; }
+            100% { opacity: 0; width: 520px; height: 520px; }
+        }
+
+        @@keyframes bioEnergyRing {
+            0% { opacity: 0; width: 28px; height: 28px; }
+            24% { opacity: 0.88; }
+            100% { opacity: 0; width: 220px; height: 220px; }
+        }
+
+        .bio-modules {
+            position: absolute;
+            left: 50%;
+            top: 61%;
+            transform: translate(-50%, -50%);
+            width: min(920px, calc(100vw - 48px));
+            display: flex;
+            justify-content: center;
+            gap: clamp(18px, 3vw, 42px);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .bio-module-card {
+            position: relative;
+            width: min(360px, 42vw);
+            min-width: 260px;
+            height: 190px;
+            padding: 22px 22px 20px;
+            border: 1px solid rgba(132, 196, 255, 0.25);
+            border-radius: 28px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                linear-gradient(145deg, rgba(9, 20, 42, 0.82), rgba(6, 16, 34, 0.5));
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255,255,255,0.06),
+                inset 0 0 40px rgba(77, 184, 255, 0.05),
+                0 0 40px rgba(32, 111, 255, 0.08);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            opacity: 0;
+            transform: translateY(40px) scale(0.84);
+            pointer-events: auto;
+            transition:
+                transform 0.45s cubic-bezier(0.2, 0.9, 0.2, 1),
+                box-shadow 0.45s ease,
+                border-color 0.35s ease,
+                background 0.35s ease;
+        }
+
+        .bio-module-card.left {
+            transform: translate(-40px, 40px) scale(0.84);
+        }
+
+        .bio-module-card.right {
+            transform: translate(40px, 40px) scale(0.84);
+            margin-top: 26px;
+        }
+
+        .bio-modules.show .bio-module-card.left {
+            animation: bioCardInLeft 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
+            animation-delay: 80ms;
+        }
+
+        .bio-modules.show .bio-module-card.right {
+            animation: bioCardInRight 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
+            animation-delay: 240ms;
+        }
+
+        @@keyframes bioCardInLeft {
+            0% { opacity: 0; transform: translate(-30px, 44px) scale(0.82); }
+            55% { opacity: 1; transform: translate(8px, -6px) scale(1.02); }
+            100% { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+
+        @@keyframes bioCardInRight {
+            0% { opacity: 0; transform: translate(34px, 48px) scale(0.82); }
+            55% { opacity: 1; transform: translate(-10px, -2px) scale(1.02); }
+            100% { opacity: 1; transform: translate(0, 26px) scale(1); }
+        }
+
+        .bio-module-card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background:
+                linear-gradient(130deg,
+                    rgba(125, 212, 255, 0.36),
+                    rgba(77, 184, 255, 0.02) 38%,
+                    rgba(125, 212, 255, 0.32) 100%);
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.85;
+            pointer-events: none;
+        }
+
+        .bio-module-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -15% -48% auto;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(80, 180, 255, 0.22), transparent 70%);
+            filter: blur(12px);
+            pointer-events: none;
+        }
+
+        .bio-module-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            border-color: rgba(137, 212, 255, 0.4);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+                linear-gradient(145deg, rgba(13, 28, 56, 0.94), rgba(7, 18, 40, 0.62));
+            box-shadow:
+                0 26px 72px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255,255,255,0.08),
+                inset 0 0 44px rgba(77, 184, 255, 0.09),
+                0 0 64px rgba(77, 184, 255, 0.16);
+        }
+
+        .bio-module-card:active {
+            transform: translateY(-2px) scale(0.985);
+        }
+
+        .bio-card-glow-line {
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            width: 120px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(144,224,255,0.9), transparent);
+            opacity: 0.8;
+        }
+
+        .bio-module-orb {
+            position: absolute;
+            right: 20px;
+            top: 22px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.18) 16%, transparent 18%),
+                radial-gradient(circle at 50% 50%, rgba(122, 221, 255, 0.95), rgba(47, 158, 255, 0.52) 54%, rgba(15, 53, 103, 0.2) 75%, transparent 100%);
+            box-shadow:
+                0 0 30px rgba(77, 184, 255, 0.28),
+                inset 0 0 24px rgba(255,255,255,0.08);
+            animation: bioOrbFloat 4.8s ease-in-out infinite;
+        }
+
+        .bio-module-card.right .bio-module-orb {
+            width: 66px;
+            height: 66px;
+            animation-duration: 5.6s;
+        }
+
+        @@keyframes bioOrbFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.92; }
+            50% { transform: translateY(-8px) scale(1.04); opacity: 1; }
+        }
+
+        .bio-module-mesh {
+            position: absolute;
+            inset: 0;
+            opacity: 0.32;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 22% 65%, rgba(135, 212, 255, 0.22) 0, transparent 10%),
+                radial-gradient(circle at 38% 58%, rgba(135, 212, 255, 0.16) 0, transparent 8%),
+                radial-gradient(circle at 58% 48%, rgba(135, 212, 255, 0.14) 0, transparent 7%),
+                linear-gradient(120deg, transparent 0 42%, rgba(120, 205, 255, 0.15) 44%, transparent 46% 100%);
+        }
+
+        .bio-module-meta {
+            position: relative;
+            z-index: 2;
+        }
+
+        .bio-module-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 28px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(132, 196, 255, 0.12);
+            color: rgba(214, 232, 255, 0.78);
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .bio-module-title {
+            margin: 18px 0 10px;
+            font-size: clamp(24px, 2.3vw, 32px);
+            font-weight: 720;
+            letter-spacing: -0.03em;
+        }
+
+        .bio-module-desc {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--bio-text-dim);
+            width: 78%;
+        }
+
+        .bio-module-arrow {
+            position: absolute;
+            right: 20px;
+            bottom: 18px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(132, 196, 255, 0.18);
+            background: rgba(255,255,255,0.03);
+            transition: transform 0.35s ease, background 0.35s ease, border-color 0.35s ease;
+        }
+
+        .bio-module-card:hover .bio-module-arrow {
+            transform: translateX(3px) rotate(-12deg);
+            background: rgba(77, 184, 255, 0.08);
+            border-color: rgba(132, 196, 255, 0.36);
+        }
+
+        .bio-module-card.floaty {
+            animation: bioPanelBreath 5.6s ease-in-out infinite;
+        }
+
+        .bio-module-card.right.floaty {
+            animation-duration: 6.4s;
+            animation-delay: 0.5s;
+        }
+
+        @@keyframes bioPanelBreath {
+            0%, 100% {
+                box-shadow:
+                    0 20px 60px rgba(0, 0, 0, 0.35),
+                    inset 0 1px 0 rgba(255,255,255,0.06),
+                    inset 0 0 40px rgba(77, 184, 255, 0.05),
+                    0 0 34px rgba(32, 111, 255, 0.08);
+            }
+            50% {
+                box-shadow:
+                    0 24px 68px rgba(0, 0, 0, 0.42),
+                    inset 0 1px 0 rgba(255,255,255,0.08),
+                    inset 0 0 46px rgba(77, 184, 255, 0.08),
+                    0 0 54px rgba(77, 184, 255, 0.12);
+            }
+        }
+
+        .bio-home-note {
+            position: absolute;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            width: min(760px, calc(100vw - 48px));
+            text-align: center;
+            color: rgba(210, 232, 255, 0.44);
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        @@media (max-width: 860px) {
+            :root {
+                --bio-top-safe-space: 86px;
+                --bio-center-y: 52%;
+            }
+
+            .bio-home-copy {
+                top: calc(var(--bio-top-safe-space) + 4%);
+            }
+
+            .bio-home-desc {
+                width: 92%;
+            }
+
+            .bio-modules {
+                top: 67%;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .bio-module-card,
+            .bio-module-card.right {
+                width: min(92vw, 430px);
+                min-width: 0;
+                height: 168px;
+                margin-top: 0;
+            }
+
+            .bio-modules.show .bio-module-card.right {
+                animation: bioCardInMobile 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
+                animation-delay: 240ms;
+            }
+
+            @@keyframes bioCardInMobile {
+                0% { opacity: 0; transform: translateY(38px) scale(0.84); }
+                55% { opacity: 1; transform: translateY(-6px) scale(1.02); }
+                100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+        }
+    </style>
 }
 
-<div class="ra-page-shell">
-    <div class="ra-workspace-page">
+<div class="bio-home">
+    <canvas id="bgCanvas" class="bio-home-canvas"></canvas>
 
-        <!-- Module 1: Overview -->
-        <section class="ra-module ra-module-overview" id="overview">
-            <div class="ra-cover ra-cover-overview">
-                <div class="ra-cover-inner">
-                    <div class="ra-cover-kicker">Overview</div>
-                    <h1 class="ra-cover-title">
-                        A curated rheumatoid arthritis workspace for target interpretation and computational entry
-                    </h1>
-                    <p class="ra-cover-desc">
-                        This overview introduces the logic of the RA workspace before users enter the database,
-                        showing how disease-relevant targets, curation structure, and docking-oriented use are
-                        organized into one coherent scholarly environment.
-                    </p>
-                    <div class="ra-cover-pills">
-                        <span>Curated RA proteins</span>
-                        <span>Mechanism-aware organization</span>
-                        <span>Docking-connected workflow</span>
-                    </div>
-                </div>
-            </div>
+    <div class="bio-home-copy">
+        <div class="bio-home-eyebrow">Scientific Entry Interface</div>
+        <h1 class="bio-home-title">
+            从一滴<span class="accent">蓝色液态能量</span><br />
+            启动分子科研入口
+        </h1>
+        <p class="bio-home-desc">
+            蓝色液滴从顶部缓慢生成并下落，在页面视觉中心发生液态脉冲式扩散，
+            最终生成两个科研功能入口：蛋白质数据库与分子对接。
+        </p>
+    </div>
 
-            <div class="ra-module-body ra-module-body-light">
-                <div class="ra-intro-grid">
-                    <article class="ra-intro-copy">
-                        <div class="ra-section-kicker">Workspace orientation</div>
-                        <h2 class="ra-section-title">A first view of what this research workspace is designed to do</h2>
-                        <p class="ra-section-desc">
-                            The workspace is meant to help users understand why these proteins matter in rheumatoid
-                            arthritis before they browse records or begin docking. Instead of presenting the platform
-                            as a generic tool, the overview frames the collection as a disease-oriented research layer.
-                        </p>
+    <div class="bio-stage">
+        <div class="bio-focus-point" id="focusPoint"></div>
+        <div class="bio-trail" id="trail"></div>
+        <div class="bio-droplet" id="droplet"></div>
 
-                        <div class="ra-actions">
-                            <a class="btn-ra-primary" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">
-                                Open Protein Database
-                            </a>
-                            <a class="btn-ra-secondary" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">
-                                Continue to Docking
-                            </a>
-                        </div>
-                    </article>
+        <div class="bio-burst" id="burst">
+            <div class="bio-core-flash"></div>
+            <div class="bio-ripple"></div>
+            <div class="bio-ripple-2"></div>
+            <div class="bio-energy-ring"></div>
+        </div>
 
-                    <aside class="ra-overview-panel">
-                        <div class="ra-panel-title">Workspace map</div>
-                        <div class="ra-map-list">
-                            <div class="ra-map-item">
-                                <strong>Knowledge structure</strong>
-                                <span>Modules and curation logic establish why each target belongs in the panel.</span>
-                            </div>
-                            <div class="ra-map-item">
-                                <strong>Protein collection</strong>
-                                <span>Database records provide identity, structural references, and biological context.</span>
-                            </div>
-                            <div class="ra-map-item">
-                                <strong>Docking entry</strong>
-                                <span>Users can move from interpretation to ligand exploration without losing context.</span>
-                            </div>
-                            <div class="ra-map-item">
-                                <strong>Result interpretation</strong>
-                                <span>The same curation logic supports later reading of computational outcomes.</span>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
+        <div class="bio-modules" id="modules">
+            <a class="bio-module-card left"
+               asp-controller="Home"
+               asp-action="Targets"
+               asp-route-domainId="@Model.Id"
+               asp-route-tagId="">
+                <div class="bio-module-mesh"></div>
+                <div class="bio-card-glow-line"></div>
+                <div class="bio-module-orb"></div>
 
-                <div class="ra-stat-band">
-                    <article class="ra-stat-card">
-                        <div class="ra-stat-value">@workspaceProteinCount</div>
-                        <div class="ra-stat-label">Curated proteins in the current workspace</div>
-                    </article>
-                    <article class="ra-stat-card">
-                        <div class="ra-stat-value">@workspaceModuleCount</div>
-                        <div class="ra-stat-label">Major functional modules supporting interpretation</div>
-                    </article>
-                    <article class="ra-stat-card">
-                        <div class="ra-stat-value">@workspaceStepCount</div>
-                        <div class="ra-stat-label">Curation stages from candidate pool to final panel</div>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 2: Knowledge Base -->
-        <section class="ra-module ra-module-knowledge" id="knowledge">
-            <div class="ra-cover ra-cover-knowledge">
-                <div class="ra-cover-inner ra-cover-inner-narrow">
-                    <div class="ra-cover-kicker">Knowledge Base</div>
-                    <h2 class="ra-cover-title">A disease-oriented knowledge layer that explains how the collection is structured</h2>
-                    <p class="ra-cover-desc">
-                        The knowledge base is not a flat inventory. It groups targets into interpretable biological modules
-                        and preserves the curation path used to retain a compact but meaningful RA-oriented panel.
+                <div class="bio-module-meta">
+                    <div class="bio-module-tag">Protein Knowledge</div>
+                    <h2 class="bio-module-title">Protein Database</h2>
+                    <p class="bio-module-desc">
+                        Explore target-related protein information, structure, sequence, annotation and searchable records.
                     </p>
                 </div>
-            </div>
 
-            <div class="ra-module-body ra-module-body-white">
-                <div class="ra-two-column">
-                    <article class="ra-editorial-block">
-                        <div class="ra-section-kicker">Biological architecture</div>
-                        <h2 class="ra-section-title">How the protein collection is biologically organized</h2>
-                        <p class="ra-section-desc">
-                            The panel is grouped into functional modules so users can read rheumatoid arthritis as a
-                            structured disease system instead of scanning an isolated list of target names.
-                        </p>
-
-                        <div class="ra-module-grid" id="raModuleGrid">
-                            @for (var i = 0; i < modules.Length; i++)
-                            {
-                                var module = modules[i];
-                                <article class="ra-module-card @(i == 0 ? "is-active" : null)"
-                                         data-module="@module.Id"
-                                         data-title="@module.Title"
-                                         data-detail="@module.Detail"
-                                         data-proteins="@string.Join(", ", module.Proteins)">
-                                    <div class="ra-module-title">@module.Title</div>
-                                    <div class="ra-module-desc">@module.Desc</div>
-                                    <div class="ra-mini-tags">
-                                        @foreach (var protein in module.Proteins)
-                                        {
-                                            <span class="ra-mini-tag">@protein</span>
-                                        }
-                                    </div>
-                                </article>
-                            }
-                        </div>
-
-                        <div class="ra-module-detail" id="raModuleDetail">
-                            <div class="ra-module-detail-title">@modules[0].Title</div>
-                            <div class="ra-module-detail-text">@modules[0].Detail</div>
-                            <div class="ra-mini-tags" id="raModuleDetailTags">
-                                @foreach (var protein in modules[0].Proteins)
-                                {
-                                    <span class="ra-mini-tag">@protein</span>
-                                }
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="ra-editorial-block ra-editorial-block-quiet">
-                        <div class="ra-section-kicker">Curation logic</div>
-                        <h2 class="ra-section-title">Why these proteins were retained</h2>
-                        <p class="ra-section-desc">
-                            The current workspace is grounded in a three-stage refinement process that narrows broad
-                            inflammatory candidates into a compact, interpretable, and application-ready RA panel.
-                        </p>
-
-                        <div class="ra-step-list">
-                            @foreach (var step in curationSteps)
-                            {
-                                <div class="ra-step-card">
-                                    <div class="ra-step-kicker">@step.Step</div>
-                                    <div class="ra-step-title">@step.Title</div>
-                                    <div class="ra-step-desc">@step.Desc</div>
-                                    <div class="ra-step-why">@step.Why</div>
-                                </div>
-                            }
-                        </div>
-
-                        <div class="ra-principle">
-                            Selection principle: disease relevance + mechanistic clarity + downstream utility.
-                        </div>
-                    </article>
+                <div class="bio-module-arrow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 17L17 7M17 7H8.5M17 7V15.5"
+                              stroke="#CFEFFF"
+                              stroke-width="1.7"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                    </svg>
                 </div>
-            </div>
-        </section>
+            </a>
 
-        <!-- Module 3: Docking -->
-        <section class="ra-module ra-module-docking" id="docking">
-            <div class="ra-cover ra-cover-docking">
-                <div class="ra-cover-inner ra-cover-inner-narrow">
-                    <div class="ra-cover-kicker">Docking</div>
-                    <h2 class="ra-cover-title">Move from curated target understanding into practical computational exploration</h2>
-                    <p class="ra-cover-desc">
-                        Docking is presented as the next scholarly step, not as a detached tool. The workspace keeps
-                        protein identity, mechanism context, and record-level detail close to later computational action.
+            <a class="bio-module-card right"
+               asp-controller="Job"
+               asp-action="New"
+               asp-route-domainId="@Model.Id">
+                <div class="bio-module-mesh"></div>
+                <div class="bio-card-glow-line"></div>
+                <div class="bio-module-orb"></div>
+
+                <div class="bio-module-meta">
+                    <div class="bio-module-tag">Docking Simulation</div>
+                    <h2 class="bio-module-title">Docking</h2>
+                    <p class="bio-module-desc">
+                        Launch molecular docking workflow and start interaction analysis between ligands and targets.
                     </p>
                 </div>
-            </div>
 
-            <div class="ra-module-body ra-module-body-warm">
-                <section class="ra-editorial-head">
-                    <div>
-                        <div class="ra-section-kicker">Workspace content</div>
-                        <h2 class="ra-section-title">What users can inspect before entering the docking workflow</h2>
-                    </div>
-                    <p class="ra-section-desc ra-editorial-head-desc">
-                        The workspace is designed to bridge curated protein knowledge and downstream computational use.
-                        Users can inspect target identity, module-level biological context, and then continue toward docking-oriented workflows.
-                    </p>
-                </section>
-
-                <div class="ra-feature-grid">
-                    <article class="ra-feature-card">
-                        <div class="ra-feature-title">Protein identity</div>
-                        <div class="ra-feature-text">
-                            Browse target names, gene symbols, UniProt references, and associated structural information.
-                        </div>
-                    </article>
-
-                    <article class="ra-feature-card">
-                        <div class="ra-feature-title">Mechanism context</div>
-                        <div class="ra-feature-text">
-                            Understand how proteins fit into inflammatory signaling, tissue invasion, autoimmune regulation,
-                            and broader support context.
-                        </div>
-                    </article>
-
-                    <article class="ra-feature-card">
-                        <div class="ra-feature-title">Curation interpretation</div>
-                        <div class="ra-feature-text">
-                            Learn why the panel was refined in stages and why a compact RA-oriented collection was retained.
-                        </div>
-                    </article>
-
-                    <article class="ra-feature-card">
-                        <div class="ra-feature-title">Docking connection</div>
-                        <div class="ra-feature-text">
-                            Move from curated target understanding into docking submission and later result interpretation.
-                        </div>
-                    </article>
+                <div class="bio-module-arrow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 17L17 7M17 7H8.5M17 7V15.5"
+                              stroke="#CFEFFF"
+                              stroke-width="1.7"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                    </svg>
                 </div>
+            </a>
+        </div>
+    </div>
 
-                @if (tags.Any())
-                {
-                    <div class="ra-tags-cloud">
-                        @foreach (var tag in tags.Take(10))
-                        {
-                            <span class="ra-chip">@tag.Name</span>
-                        }
-                    </div>
-                }
-
-                <section class="ra-preview-wrap">
-                    <div class="ra-preview-head">
-                        <div>
-                            <div class="ra-section-kicker">Collection preview</div>
-                            <h2 class="ra-section-title ra-preview-title">Preview representative proteins before entering the full database</h2>
-                            <p class="ra-section-desc ra-preview-desc">
-                                This preview introduces representative proteins in the workspace before users enter the full database view.
-                            </p>
-                        </div>
-
-                        <div class="ra-view-toggle">
-                            <button class="ra-toggle-btn is-active" type="button" data-view="card">Card view</button>
-                            <button class="ra-toggle-btn" type="button" data-view="list">Compact list</button>
-                        </div>
-                    </div>
-
-                    <div class="ra-preview-panel">
-                        <div class="ra-card-view" id="raCardView">
-                            @foreach (var item in featuredProteins)
-                            {
-                                <article class="ra-protein-card">
-                                    <img class="ra-protein-thumb" src="@item.ImageUrl" alt="@item.ProteinName" />
-
-                                    <div class="ra-protein-body">
-                                        <h3 class="ra-protein-title">@item.ProteinName</h3>
-
-                                        <div class="ra-protein-meta">
-                                            @if (!string.IsNullOrWhiteSpace(item.Organism))
-                                            {
-                                                <div><strong>Organism:</strong> @item.Organism</div>
-                                            }
-                                            <div><strong>Gene:</strong> @item.Gene</div>
-                                            <div><strong>Symbol:</strong> @item.Symbol</div>
-                                            @if (!string.IsNullOrWhiteSpace(item.BindingSite))
-                                            {
-                                                <div><strong>Binding site:</strong> @item.BindingSite</div>
-                                            }
-                                        </div>
-
-                                        <div class="ra-badge-row">
-                                            <span class="ra-badge">Workspace preview</span>
-                                            <span class="ra-badge">RA-oriented</span>
-                                            <span class="ra-badge">Docking-ready</span>
-                                        </div>
-
-                                        <div class="ra-link-row">
-                                            <a asp-controller="Protein"
-                                               asp-action="Details"
-                                               asp-route-domainId="@item.DomainId"
-                                               asp-route-cavityId="@item.CavityId">
-                                                View details
-                                            </a>
-
-                                            <a asp-controller="Home"
-                                               asp-action="Targets"
-                                               asp-route-domainId="@Model.Id">
-                                                Open in database
-                                            </a>
-                                        </div>
-                                    </div>
-                                </article>
-                            }
-                        </div>
-
-                        <div class="ra-list-view" id="raListView">
-                            <div class="ra-table-wrap">
-                                <table class="ra-list-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Protein</th>
-                                            <th>Gene</th>
-                                            <th>Symbol</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var item in featuredProteins)
-                                        {
-                                            <tr>
-                                                <td>@item.ProteinName</td>
-                                                <td>@item.Gene</td>
-                                                <td>@item.Symbol</td>
-                                                <td>
-                                                    <a asp-controller="Protein"
-                                                       asp-action="Details"
-                                                       asp-route-domainId="@item.DomainId"
-                                                       asp-route-cavityId="@item.CavityId">
-                                                        View
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ra-actions ra-actions-bottom">
-                        <a class="btn-ra-primary" asp-controller="Home" asp-action="Targets" asp-route-domainId="@Model.Id">
-                            Browse Full Protein Database
-                        </a>
-                        <a class="btn-ra-secondary" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id">
-                            Continue to Docking
-                        </a>
-                    </div>
-                </section>
-            </div>
-        </section>
+    <div class="bio-home-note">
+        Liquid Signal → Molecular Burst → Functional Gateways
     </div>
 </div>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const moduleCards = document.querySelectorAll(".ra-module-card");
-            const detailTitle = document.querySelector("#raModuleDetail .ra-module-detail-title");
-            const detailText = document.querySelector("#raModuleDetail .ra-module-detail-text");
-            const detailTags = document.getElementById("raModuleDetailTags");
+        (function () {
+            const droplet = document.getElementById("droplet");
+            const trail = document.getElementById("trail");
+            const burst = document.getElementById("burst");
+            const modules = document.getElementById("modules");
+            const focusPoint = document.getElementById("focusPoint");
+            const home = document.querySelector(".bio-home");
+            const canvas = document.getElementById("bgCanvas");
+            const ctx = canvas.getContext("2d");
 
-            moduleCards.forEach(card => {
-                card.addEventListener("click", function () {
-                    moduleCards.forEach(x => x.classList.remove("is-active"));
-                    this.classList.add("is-active");
+            function startSequence() {
+                focusPoint.classList.add("active");
 
-                    const title = this.getAttribute("data-title");
-                    const detail = this.getAttribute("data-detail");
-                    const proteins = (this.getAttribute("data-proteins") || "").split(",");
+                setTimeout(() => {
+                    droplet.classList.add("forming");
+                }, 180);
 
-                    detailTitle.textContent = title;
-                    detailText.textContent = detail;
+                setTimeout(() => {
+                    droplet.classList.remove("forming");
+                    droplet.classList.add("falling");
+                    trail.classList.add("active");
+                }, 2300);
 
-                    detailTags.innerHTML = "";
-                    proteins.forEach(p => {
-                        const txt = p.trim();
-                        if (!txt) return;
-                        const span = document.createElement("span");
-                        span.className = "ra-mini-tag";
-                        span.textContent = txt;
-                        detailTags.appendChild(span);
+                setTimeout(() => {
+                    droplet.style.opacity = "0";
+                    trail.classList.remove("active");
+                    burst.classList.add("active");
+                    spawnParticles();
+                }, 3740);
+
+                setTimeout(() => {
+                    modules.classList.add("show");
+                    document.querySelectorAll(".bio-module-card").forEach(card => {
+                        card.classList.add("floaty");
                     });
-                });
-            });
+                }, 4200);
+            }
 
-            const toggleButtons = document.querySelectorAll(".ra-toggle-btn");
-            const cardView = document.getElementById("raCardView");
-            const listView = document.getElementById("raListView");
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
 
-            toggleButtons.forEach(btn => {
-                btn.addEventListener("click", function () {
-                    toggleButtons.forEach(x => x.classList.remove("is-active"));
-                    this.classList.add("is-active");
+            function spawnParticles() {
+                const stage = document.querySelector(".bio-stage");
+                const count = window.innerWidth < 768 ? 18 : 28;
 
-                    const view = this.getAttribute("data-view");
-                    if (view === "list") {
-                        cardView.style.display = "none";
-                        listView.style.display = "block";
-                    } else {
-                        cardView.style.display = "grid";
-                        listView.style.display = "none";
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement("span");
+                    p.style.position = "absolute";
+                    p.style.left = "50%";
+                    p.style.top = "50%";
+                    p.style.width = `${random(3, 8)}px`;
+                    p.style.height = p.style.width;
+                    p.style.borderRadius = "50%";
+                    p.style.pointerEvents = "none";
+                    p.style.zIndex = "9";
+                    p.style.opacity = "0";
+                    p.style.background = i % 3 === 0
+                        ? "rgba(210, 244, 255, 0.95)"
+                        : i % 3 === 1
+                            ? "rgba(124, 216, 255, 0.9)"
+                            : "rgba(77, 184, 255, 0.9)";
+                    p.style.boxShadow = "0 0 16px rgba(77, 184, 255, 0.55)";
+                    p.style.transform = "translate(-50%, -50%) scale(0.3)";
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = random(80, window.innerWidth < 768 ? 180 : 260);
+                    const x = Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance * random(0.55, 0.95);
+                    const rotate = random(-80, 80);
+                    const duration = random(900, 1700);
+
+                    stage.appendChild(p);
+
+                    p.animate(
+                        [
+                            {
+                                opacity: 0,
+                                transform: "translate(-50%, -50%) scale(0.2)"
+                            },
+                            {
+                                opacity: 1,
+                                transform: `translate(calc(-50% + ${x * 0.28}px), calc(-50% + ${y * 0.28}px)) scale(1.15)`
+                            },
+                            {
+                                opacity: 0,
+                                transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotate}deg) scale(0.1)`
+                            }
+                        ],
+                        {
+                            duration,
+                            easing: "cubic-bezier(0.12, 0.74, 0.22, 1)",
+                            fill: "forwards"
+                        }
+                    );
+
+                    setTimeout(() => p.remove(), duration + 80);
+                }
+            }
+
+            function resizeCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const width = home.offsetWidth;
+                const height = home.offsetHeight;
+
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                canvas.style.width = width + "px";
+                canvas.style.height = height + "px";
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function initBackgroundParticles() {
+                resizeCanvas();
+                window.addEventListener("resize", resizeCanvas);
+
+                const getWidth = () => home.offsetWidth;
+                const getHeight = () => home.offsetHeight;
+
+                const particleCount = Math.min(70, Math.max(34, Math.floor(getWidth() / 24)));
+                const particles = [];
+
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * getWidth(),
+                        y: Math.random() * getHeight(),
+                        r: Math.random() * 1.8 + 0.5,
+                        vx: (Math.random() - 0.5) * 0.22,
+                        vy: (Math.random() - 0.5) * 0.18,
+                        a: Math.random() * 0.65 + 0.15
+                    });
+                }
+
+                function draw() {
+                    const w = getWidth();
+                    const h = getHeight();
+
+                    ctx.clearRect(0, 0, w, h);
+
+                    const glow = ctx.createRadialGradient(
+                        w * 0.5,
+                        h * 0.5,
+                        0,
+                        w * 0.5,
+                        h * 0.5,
+                        Math.min(w, h) * 0.32
+                    );
+
+                    glow.addColorStop(0, "rgba(72, 168, 255, 0.08)");
+                    glow.addColorStop(0.5, "rgba(72, 168, 255, 0.03)");
+                    glow.addColorStop(1, "rgba(72, 168, 255, 0)");
+                    ctx.fillStyle = glow;
+                    ctx.fillRect(0, 0, w, h);
+
+                    for (let i = 0; i < particles.length; i++) {
+                        const p1 = particles[i];
+
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const p2 = particles[j];
+                            const dx = p1.x - p2.x;
+                            const dy = p1.y - p2.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < 140) {
+                                const alpha = (1 - dist / 140) * 0.16;
+                                ctx.strokeStyle = `rgba(114, 188, 255, ${alpha})`;
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x, p1.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        }
                     }
-                });
+
+                    for (const p of particles) {
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        if (p.x < -20) p.x = w + 20;
+                        if (p.x > w + 20) p.x = -20;
+                        if (p.y < -20) p.y = h + 20;
+                        if (p.y > h + 20) p.y = -20;
+
+                        ctx.beginPath();
+                        ctx.fillStyle = `rgba(158, 223, 255, ${p.a})`;
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.beginPath();
+                        ctx.fillStyle = `rgba(77, 184, 255, ${p.a * 0.24})`;
+                        ctx.arc(p.x, p.y, p.r * 3.2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    requestAnimationFrame(draw);
+                }
+
+                draw();
+            }
+
+            window.addEventListener("load", function () {
+                startSequence();
+                initBackgroundParticles();
             });
-        });
+        })();
     </script>
 }
