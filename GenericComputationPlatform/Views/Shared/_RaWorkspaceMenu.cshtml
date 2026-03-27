@@ -1,22 +1,36 @@
 ﻿@{
     var domainId = ViewContext.RouteData.Values["domainId"]?.ToString();
     var active = ViewData["ActiveMenu"]?.ToString() ?? "";
+    var workspaceActive = active == "workspace" || active == "database" || active == "docking";
 }
 
-<li class="nav-item workspace-nav-item @(active == "workspace" ? "active" : "")">
-    <a class="nav-link" asp-controller="Home" asp-action="Index" asp-route-domainId="@domainId">
-        RA Workspace
+<li class="nav-item dropdown ra-section-dropdown nav-item-with-separator @(workspaceActive ? "show" : "")">
+    <a class="nav-link dropdown-toggle ra-section-dropdown-toggle @(workspaceActive ? "active" : "")"
+       href="#"
+       id="WorkspaceMenu"
+       role="button"
+       data-toggle="dropdown"
+       aria-haspopup="true"
+       aria-expanded="false">
+        <span class="ra-section-dropdown-label">RA Workspace</span>
     </a>
-</li>
 
-<li class="nav-item workspace-nav-item @(active == "database" ? "active" : "")">
-    <a class="nav-link" asp-controller="Home" asp-action="Targets" asp-route-domainId="@domainId" asp-route-tagId="">
-        Protein Database
-    </a>
-</li>
+    <div class="dropdown-menu dropdown-menu-right ra-section-dropdown-menu"
+         aria-labelledby="WorkspaceMenu">
 
-<li class="nav-item workspace-nav-item @(active == "docking" ? "active" : "")">
-    <a class="nav-link" asp-controller="Job" asp-action="New" asp-route-domainId="@domainId">
-        Docking
-    </a>
+        <a class="dropdown-item ra-section-dropdown-item @(active == "database" ? "active" : "")"
+           asp-controller="Home"
+           asp-action="Targets"
+           asp-route-domainId="@domainId"
+           asp-route-tagId="">
+            Protein Database
+        </a>
+
+        <a class="dropdown-item ra-section-dropdown-item @(active == "docking" ? "active" : "")"
+           asp-controller="Job"
+           asp-action="New"
+           asp-route-domainId="@domainId">
+            Docking
+        </a>
+    </div>
 </li>
