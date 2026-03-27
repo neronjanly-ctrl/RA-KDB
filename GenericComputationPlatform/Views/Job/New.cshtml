@@ -427,8 +427,8 @@
                     <div class="ra-info-title">Submission rules</div>
                     <div class="ra-info-body">
                         <ul class="ra-info-list">
-                            <li>You can submit up to <strong>@maxLigands</strong> ligands in one job.</li>
-                            <li>Each molecule needs both a ligand name and a valid structure.</li>
+                            <li>You can submit one drug's structure in this job.</li>
+                            <li>Each molecule needs both a ligand name and its SMILES.</li>
                             <li>Duplicate ligand names and duplicate SMILES are blocked.</li>
                         </ul>
                     </div>
@@ -437,20 +437,8 @@
                 <article class="ra-info-card">
                     <div class="ra-info-title">After submission</div>
                     <div class="ra-info-body">
-                        Once the job is created, you can monitor progress, inspect result tables/cards,
-                        and continue into downstream comparison or interpretation workflows.
-                    </div>
-                </article>
-
-                <article class="ra-info-card">
-                    <div class="ra-info-title">Current domain</div>
-                    <div class="ra-info-body">
-                        <div><strong>Domain:</strong> @Model.Name</div>
-                        <div><strong>Identifier:</strong> @Model.Id</div>
-                        @if (!string.IsNullOrWhiteSpace(Model.Description))
-                        {
-                            <div class="mt-2">@Model.Description</div>
-                        }
+                        Once the job is created, you can wait for the docking scores computed by our platform 
+                        and see the Spider Plot Picture.
                     </div>
                 </article>
             </div>

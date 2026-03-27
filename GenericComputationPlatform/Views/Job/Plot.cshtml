@@ -99,11 +99,6 @@
         JobStatusHelper.setStatus("@Model.Status.ToString()", @Model.Updated.UtcToUnixTimeMilliseconds());
         JobProgressHelper.setProgress(@Model.Progress, "@Model.TimeRemainingString", @Model.Updated.UtcToUnixTimeMilliseconds());
         setupJobHubConnection();
-        setupJobStatusMonitor({
-            statusUrl: "@Url.Action("StatusSnapshot", "Job", new { domainId = domainId, jobId = Model.Id })",
-            initialStatus: "@Model.Status.ToString()",
-            initialUpdatedUtms: @Model.Updated.UtcToUnixTimeMilliseconds()
-                });
         var model = @Html.Raw(ViewBag.Data);
         setupViewport(model);
     </script>

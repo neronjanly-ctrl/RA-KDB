@@ -536,11 +536,6 @@ else // table view
         JobStatusHelper.setStatus("@Model.Job.Status.ToString()", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
         JobProgressHelper.setProgress(@Model.Job.Progress, "@Model.Job.TimeRemainingString", @Model.Job.Updated.UtcToUnixTimeMilliseconds());
         setupJobHubConnection();
-        setupJobStatusMonitor({
-            statusUrl: "@Url.Action("StatusSnapshot", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id })",
-            initialStatus: "@Model.Job.Status.ToString()",
-            initialUpdatedUtms: @Model.Job.Updated.UtcToUnixTimeMilliseconds()
-                });
         setupProteinInfoModal();
         setupCompareLigandsModal();
         @if (!Model.UseCardOutputDisplay)
