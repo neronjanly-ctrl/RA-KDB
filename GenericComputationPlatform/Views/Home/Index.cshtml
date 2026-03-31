@@ -6,1030 +6,590 @@
 
 @section Menu {
     @{
-        ViewData["ActiveMenu"] = "workspace";
+        ViewData["ActiveMenu"] = "database";
     }
     <partial name="_RaWorkspaceMenu" />
 }
 
 @section Styles {
-    <style>
-        :root {
-            --bio-bg-1: #030816;
-            --bio-bg-2: #071224;
-            --bio-bg-3: #0a1630;
-
-            --bio-text-main: #eaf4ff;
-            --bio-text-dim: rgba(214, 232, 255, 0.72);
-
-            --bio-accent: #4db8ff;
-            --bio-accent-2: #7dd4ff;
-            --bio-accent-3: #0f8cff;
-
-            --bio-card-border: rgba(132, 196, 255, 0.25);
-
-            --bio-drop-size: 44px;
-            --bio-drop-tail-height: 38px;
-
-            --bio-center-x: 50%;
-            --bio-center-y: 50%;
-
-            /* 这里是给你调导航和首屏距离的核心变量 */
-            --bio-top-safe-space: 96px;
-        }
-
-        .bio-home,
-        .bio-home * {
-            box-sizing: border-box;
-        }
-
-        .bio-home {
-            position: relative;
-            width: 100%;
-            min-height: calc(100vh - 1px);
-            overflow: hidden;
-            isolation: isolate;
-            color: var(--bio-text-main);
-            font-family:
-                Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-                "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            background:
-                radial-gradient(circle at 50% 10%, rgba(65, 138, 255, 0.12), transparent 30%),
-                radial-gradient(circle at 20% 85%, rgba(48, 149, 255, 0.07), transparent 28%),
-                radial-gradient(circle at 80% 78%, rgba(0, 184, 255, 0.08), transparent 24%),
-                linear-gradient(180deg, var(--bio-bg-2) 0%, var(--bio-bg-1) 42%, #020611 100%);
-        }
-
-        .bio-home::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background:
-                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-            background-size: 64px 64px;
-            mask-image: radial-gradient(circle at center, black 38%, transparent 88%);
-            opacity: 0.35;
-            animation: bioGridDrift 18s linear infinite;
-            z-index: 0;
-        }
-
-        .bio-home::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 50% 45%, rgba(90, 180, 255, 0.16), transparent 17%),
-                radial-gradient(circle at 50% 45%, rgba(90, 180, 255, 0.08), transparent 30%);
-            filter: blur(30px);
-            opacity: 0.9;
-            z-index: 0;
-        }
-
-        @@keyframes bioGridDrift {
-            0% { transform: translate3d(0, 0, 0); }
-            50% { transform: translate3d(-12px, 8px, 0); }
-            100% { transform: translate3d(0, 0, 0); }
-        }
-
-        .bio-home-canvas {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            opacity: 0.8;
-            pointer-events: none;
-        }
-
-        .bio-home-copy {
-            position: absolute;
-            top: calc(var(--bio-top-safe-space) + 5%);
-            left: 50%;
-            transform: translateX(-50%);
-            width: min(920px, calc(100vw - 40px));
-            text-align: center;
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        .bio-home-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            height: 32px;
-            padding: 0 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(132, 196, 255, 0.15);
-            background: rgba(12, 22, 45, 0.35);
-            color: rgba(208, 230, 255, 0.76);
-            font-size: 12px;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            margin-bottom: 18px;
-            box-shadow: inset 0 0 20px rgba(255,255,255,0.03);
-        }
-
-        .bio-home-title {
-            margin: 0;
-            font-size: clamp(34px, 5vw, 72px);
-            line-height: 1.06;
-            font-weight: 760;
-            letter-spacing: -0.03em;
-            text-shadow: 0 8px 50px rgba(66, 164, 255, 0.12);
-        }
-
-        .bio-home-title .accent {
-            color: #8edcff;
-            text-shadow:
-                0 0 16px rgba(77, 184, 255, 0.35),
-                0 0 42px rgba(77, 184, 255, 0.18);
-        }
-
-        .bio-home-desc {
-            width: min(760px, 92%);
-            margin: 18px auto 0;
-            font-size: clamp(14px, 1.35vw, 18px);
-            line-height: 1.75;
-            color: var(--bio-text-dim);
-        }
-
-        .bio-stage {
-            position: absolute;
-            inset: 0;
-            z-index: 4;
-            pointer-events: none;
-        }
-
-        .bio-focus-point {
-            position: absolute;
-            left: var(--bio-center-x);
-            top: var(--bio-center-y);
-            transform: translate(-50%, -50%);
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(130, 223, 255, 0.95), rgba(77, 184, 255, 0.3) 48%, transparent 70%);
-            opacity: 0;
-            filter: blur(2px);
-            transition: opacity 0.4s ease;
-        }
-
-        .bio-focus-point.active {
-            opacity: 1;
-            animation: bioFocusPulse 2.8s ease-in-out infinite;
-        }
-
-        @@keyframes bioFocusPulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.35; }
-            50% { transform: translate(-50%, -50%) scale(1.25); opacity: 0.9; }
-        }
-
-        .bio-droplet {
-            position: absolute;
-            left: 50%;
-            top: calc(var(--bio-top-safe-space) - 8px);
-            width: var(--bio-drop-size);
-            height: calc(var(--bio-drop-size) + var(--bio-drop-tail-height));
-            transform: translateX(-50%) scale(0.08);
-            transform-origin: top center;
-            opacity: 0;
-            filter: drop-shadow(0 0 18px rgba(84, 188, 255, 0.45));
-            z-index: 7;
-            pointer-events: none;
-        }
-
-        .bio-droplet::before {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 10px;
-            width: var(--bio-drop-size);
-            height: var(--bio-drop-size);
-            transform: translateX(-50%) rotate(45deg);
-            border-radius: 0 70% 70% 70%;
-            background:
-                radial-gradient(circle at 30% 22%, rgba(255,255,255,0.95), rgba(255,255,255,0.24) 18%, transparent 20%),
-                radial-gradient(circle at 40% 38%, rgba(151, 234, 255, 0.95), rgba(79, 181, 255, 0.82) 40%, rgba(12, 111, 255, 0.7) 70%, rgba(5, 42, 82, 0.75) 100%);
-            box-shadow:
-                inset -8px -10px 18px rgba(8, 44, 88, 0.35),
-                inset 8px 8px 18px rgba(255,255,255,0.08),
-                0 0 22px rgba(77, 184, 255, 0.42);
-        }
-
-        .bio-droplet::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 10px;
-            height: calc(var(--bio-drop-tail-height) + 8px);
-            transform: translateX(-50%);
-            border-radius: 999px;
-            background: linear-gradient(180deg, rgba(140, 224, 255, 0.08), rgba(77, 184, 255, 0.8));
-            opacity: 0.85;
-        }
-
-        .bio-droplet.forming {
-            opacity: 1;
-            animation: bioDropletForm 1800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        .bio-droplet.falling {
-            opacity: 1;
-            animation:
-                bioDropletFall 1500ms cubic-bezier(0.12, 0.66, 0.18, 1) forwards,
-                bioDropletShiver 560ms ease-in-out infinite;
-        }
-
-        @@keyframes bioDropletForm {
-            0% {
-                opacity: 0;
-                transform: translateX(-50%) scale(0.06) translateY(-8px);
-            }
-            18% {
-                opacity: 0.9;
-                transform: translateX(-50%) scale(0.22, 0.08) translateY(-1px);
-            }
-            44% {
-                transform: translateX(-50%) scale(0.46, 1.15) translateY(4px);
-            }
-            62% {
-                transform: translateX(-50%) scale(0.92, 1.08) translateY(8px);
-            }
-            82% {
-                transform: translateX(-50%) scale(1.06, 0.96) translateY(12px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateX(-50%) scale(1, 1) translateY(16px);
-            }
-        }
-
-        @@keyframes bioDropletFall {
-            0% {
-                top: calc(var(--bio-top-safe-space) + 8px);
-                transform: translateX(-50%) scale(1, 1);
-            }
-            18% {
-                transform: translateX(-50%) scale(0.94, 1.08);
-            }
-            52% {
-                transform: translateX(-50%) scale(1.08, 0.92);
-            }
-            76% {
-                transform: translateX(-50%) scale(0.96, 1.06);
-            }
-            100% {
-                top: calc(var(--bio-center-y) - 10px);
-                transform: translateX(-50%) scale(1.06, 0.86);
-            }
-        }
-
-        @@keyframes bioDropletShiver {
-            0%, 100% { margin-left: 0; }
-            50% { margin-left: 0.6px; }
-        }
-
-        .bio-trail {
-            position: absolute;
-            left: 50%;
-            top: calc(var(--bio-top-safe-space) + 28px);
-            width: 10px;
-            height: 0;
-            transform: translateX(-50%);
-            border-radius: 999px;
-            background: linear-gradient(180deg, rgba(155, 231, 255, 0), rgba(77, 184, 255, 0.5), rgba(77, 184, 255, 0));
-            filter: blur(3px);
-            opacity: 0;
-            z-index: 6;
-            pointer-events: none;
-        }
-
-        .bio-trail.active {
-            animation: bioTrailFall 1500ms cubic-bezier(0.12, 0.66, 0.18, 1) forwards;
-        }
-
-        @@keyframes bioTrailFall {
-            0% {
-                opacity: 0;
-                top: calc(var(--bio-top-safe-space) + 28px);
-                height: 18px;
-            }
-            10% { opacity: 1; }
-            70% { opacity: 0.88; }
-            100% {
-                top: calc(var(--bio-center-y) - 60px);
-                height: 126px;
-                opacity: 0;
-            }
-        }
-
-        .bio-burst {
-            position: absolute;
-            left: var(--bio-center-x);
-            top: var(--bio-center-y);
-            transform: translate(-50%, -50%);
-            width: 22px;
-            height: 22px;
-            pointer-events: none;
-            z-index: 8;
-            opacity: 0;
-        }
-
-        .bio-burst.active {
-            opacity: 1;
-        }
-
-        .bio-core-flash,
-        .bio-ripple,
-        .bio-ripple-2,
-        .bio-energy-ring {
-            position: absolute;
-            inset: 50% auto auto 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .bio-core-flash {
-            width: 32px;
-            height: 32px;
-            background:
-                radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(130,223,255,0.9) 18%, rgba(77,184,255,0.5) 42%, rgba(77,184,255,0.04) 70%, transparent 100%);
-            filter: blur(4px);
-            opacity: 0;
-        }
-
-        .bio-ripple,
-        .bio-ripple-2,
-        .bio-energy-ring {
-            border: 1px solid rgba(128, 211, 255, 0.45);
-            box-shadow:
-                0 0 22px rgba(77, 184, 255, 0.18),
-                inset 0 0 20px rgba(164, 228, 255, 0.08);
-            opacity: 0;
-        }
-
-        .bio-ripple { width: 20px; height: 20px; }
-        .bio-ripple-2 { width: 20px; height: 20px; }
-        .bio-energy-ring {
-            width: 28px;
-            height: 28px;
-            border-width: 2px;
-            border-color: rgba(130, 223, 255, 0.35);
-        }
-
-        .bio-burst.active .bio-core-flash {
-            animation: bioCoreFlash 1400ms cubic-bezier(0.18, 0.84, 0.22, 1) forwards;
-        }
-
-        .bio-burst.active .bio-ripple {
-            animation: bioRippleWave 1400ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
-        }
-
-        .bio-burst.active .bio-ripple-2 {
-            animation: bioRippleWave2 1660ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
-        }
-
-        .bio-burst.active .bio-energy-ring {
-            animation: bioEnergyRing 1560ms cubic-bezier(0.16, 0.82, 0.2, 1) forwards;
-        }
-
-        @@keyframes bioCoreFlash {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-            16% { opacity: 1; transform: translate(-50%, -50%) scale(2.8); }
-            38% { opacity: 0.95; transform: translate(-50%, -50%) scale(4.6); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(8.2); }
-        }
-
-        @@keyframes bioRippleWave {
-            0% { opacity: 0; width: 22px; height: 22px; }
-            10% { opacity: 1; }
-            100% { opacity: 0; width: 360px; height: 360px; }
-        }
-
-        @@keyframes bioRippleWave2 {
-            0% { opacity: 0; width: 22px; height: 22px; }
-            20% { opacity: 0.6; }
-            100% { opacity: 0; width: 520px; height: 520px; }
-        }
-
-        @@keyframes bioEnergyRing {
-            0% { opacity: 0; width: 28px; height: 28px; }
-            24% { opacity: 0.88; }
-            100% { opacity: 0; width: 220px; height: 220px; }
-        }
-
-        .bio-modules {
-            position: absolute;
-            left: 50%;
-            top: 61%;
-            transform: translate(-50%, -50%);
-            width: min(920px, calc(100vw - 48px));
-            display: flex;
-            justify-content: center;
-            gap: clamp(18px, 3vw, 42px);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .bio-module-card {
-            position: relative;
-            width: min(360px, 42vw);
-            min-width: 260px;
-            height: 190px;
-            padding: 22px 22px 20px;
-            border: 1px solid rgba(132, 196, 255, 0.25);
-            border-radius: 28px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
-                linear-gradient(145deg, rgba(9, 20, 42, 0.82), rgba(6, 16, 34, 0.5));
-            box-shadow:
-                0 20px 60px rgba(0, 0, 0, 0.35),
-                inset 0 1px 0 rgba(255,255,255,0.06),
-                inset 0 0 40px rgba(77, 184, 255, 0.05),
-                0 0 40px rgba(32, 111, 255, 0.08);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            overflow: hidden;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            opacity: 0;
-            transform: translateY(40px) scale(0.84);
-            pointer-events: auto;
-            transition:
-                transform 0.45s cubic-bezier(0.2, 0.9, 0.2, 1),
-                box-shadow 0.45s ease,
-                border-color 0.35s ease,
-                background 0.35s ease;
-        }
-
-        .bio-module-card.left {
-            transform: translate(-40px, 40px) scale(0.84);
-        }
-
-        .bio-module-card.right {
-            transform: translate(40px, 40px) scale(0.84);
-            margin-top: 26px;
-        }
-
-        .bio-modules.show .bio-module-card.left {
-            animation: bioCardInLeft 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
-            animation-delay: 80ms;
-        }
-
-        .bio-modules.show .bio-module-card.right {
-            animation: bioCardInRight 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
-            animation-delay: 240ms;
-        }
-
-        @@keyframes bioCardInLeft {
-            0% { opacity: 0; transform: translate(-30px, 44px) scale(0.82); }
-            55% { opacity: 1; transform: translate(8px, -6px) scale(1.02); }
-            100% { opacity: 1; transform: translate(0, 0) scale(1); }
-        }
-
-        @@keyframes bioCardInRight {
-            0% { opacity: 0; transform: translate(34px, 48px) scale(0.82); }
-            55% { opacity: 1; transform: translate(-10px, -2px) scale(1.02); }
-            100% { opacity: 1; transform: translate(0, 26px) scale(1); }
-        }
-
-        .bio-module-card::before {
-            content: "";
-            position: absolute;
-            inset: -1px;
-            border-radius: inherit;
-            padding: 1px;
-            background:
-                linear-gradient(130deg,
-                    rgba(125, 212, 255, 0.36),
-                    rgba(77, 184, 255, 0.02) 38%,
-                    rgba(125, 212, 255, 0.32) 100%);
-            -webkit-mask:
-                linear-gradient(#000 0 0) content-box,
-                linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0.85;
-            pointer-events: none;
-        }
-
-        .bio-module-card::after {
-            content: "";
-            position: absolute;
-            inset: auto -15% -48% auto;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(80, 180, 255, 0.22), transparent 70%);
-            filter: blur(12px);
-            pointer-events: none;
-        }
-
-        .bio-module-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            border-color: rgba(137, 212, 255, 0.4);
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
-                linear-gradient(145deg, rgba(13, 28, 56, 0.94), rgba(7, 18, 40, 0.62));
-            box-shadow:
-                0 26px 72px rgba(0, 0, 0, 0.42),
-                inset 0 1px 0 rgba(255,255,255,0.08),
-                inset 0 0 44px rgba(77, 184, 255, 0.09),
-                0 0 64px rgba(77, 184, 255, 0.16);
-        }
-
-        .bio-module-card:active {
-            transform: translateY(-2px) scale(0.985);
-        }
-
-        .bio-card-glow-line {
-            position: absolute;
-            left: 18px;
-            top: 18px;
-            width: 120px;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(144,224,255,0.9), transparent);
-            opacity: 0.8;
-        }
-
-        .bio-module-orb {
-            position: absolute;
-            right: 20px;
-            top: 22px;
-            width: 58px;
-            height: 58px;
-            border-radius: 50%;
-            background:
-                radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.18) 16%, transparent 18%),
-                radial-gradient(circle at 50% 50%, rgba(122, 221, 255, 0.95), rgba(47, 158, 255, 0.52) 54%, rgba(15, 53, 103, 0.2) 75%, transparent 100%);
-            box-shadow:
-                0 0 30px rgba(77, 184, 255, 0.28),
-                inset 0 0 24px rgba(255,255,255,0.08);
-            animation: bioOrbFloat 4.8s ease-in-out infinite;
-        }
-
-        .bio-module-card.right .bio-module-orb {
-            width: 66px;
-            height: 66px;
-            animation-duration: 5.6s;
-        }
-
-        @@keyframes bioOrbFloat {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 0.92; }
-            50% { transform: translateY(-8px) scale(1.04); opacity: 1; }
-        }
-
-        .bio-module-mesh {
-            position: absolute;
-            inset: 0;
-            opacity: 0.32;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 22% 65%, rgba(135, 212, 255, 0.22) 0, transparent 10%),
-                radial-gradient(circle at 38% 58%, rgba(135, 212, 255, 0.16) 0, transparent 8%),
-                radial-gradient(circle at 58% 48%, rgba(135, 212, 255, 0.14) 0, transparent 7%),
-                linear-gradient(120deg, transparent 0 42%, rgba(120, 205, 255, 0.15) 44%, transparent 46% 100%);
-        }
-
-        .bio-module-meta {
-            position: relative;
-            z-index: 2;
-        }
-
-        .bio-module-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            height: 28px;
-            padding: 0 12px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(132, 196, 255, 0.12);
-            color: rgba(214, 232, 255, 0.78);
-            font-size: 11px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-        }
-
-        .bio-module-title {
-            margin: 18px 0 10px;
-            font-size: clamp(24px, 2.3vw, 32px);
-            font-weight: 720;
-            letter-spacing: -0.03em;
-        }
-
-        .bio-module-desc {
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--bio-text-dim);
-            width: 78%;
-        }
-
-        .bio-module-arrow {
-            position: absolute;
-            right: 20px;
-            bottom: 18px;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            border: 1px solid rgba(132, 196, 255, 0.18);
-            background: rgba(255,255,255,0.03);
-            transition: transform 0.35s ease, background 0.35s ease, border-color 0.35s ease;
-        }
-
-        .bio-module-card:hover .bio-module-arrow {
-            transform: translateX(3px) rotate(-12deg);
-            background: rgba(77, 184, 255, 0.08);
-            border-color: rgba(132, 196, 255, 0.36);
-        }
-
-        .bio-module-card.floaty {
-            animation: bioPanelBreath 5.6s ease-in-out infinite;
-        }
-
-        .bio-module-card.right.floaty {
-            animation-duration: 6.4s;
-            animation-delay: 0.5s;
-        }
-
-        @@keyframes bioPanelBreath {
-            0%, 100% {
-                box-shadow:
-                    0 20px 60px rgba(0, 0, 0, 0.35),
-                    inset 0 1px 0 rgba(255,255,255,0.06),
-                    inset 0 0 40px rgba(77, 184, 255, 0.05),
-                    0 0 34px rgba(32, 111, 255, 0.08);
-            }
-            50% {
-                box-shadow:
-                    0 24px 68px rgba(0, 0, 0, 0.42),
-                    inset 0 1px 0 rgba(255,255,255,0.08),
-                    inset 0 0 46px rgba(77, 184, 255, 0.08),
-                    0 0 54px rgba(77, 184, 255, 0.12);
-            }
-        }
-
-        .bio-home-note {
-            position: absolute;
-            left: 50%;
-            bottom: 24px;
-            transform: translateX(-50%);
-            width: min(760px, calc(100vw - 48px));
-            text-align: center;
-            color: rgba(210, 232, 255, 0.44);
-            font-size: 12px;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        @@media (max-width: 860px) {
-            :root {
-                --bio-top-safe-space: 86px;
-                --bio-center-y: 52%;
-            }
-
-            .bio-home-copy {
-                top: calc(var(--bio-top-safe-space) + 4%);
-            }
-
-            .bio-home-desc {
-                width: 92%;
-            }
-
-            .bio-modules {
-                top: 67%;
-                flex-direction: column;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .bio-module-card,
-            .bio-module-card.right {
-                width: min(92vw, 430px);
-                min-width: 0;
-                height: 168px;
-                margin-top: 0;
-            }
-
-            .bio-modules.show .bio-module-card.right {
-                animation: bioCardInMobile 900ms cubic-bezier(0.16, 0.92, 0.18, 1) forwards;
-                animation-delay: 240ms;
-            }
-
-            @@keyframes bioCardInMobile {
-                0% { opacity: 0; transform: translateY(38px) scale(0.84); }
-                55% { opacity: 1; transform: translateY(-6px) scale(1.02); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/pageIndex.css" asp-append-version="true" />
 }
 
-<div class="bio-home">
-    <canvas id="bgCanvas" class="bio-home-canvas"></canvas>
+<div class="science-canvas" id="scienceCanvas">
+    <div class="science-bg-image">
+    </div>
 
-    <div class="bio-home-copy">
-        <div class="bio-home-eyebrow">Scientific Entry Interface</div>
-        <h1 class="bio-home-title">
-            从一滴<span class="accent">蓝色液态能量</span><br />
-            启动分子科研入口
+    <div class="science-overlay-focus"></div>
+
+    <div class="science-bg-layer">
+        <canvas id="scienceBgCanvas" class="science-bg-canvas"></canvas>
+    </div>
+
+    <div class="science-copy" id="scienceCopy">
+        <h1 class="science-title">
+            Core Features<br />
+            Overview.
         </h1>
-        <p class="bio-home-desc">
-            蓝色液滴从顶部缓慢生成并下落，在页面视觉中心发生液态脉冲式扩散，
-            最终生成两个科研功能入口：蛋白质数据库与分子对接。
-        </p>
-    </div>
-
-    <div class="bio-stage">
-        <div class="bio-focus-point" id="focusPoint"></div>
-        <div class="bio-trail" id="trail"></div>
-        <div class="bio-droplet" id="droplet"></div>
-
-        <div class="bio-burst" id="burst">
-            <div class="bio-core-flash"></div>
-            <div class="bio-ripple"></div>
-            <div class="bio-ripple-2"></div>
-            <div class="bio-energy-ring"></div>
-        </div>
-
-        <div class="bio-modules" id="modules">
-            <a class="bio-module-card left"
-               asp-controller="Home"
-               asp-action="Targets"
-               asp-route-domainId="@Model.Id"
-               asp-route-tagId="">
-                <div class="bio-module-mesh"></div>
-                <div class="bio-card-glow-line"></div>
-                <div class="bio-module-orb"></div>
-
-                <div class="bio-module-meta">
-                    <div class="bio-module-tag">Protein Knowledge</div>
-                    <h2 class="bio-module-title">Protein Database</h2>
-                    <p class="bio-module-desc">
-                        Explore target-related protein information, structure, sequence, annotation and searchable records.
-                    </p>
-                </div>
-
-                <div class="bio-module-arrow">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M7 17L17 7M17 7H8.5M17 7V15.5"
-                              stroke="#CFEFFF"
-                              stroke-width="1.7"
-                              stroke-linecap="round"
-                              stroke-linejoin="round" />
-                    </svg>
-                </div>
-            </a>
-
-            <a class="bio-module-card right"
-               asp-controller="Job"
-               asp-action="New"
-               asp-route-domainId="@Model.Id">
-                <div class="bio-module-mesh"></div>
-                <div class="bio-card-glow-line"></div>
-                <div class="bio-module-orb"></div>
-
-                <div class="bio-module-meta">
-                    <div class="bio-module-tag">Docking Simulation</div>
-                    <h2 class="bio-module-title">Docking</h2>
-                    <p class="bio-module-desc">
-                        Launch molecular docking workflow and start interaction analysis between ligands and targets.
-                    </p>
-                </div>
-
-                <div class="bio-module-arrow">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M7 17L17 7M17 7H8.5M17 7V15.5"
-                              stroke="#CFEFFF"
-                              stroke-width="1.7"
-                              stroke-linecap="round"
-                              stroke-linejoin="round" />
-                    </svg>
-                </div>
-            </a>
+        <div class="science-subtitle">
+            At the current stage, two core functions are available, with additional modules to be introduced in future updates.
         </div>
     </div>
 
-    <div class="bio-home-note">
-        Liquid Signal → Molecular Burst → Functional Gateways
+    <section class="science-field" aria-label="Scientific interaction field">
+        <div class="science-center">
+            <button type="button"
+                    class="science-module science-module-protein"
+                    id="proteinModule"
+                    data-target-url="@Url.Action("Targets", "Home", new { domainId = Model.Id, tagId = "" })"
+                    aria-label="Enter Protein KnowledgeBase">
+                <div class="science-module-shell">
+                    <div class="science-module-shell-inner" id="proteinShellInner">
+                        <div class="protein-entity" id="proteinEntity">
+                            <div class="protein-outer" id="proteinOuter"></div>
+                            <div class="protein-middle" id="proteinMiddle"></div>
+                            <div class="protein-structure-1" id="proteinStructure1"></div>
+                            <div class="protein-structure-2" id="proteinStructure2"></div>
+                            <div class="protein-core" id="proteinCore"></div>
+
+                            <div class="protein-network" id="proteinNetwork">
+                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                                    <line x1="18" y1="48" x2="33" y2="34"></line>
+                                    <line x1="33" y1="34" x2="54" y2="29"></line>
+                                    <line x1="54" y1="29" x2="70" y2="40"></line>
+                                    <line x1="70" y1="40" x2="66" y2="58"></line>
+                                    <line x1="66" y1="58" x2="48" y2="71"></line>
+                                    <line x1="48" y1="71" x2="28" y2="61"></line>
+                                    <line x1="28" y1="61" x2="18" y2="48"></line>
+                                    <line x1="33" y1="34" x2="48" y2="71"></line>
+                                    <circle cx="18" cy="48" r="1.9"></circle>
+                                    <circle cx="33" cy="34" r="1.9"></circle>
+                                    <circle cx="54" cy="29" r="1.9"></circle>
+                                    <circle cx="70" cy="40" r="1.9"></circle>
+                                    <circle cx="66" cy="58" r="1.9"></circle>
+                                    <circle cx="48" cy="71" r="1.9"></circle>
+                                    <circle cx="28" cy="61" r="1.9"></circle>
+                                </svg>
+                            </div>
+
+                            <div class="protein-topology" id="proteinTopology">
+                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                                    <path d="M22 57 C 30 44, 34 36, 46 34 C 57 33, 66 38, 70 47 C 72 53, 70 61, 64 66 C 56 73, 46 72, 39 68 C 33 65, 29 61, 22 57"></path>
+                                </svg>
+                            </div>
+
+                            <div class="protein-rim-wave" id="proteinRimWave"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="science-annotation" id="proteinAnnotation">
+                    <div class="science-annotation-line"></div>
+                    <div class="science-annotation-card">
+                        <div class="science-annotation-kicker"><span class="science-annotation-dot"></span>Knowledge Core</div>
+                        <div class="science-annotation-title">Protein KnowledgeBase</div>
+                    </div>
+                </div>
+            </button>
+
+            <button type="button"
+                    class="science-module science-module-docking"
+                    id="dockingModule"
+                    data-target-url="@Url.Action("New", "Job", new { domainId = Model.Id })"
+                    aria-label="Enter Docking Computation">
+                <div class="science-module-shell">
+                    <div class="science-module-shell-inner" id="dockingShellInner">
+                        <div class="docking-entity" id="dockingEntity">
+
+                            <div class="dock-protein" id="dockProtein">
+                                <div class="dock-protein-shadow"></div>
+
+                                <div class="dock-protein-ribbon dock-protein-ribbon-1"></div>
+                                <div class="dock-protein-ribbon dock-protein-ribbon-2"></div>
+                                <div class="dock-protein-ribbon dock-protein-ribbon-3"></div>
+                                <div class="dock-protein-ribbon dock-protein-ribbon-4"></div>
+
+                                <div class="dock-protein-loop dock-protein-loop-1"></div>
+                                <div class="dock-protein-loop dock-protein-loop-2"></div>
+                                <div class="dock-protein-loop dock-protein-loop-3"></div>
+
+                                <div class="dock-protein-sheet dock-protein-sheet-1"></div>
+                                <div class="dock-protein-sheet dock-protein-sheet-2"></div>
+
+                                <div class="dock-pocket" id="dockPocket"></div>
+                                <div class="dock-pocket-halo" id="dockPocketHalo"></div>
+                            </div>
+
+                            <div class="dock-ligand" id="dockLigand">
+                                <div class="dock-ligand-core"></div>
+                                <div class="dock-ligand-lobe dock-ligand-lobe-1"></div>
+                                <div class="dock-ligand-lobe dock-ligand-lobe-2"></div>
+                                <div class="dock-ligand-lobe dock-ligand-lobe-3"></div>
+
+                                <div class="dock-ligand-atom dock-ligand-atom-o1"></div>
+                                <div class="dock-ligand-atom dock-ligand-atom-o2"></div>
+                                <div class="dock-ligand-atom dock-ligand-atom-n1"></div>
+                                <div class="dock-ligand-atom dock-ligand-atom-x1"></div>
+
+                                <div class="dock-ligand-specular"></div>
+                            </div>
+
+                            <div class="dock-binding-glow" id="dockingGapGlow"></div>
+                            <div class="dock-interface-line dock-interface-line-1" id="dockingFieldLine1"></div>
+                            <div class="dock-interface-line dock-interface-line-2" id="dockingFieldLine2"></div>
+                            <div class="dock-interface-line dock-interface-line-3" id="dockingFieldLine3"></div>
+                            <div class="dock-contact-mist"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="science-annotation" id="dockingAnnotation">
+                    <div class="science-annotation-line"></div>
+                    <div class="science-annotation-card">
+                        <div class="science-annotation-kicker"><span class="science-annotation-dot"></span>Binding Solver</div>
+                        <div class="science-annotation-title">Docking Computation</div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </section>
+
+    <div class="science-hint" id="scienceHint">
+        Approach the entities to activate them
     </div>
 </div>
 
 @section Scripts {
     <script>
         (function () {
-            const droplet = document.getElementById("droplet");
-            const trail = document.getElementById("trail");
-            const burst = document.getElementById("burst");
-            const modules = document.getElementById("modules");
-            const focusPoint = document.getElementById("focusPoint");
-            const home = document.querySelector(".bio-home");
-            const canvas = document.getElementById("bgCanvas");
-            const ctx = canvas.getContext("2d");
+            const canvasRoot = document.getElementById("scienceCanvas");
+            const bgCanvas = document.getElementById("scienceBgCanvas");
+            const bgCtx = bgCanvas.getContext("2d");
 
-            function startSequence() {
-                focusPoint.classList.add("active");
+            const proteinModule = document.getElementById("proteinModule");
+            const dockingModule = document.getElementById("dockingModule");
+            const scienceCopy = document.getElementById("scienceCopy");
+            const scienceHint = document.getElementById("scienceHint");
 
+            const modules = [
+                {
+                    kind: "protein",
+                    root: proteinModule,
+                    shellInner: document.getElementById("proteinShellInner"),
+                    annotation: document.getElementById("proteinAnnotation"),
+                    targetUrl: proteinModule.dataset.targetUrl,
+                    refs: {
+                        outer: document.getElementById("proteinOuter"),
+                        middle: document.getElementById("proteinMiddle"),
+                        structure1: document.getElementById("proteinStructure1"),
+                        structure2: document.getElementById("proteinStructure2"),
+                        core: document.getElementById("proteinCore"),
+                        network: document.getElementById("proteinNetwork"),
+                        topology: document.getElementById("proteinTopology"),
+                        rimWave: document.getElementById("proteinRimWave")
+                    },
+                    state: {
+                        current: 0,
+                        target: 0,
+                        dx: 0,
+                        dy: 0,
+                        offsetX: 0,
+                        offsetY: 0
+                    }
+                },
+                {
+                    kind: "docking",
+                    root: dockingModule,
+                    shellInner: document.getElementById("dockingShellInner"),
+                    annotation: document.getElementById("dockingAnnotation"),
+                    targetUrl: dockingModule.dataset.targetUrl,
+                    refs: {
+                        protein: document.getElementById("dockProtein"),
+                        pocket: document.getElementById("dockPocket"),
+                        pocketHalo: document.getElementById("dockPocketHalo"),
+                        ligand: document.getElementById("dockLigand"),
+                        gapGlow: document.getElementById("dockingGapGlow"),
+                        field1: document.getElementById("dockingFieldLine1"),
+                        field2: document.getElementById("dockingFieldLine2"),
+                        field3: document.getElementById("dockingFieldLine3")
+                    },
+                    state: {
+                        current: 0,
+                        target: 0,
+                        dx: 0,
+                        dy: 0,
+                        offsetX: 0,
+                        offsetY: 0
+                    }
+                }
+            ];
+
+            const globalState = {
+                pointerX: window.innerWidth * 0.5,
+                pointerY: window.innerHeight * 0.5,
+                entering: false,
+                bgParticles: []
+            };
+
+            function clamp(v, min, max) {
+                return Math.min(max, Math.max(min, v));
+            }
+
+            function lerp(a, b, t) {
+                return a + (b - a) * t;
+            }
+
+            function init() {
+                initEntrance();
+                initPointerSystem();
+                initClickTransitions();
+                initBackgroundCanvas();
+                startRenderLoop();
+            }
+
+            function initEntrance() {
                 setTimeout(() => {
-                    droplet.classList.add("forming");
+                    modules.forEach(m => m.root.classList.add("is-visible"));
                 }, 180);
 
                 setTimeout(() => {
-                    droplet.classList.remove("forming");
-                    droplet.classList.add("falling");
-                    trail.classList.add("active");
-                }, 2300);
-
-                setTimeout(() => {
-                    droplet.style.opacity = "0";
-                    trail.classList.remove("active");
-                    burst.classList.add("active");
-                    spawnParticles();
-                }, 3740);
-
-                setTimeout(() => {
-                    modules.classList.add("show");
-                    document.querySelectorAll(".bio-module-card").forEach(card => {
-                        card.classList.add("floaty");
-                    });
-                }, 4200);
+                    modules.forEach(m => m.root.classList.add("is-settled"));
+                }, 1250);
             }
 
-            function random(min, max) {
-                return Math.random() * (max - min) + min;
+            function initPointerSystem() {
+                window.addEventListener("pointermove", (e) => {
+                    globalState.pointerX = e.clientX;
+                    globalState.pointerY = e.clientY;
+                });
+
+                window.addEventListener("resize", () => {
+                    resizeBackgroundCanvas();
+                    createBackgroundParticles();
+                });
             }
 
-            function spawnParticles() {
-                const stage = document.querySelector(".bio-stage");
-                const count = window.innerWidth < 768 ? 18 : 28;
+            function initClickTransitions() {
+                proteinModule.addEventListener("click", () => enterSubspace("protein"));
+                dockingModule.addEventListener("click", () => enterSubspace("docking"));
+            }
+
+            function getModuleMetrics(module) {
+                const rect = module.root.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = globalState.pointerX - cx;
+                const dy = globalState.pointerY - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const radius = Math.max(rect.width * 1.0, 250);
+                const proximity = clamp(1 - dist / radius, 0, 1);
+
+                module.state.dx = dx;
+                module.state.dy = dy;
+                module.state.target = proximity;
+            }
+
+            function applyProteinPointerResponse(module, proximity, dx, dy) {
+                const { refs, shellInner, annotation, root } = module;
+                const maxShift = 11;
+                const shiftX = clamp(dx * 0.018, -maxShift, maxShift) * proximity;
+                const shiftY = clamp(dy * 0.018, -maxShift, maxShift) * proximity;
+
+                module.state.offsetX = lerp(module.state.offsetX, shiftX, 0.11);
+                module.state.offsetY = lerp(module.state.offsetY, shiftY, 0.11);
+
+                shellInner.style.transform =
+                    `translate3d(${module.state.offsetX.toFixed(2)}px, ${module.state.offsetY.toFixed(2)}px, 0) scale(${(1 + proximity * 0.038).toFixed(4)})`;
+
+                refs.outer.style.borderRadius =
+                    `${(43 - proximity * 4).toFixed(2)}% ${(57 + proximity * 4).toFixed(2)}% ${(50 + proximity * 2).toFixed(2)}% ${(50 - proximity * 2).toFixed(2)}% / ${(48 - proximity * 3).toFixed(2)}% ${(40 + proximity * 2.5).toFixed(2)}% ${(60 - proximity * 2.4).toFixed(2)}% ${(52 + proximity * 2.6).toFixed(2)}%`;
+                refs.outer.style.boxShadow =
+                    `inset 0 0 0 1px rgba(142, 198, 255, ${0.14 + proximity * 0.16}),
+                             0 0 ${34 + proximity * 34}px rgba(94, 181, 255, ${0.08 + proximity * 0.18})`;
+
+                refs.middle.style.transform =
+                    `translate3d(${(-module.state.offsetX * 0.18).toFixed(2)}px, ${(-module.state.offsetY * 0.18).toFixed(2)}px, 0)
+                             scale(${(1 + proximity * 0.07).toFixed(4)})`;
+
+                refs.structure1.style.transform =
+                    `translate3d(${(-6 + proximity * 9).toFixed(2)}px, ${(4 - proximity * 8).toFixed(2)}px, 0)
+                             rotate(${(-8 + proximity * 10).toFixed(2)}deg)
+                             scale(${(1 + proximity * 0.10).toFixed(4)})`;
+                refs.structure1.style.opacity = (0.28 + proximity * 0.26).toFixed(3);
+
+                refs.structure2.style.transform =
+                    `translate3d(${(4 - proximity * 7).toFixed(2)}px, ${(0 + proximity * 5).toFixed(2)}px, 0)
+                             rotate(${(8 - proximity * 8).toFixed(2)}deg)
+                             scale(${(1 + proximity * 0.12).toFixed(4)})`;
+                refs.structure2.style.opacity = (0.18 + proximity * 0.20).toFixed(3);
+
+                refs.core.style.transform =
+                    `translate3d(${(module.state.offsetX * 0.24).toFixed(2)}px, ${(module.state.offsetY * 0.24).toFixed(2)}px, 0)
+                             scale(${(1 + proximity * 0.18).toFixed(4)})`;
+                refs.core.style.boxShadow =
+                    `0 0 ${28 + proximity * 24}px rgba(94, 181, 255, ${0.18 + proximity * 0.20}),
+                             0 0 ${60 + proximity * 44}px rgba(94, 181, 255, ${0.08 + proximity * 0.10})`;
+
+                refs.network.style.opacity = (0.04 + proximity * 0.62).toFixed(3);
+                refs.topology.style.opacity = (0.06 + proximity * 0.54).toFixed(3);
+
+                refs.rimWave.style.opacity = (0.02 + proximity * 0.36).toFixed(3);
+                refs.rimWave.style.transform =
+                    `scale(${(1 + proximity * 0.05).toFixed(4)}) rotate(${(module.state.offsetX * 0.16).toFixed(2)}deg)`;
+
+                annotation.style.transform =
+                    `translate3d(${(module.state.offsetX * 0.24).toFixed(2)}px, ${(-2 - proximity * 4).toFixed(2)}px, 0)`;
+                annotation.style.filter = `blur(${(1 - proximity) * 0.35}px)`;
+
+                root.classList.toggle("is-interacting", proximity > 0.10);
+            }
+
+            function applyDockingPointerResponse(module, proximity, dx, dy) {
+                const { refs, shellInner, annotation, root } = module;
+                const maxShift = 8;
+                const shiftX = clamp(dx * 0.012, -maxShift, maxShift) * proximity;
+                const shiftY = clamp(dy * 0.012, -maxShift, maxShift) * proximity;
+
+                module.state.offsetX = lerp(module.state.offsetX, shiftX, 0.10);
+                module.state.offsetY = lerp(module.state.offsetY, shiftY, 0.10);
+
+                shellInner.style.transform =
+                    `translate3d(${module.state.offsetX.toFixed(2)}px, ${module.state.offsetY.toFixed(2)}px, 0) scale(${(1 + proximity * 0.022).toFixed(4)})`;
+
+                refs.protein.style.transform =
+                    `translate3d(${(-module.state.offsetX * 0.10).toFixed(2)}px, ${(-module.state.offsetY * 0.06).toFixed(2)}px, 0)
+                             rotate(${(-1.2 + proximity * 1.6).toFixed(2)}deg)`;
+
+                const ligandCloseX = 10 + proximity * 10;
+                const ligandCloseY = -2 - proximity * 4;
+                refs.ligand.style.transform =
+                    `translate3d(${(-ligandCloseX).toFixed(2)}px, ${ligandCloseY.toFixed(2)}px, 0)
+                             rotate(${(-6 + proximity * 8).toFixed(2)}deg)
+                             scale(${(1 + proximity * 0.06).toFixed(4)})`;
+
+                refs.pocket.style.opacity = (0.34 + proximity * 0.28).toFixed(3);
+                refs.pocketHalo.style.opacity = (0.20 + proximity * 0.52).toFixed(3);
+                refs.pocketHalo.style.transform = `scale(${(1 + proximity * 0.18).toFixed(4)})`;
+
+                refs.gapGlow.style.opacity = (0.30 + proximity * 0.62).toFixed(3);
+                refs.gapGlow.style.transform =
+                    `translate(-50%, -50%) rotate(-12deg) scale(${(1 + proximity * 0.30).toFixed(4)})`;
+
+                refs.field1.style.opacity = (0.02 + proximity * 0.64).toFixed(3);
+                refs.field2.style.opacity = (0.02 + proximity * 0.58).toFixed(3);
+                refs.field3.style.opacity = (0.00 + proximity * 0.46).toFixed(3);
+
+                annotation.style.transform =
+                    `translate3d(${(module.state.offsetX * 0.18).toFixed(2)}px, ${(-2 - proximity * 4).toFixed(2)}px, 0)`;
+                annotation.style.filter = `blur(${(1 - proximity) * 0.30}px)`;
+
+                root.classList.toggle("is-interacting", proximity > 0.10);
+            }
+
+            function updateModuleResponses() {
+                modules.forEach(module => {
+                    getModuleMetrics(module);
+                    module.state.current = lerp(module.state.current, module.state.target, 0.085);
+
+                    if (module.kind === "protein") {
+                        applyProteinPointerResponse(module, module.state.current, module.state.dx, module.state.dy);
+                    } else {
+                        applyDockingPointerResponse(module, module.state.current, module.state.dx, module.state.dy);
+                    }
+                });
+            }
+
+            function enterSubspace(kind) {
+                if (globalState.entering) return;
+                globalState.entering = true;
+
+                const chosen = modules.find(m => m.kind === kind);
+                const other = modules.find(m => m.kind !== kind);
+
+                canvasRoot.classList.add(kind === "protein" ? "entering-protein" : "entering-docking");
+                other.root.classList.add("fade-away");
+
+                if (kind === "protein") {
+                    animateProteinEnter(chosen);
+                } else {
+                    animateDockingEnter(chosen);
+                }
+
+                setTimeout(() => {
+                    window.location.href = chosen.targetUrl;
+                }, 900);
+            }
+
+            function animateProteinEnter(module) {
+                const { refs, shellInner, annotation } = module;
+
+                module.root.style.zIndex = "8";
+                refs.outer.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
+                refs.middle.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
+                refs.structure1.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 620ms ease";
+                refs.structure2.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 620ms ease";
+                refs.core.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
+                refs.network.style.transition = "opacity 420ms ease";
+                refs.topology.style.transition = "opacity 420ms ease";
+                shellInner.style.transition = "transform 720ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
+
+                refs.outer.style.transform = "scale(0.95)";
+                refs.middle.style.transform = "scale(0.89)";
+                refs.structure1.style.transform = "translate3d(0,0,0) rotate(0deg) scale(0.84)";
+                refs.structure2.style.transform = "translate3d(0,0,0) rotate(0deg) scale(0.84)";
+                refs.structure1.style.opacity = "0.12";
+                refs.structure2.style.opacity = "0.08";
+                refs.core.style.transform = "scale(1.42)";
+                refs.core.style.boxShadow = "0 0 44px rgba(94,181,255,0.42), 0 0 92px rgba(94,181,255,0.18)";
+                refs.network.style.opacity = "0.92";
+                refs.topology.style.opacity = "0.86";
+                shellInner.style.transform = "translate3d(0,0,0) scale(1.10)";
+
+                setTimeout(() => {
+                    shellInner.style.transform = "translate3d(0,0,0) scale(1.20)";
+                    annotation.style.opacity = "0";
+                }, 240);
+            }
+
+            function animateDockingEnter(module) {
+                const { refs, shellInner, annotation } = module;
+
+                module.root.style.zIndex = "8";
+                refs.protein.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
+                refs.ligand.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
+                refs.pocket.style.transition = "opacity 320ms ease";
+                refs.pocketHalo.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 420ms ease";
+                refs.gapGlow.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 420ms ease";
+                refs.field1.style.transition = "opacity 320ms ease";
+                refs.field2.style.transition = "opacity 320ms ease";
+                refs.field3.style.transition = "opacity 320ms ease";
+                shellInner.style.transition = "transform 720ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
+
+                refs.protein.style.transform = "translate3d(6px, -2px, 0) scale(1.02)";
+                refs.ligand.style.transform = "translate3d(-24px, -4px, 0) rotate(4deg) scale(1.10)";
+
+                refs.pocket.style.opacity = "0.78";
+                refs.pocketHalo.style.opacity = "1";
+                refs.pocketHalo.style.transform = "scale(1.28)";
+
+                refs.gapGlow.style.opacity = "1";
+                refs.gapGlow.style.transform = "translate(-50%, -50%) rotate(-12deg) scale(1.48)";
+
+                refs.field1.style.opacity = "0.96";
+                refs.field2.style.opacity = "0.90";
+                refs.field3.style.opacity = "0.78";
+
+                shellInner.style.transform = "translate3d(0,0,0) scale(1.10)";
+
+                setTimeout(() => {
+                    refs.protein.style.transform = "translate3d(10px, -3px, 0) scale(1.04)";
+                    refs.ligand.style.transform = "translate3d(-34px, -6px, 0) rotate(6deg) scale(1.14)";
+                    shellInner.style.transform = "translate3d(0,0,0) scale(1.18)";
+                    annotation.style.opacity = "0";
+                }, 240);
+            }
+
+            function startRenderLoop() {
+                function frame() {
+                    if (!globalState.entering) {
+                        updateModuleResponses();
+                    }
+                    requestAnimationFrame(frame);
+                }
+                frame();
+            }
+
+            function resizeBackgroundCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const width = canvasRoot.offsetWidth;
+                const height = canvasRoot.offsetHeight;
+
+                bgCanvas.width = width * dpr;
+                bgCanvas.height = height * dpr;
+                bgCanvas.style.width = width + "px";
+                bgCanvas.style.height = height + "px";
+                bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            /* 粒子数量减半左右，退后为环境层 */
+            function createBackgroundParticles() {
+                const count = Math.min(24, Math.max(12, Math.floor(canvasRoot.offsetWidth / 64)));
+                globalState.bgParticles = [];
 
                 for (let i = 0; i < count; i++) {
-                    const p = document.createElement("span");
-                    p.style.position = "absolute";
-                    p.style.left = "50%";
-                    p.style.top = "50%";
-                    p.style.width = `${random(3, 8)}px`;
-                    p.style.height = p.style.width;
-                    p.style.borderRadius = "50%";
-                    p.style.pointerEvents = "none";
-                    p.style.zIndex = "9";
-                    p.style.opacity = "0";
-                    p.style.background = i % 3 === 0
-                        ? "rgba(210, 244, 255, 0.95)"
-                        : i % 3 === 1
-                            ? "rgba(124, 216, 255, 0.9)"
-                            : "rgba(77, 184, 255, 0.9)";
-                    p.style.boxShadow = "0 0 16px rgba(77, 184, 255, 0.55)";
-                    p.style.transform = "translate(-50%, -50%) scale(0.3)";
-
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = random(80, window.innerWidth < 768 ? 180 : 260);
-                    const x = Math.cos(angle) * distance;
-                    const y = Math.sin(angle) * distance * random(0.55, 0.95);
-                    const rotate = random(-80, 80);
-                    const duration = random(900, 1700);
-
-                    stage.appendChild(p);
-
-                    p.animate(
-                        [
-                            {
-                                opacity: 0,
-                                transform: "translate(-50%, -50%) scale(0.2)"
-                            },
-                            {
-                                opacity: 1,
-                                transform: `translate(calc(-50% + ${x * 0.28}px), calc(-50% + ${y * 0.28}px)) scale(1.15)`
-                            },
-                            {
-                                opacity: 0,
-                                transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotate}deg) scale(0.1)`
-                            }
-                        ],
-                        {
-                            duration,
-                            easing: "cubic-bezier(0.12, 0.74, 0.22, 1)",
-                            fill: "forwards"
-                        }
-                    );
-
-                    setTimeout(() => p.remove(), duration + 80);
-                }
-            }
-
-            function resizeCanvas() {
-                const dpr = window.devicePixelRatio || 1;
-                const width = home.offsetWidth;
-                const height = home.offsetHeight;
-
-                canvas.width = width * dpr;
-                canvas.height = height * dpr;
-                canvas.style.width = width + "px";
-                canvas.style.height = height + "px";
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            }
-
-            function initBackgroundParticles() {
-                resizeCanvas();
-                window.addEventListener("resize", resizeCanvas);
-
-                const getWidth = () => home.offsetWidth;
-                const getHeight = () => home.offsetHeight;
-
-                const particleCount = Math.min(70, Math.max(34, Math.floor(getWidth() / 24)));
-                const particles = [];
-
-                for (let i = 0; i < particleCount; i++) {
-                    particles.push({
-                        x: Math.random() * getWidth(),
-                        y: Math.random() * getHeight(),
-                        r: Math.random() * 1.8 + 0.5,
-                        vx: (Math.random() - 0.5) * 0.22,
-                        vy: (Math.random() - 0.5) * 0.18,
-                        a: Math.random() * 0.65 + 0.15
+                    globalState.bgParticles.push({
+                        x: Math.random() * canvasRoot.offsetWidth,
+                        y: Math.random() * canvasRoot.offsetHeight,
+                        r: Math.random() * 1.1 + 0.35,
+                        vx: (Math.random() - 0.5) * 0.08,
+                        vy: (Math.random() - 0.5) * 0.06,
+                        a: Math.random() * 0.18 + 0.05
                     });
                 }
-
-                function draw() {
-                    const w = getWidth();
-                    const h = getHeight();
-
-                    ctx.clearRect(0, 0, w, h);
-
-                    const glow = ctx.createRadialGradient(
-                        w * 0.5,
-                        h * 0.5,
-                        0,
-                        w * 0.5,
-                        h * 0.5,
-                        Math.min(w, h) * 0.32
-                    );
-
-                    glow.addColorStop(0, "rgba(72, 168, 255, 0.08)");
-                    glow.addColorStop(0.5, "rgba(72, 168, 255, 0.03)");
-                    glow.addColorStop(1, "rgba(72, 168, 255, 0)");
-                    ctx.fillStyle = glow;
-                    ctx.fillRect(0, 0, w, h);
-
-                    for (let i = 0; i < particles.length; i++) {
-                        const p1 = particles[i];
-
-                        for (let j = i + 1; j < particles.length; j++) {
-                            const p2 = particles[j];
-                            const dx = p1.x - p2.x;
-                            const dy = p1.y - p2.y;
-                            const dist = Math.sqrt(dx * dx + dy * dy);
-
-                            if (dist < 140) {
-                                const alpha = (1 - dist / 140) * 0.16;
-                                ctx.strokeStyle = `rgba(114, 188, 255, ${alpha})`;
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.moveTo(p1.x, p1.y);
-                                ctx.lineTo(p2.x, p2.y);
-                                ctx.stroke();
-                            }
-                        }
-                    }
-
-                    for (const p of particles) {
-                        p.x += p.vx;
-                        p.y += p.vy;
-
-                        if (p.x < -20) p.x = w + 20;
-                        if (p.x > w + 20) p.x = -20;
-                        if (p.y < -20) p.y = h + 20;
-                        if (p.y > h + 20) p.y = -20;
-
-                        ctx.beginPath();
-                        ctx.fillStyle = `rgba(158, 223, 255, ${p.a})`;
-                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        ctx.beginPath();
-                        ctx.fillStyle = `rgba(77, 184, 255, ${p.a * 0.24})`;
-                        ctx.arc(p.x, p.y, p.r * 3.2, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-
-                    requestAnimationFrame(draw);
-                }
-
-                draw();
             }
 
-            window.addEventListener("load", function () {
-                startSequence();
-                initBackgroundParticles();
-            });
+            function initBackgroundCanvas() {
+                resizeBackgroundCanvas();
+                createBackgroundParticles();
+                drawBackground();
+            }
+
+            function drawBackground() {
+                const w = canvasRoot.offsetWidth;
+                const h = canvasRoot.offsetHeight;
+                const particles = globalState.bgParticles;
+
+                bgCtx.clearRect(0, 0, w, h);
+
+                const glow = bgCtx.createRadialGradient(
+                    w * 0.50, h * 0.50, 0,
+                    w * 0.50, h * 0.50, Math.min(w, h) * 0.34
+                );
+                glow.addColorStop(0, "rgba(176, 195, 218, 0.04)");
+                glow.addColorStop(0.56, "rgba(176, 195, 218, 0.018)");
+                glow.addColorStop(1, "rgba(176, 195, 218, 0)");
+
+                bgCtx.fillStyle = glow;
+                bgCtx.fillRect(0, 0, w, h);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p1 = particles[i];
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 118) {
+                            const alpha = (1 - dist / 118) * 0.022;
+                            bgCtx.strokeStyle = `rgba(104, 127, 154, ${alpha})`;
+                            bgCtx.lineWidth = 1;
+                            bgCtx.beginPath();
+                            bgCtx.moveTo(p1.x, p1.y);
+                            bgCtx.lineTo(p2.x, p2.y);
+                            bgCtx.stroke();
+                        }
+                    }
+                }
+
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < -20) p.x = w + 20;
+                    if (p.x > w + 20) p.x = -20;
+                    if (p.y < -20) p.y = h + 20;
+                    if (p.y > h + 20) p.y = -20;
+
+                    bgCtx.beginPath();
+                    bgCtx.fillStyle = `rgba(105, 128, 152, ${p.a})`;
+                    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    bgCtx.fill();
+                }
+
+                requestAnimationFrame(drawBackground);
+            }
+
+            window.addEventListener("load", init);
         })();
     </script>
 }
