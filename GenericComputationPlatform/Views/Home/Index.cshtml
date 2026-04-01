@@ -16,9 +16,7 @@
 }
 
 <div class="science-canvas" id="scienceCanvas">
-    <div class="science-bg-image">
-    </div>
-
+    <div class="science-bg-image"></div>
     <div class="science-overlay-focus"></div>
 
     <div class="science-bg-layer">
@@ -26,570 +24,159 @@
     </div>
 
     <div class="science-copy" id="scienceCopy">
+        <div class="science-kicker">Scientific Workspace</div>
         <h1 class="science-title">
-            Core Features<br />
-            Overview.
+            Core Feature Cards
         </h1>
         <div class="science-subtitle">
-            At the current stage, two core functions are available, with additional modules to be introduced in future updates.
+            Explore two simplified product cards with clean biological visuals,
+            information blocks, and lightweight interaction.
         </div>
     </div>
 
     <section class="science-field" aria-label="Scientific interaction field">
         <div class="science-center">
+
+            <!-- Protein card -->
             <button type="button"
                     class="science-module science-module-protein"
                     id="proteinModule"
                     data-target-url="@Url.Action("Targets", "Home", new { domainId = Model.Id, tagId = "" })"
                     aria-label="Enter Protein KnowledgeBase">
-                <div class="science-module-shell">
-                    <div class="science-module-shell-inner" id="proteinShellInner">
-                        <div class="protein-entity" id="proteinEntity">
-                            <div class="protein-outer" id="proteinOuter"></div>
-                            <div class="protein-middle" id="proteinMiddle"></div>
-                            <div class="protein-structure-1" id="proteinStructure1"></div>
-                            <div class="protein-structure-2" id="proteinStructure2"></div>
-                            <div class="protein-core" id="proteinCore"></div>
+                <div class="feature-card">
+                    <div class="feature-card-visual">
+                        <div class="protein-cartoon" id="proteinArt">
+                            <div class="protein-capsule capsule-1"></div>
+                            <div class="protein-capsule capsule-2"></div>
+                            <div class="protein-capsule capsule-3"></div>
+                            <div class="protein-capsule capsule-4"></div>
 
-                            <div class="protein-network" id="proteinNetwork">
-                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                                    <line x1="18" y1="48" x2="33" y2="34"></line>
-                                    <line x1="33" y1="34" x2="54" y2="29"></line>
-                                    <line x1="54" y1="29" x2="70" y2="40"></line>
-                                    <line x1="70" y1="40" x2="66" y2="58"></line>
-                                    <line x1="66" y1="58" x2="48" y2="71"></line>
-                                    <line x1="48" y1="71" x2="28" y2="61"></line>
-                                    <line x1="28" y1="61" x2="18" y2="48"></line>
-                                    <line x1="33" y1="34" x2="48" y2="71"></line>
-                                    <circle cx="18" cy="48" r="1.9"></circle>
-                                    <circle cx="33" cy="34" r="1.9"></circle>
-                                    <circle cx="54" cy="29" r="1.9"></circle>
-                                    <circle cx="70" cy="40" r="1.9"></circle>
-                                    <circle cx="66" cy="58" r="1.9"></circle>
-                                    <circle cx="48" cy="71" r="1.9"></circle>
-                                    <circle cx="28" cy="61" r="1.9"></circle>
-                                </svg>
-                            </div>
+                            <div class="protein-arm"></div>
+                            <div class="protein-base protein-base-1"></div>
+                            <div class="protein-base protein-base-2"></div>
 
-                            <div class="protein-topology" id="proteinTopology">
-                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                                    <path d="M22 57 C 30 44, 34 36, 46 34 C 57 33, 66 38, 70 47 C 72 53, 70 61, 64 66 C 56 73, 46 72, 39 68 C 33 65, 29 61, 22 57"></path>
-                                </svg>
-                            </div>
+                            <div class="protein-connector connector-1"></div>
+                            <div class="protein-connector connector-2"></div>
+                            <div class="protein-connector connector-3"></div>
 
-                            <div class="protein-rim-wave" id="proteinRimWave"></div>
+                            <div class="protein-glow glow-1"></div>
+                            <div class="protein-glow glow-2"></div>
                         </div>
                     </div>
-                </div>
 
-                <div class="science-annotation" id="proteinAnnotation">
-                    <div class="science-annotation-line"></div>
-                    <div class="science-annotation-card">
-                        <div class="science-annotation-kicker"><span class="science-annotation-dot"></span>Knowledge Core</div>
-                        <div class="science-annotation-title">Protein KnowledgeBase</div>
+                    <div class="feature-card-info">
+                        <div class="feature-card-topline">
+                            <div>
+                                <div class="feature-card-title">Protein KnowledgeBase</div>
+                                <div class="feature-card-subtitle">Knowledge Core / Structured View</div>
+                            </div>
+                            <div class="feature-card-badge">ACTIVE</div>
+                        </div>
+
+                        <div class="feature-card-desc">
+                            A simplified modular protein card with a white-top visual area,
+                            clean biological silhouettes, and concise information layout.
+                        </div>
+
+                        <div class="feature-card-tags">
+                            <span class="feature-tag">Protein</span>
+                            <span class="feature-tag">Cartoon Module</span>
+                            <span class="feature-tag">Knowledge UI</span>
+                        </div>
+
+                        <div class="feature-metrics">
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">Coverage</div>
+                                <div class="feature-metric-value">92%</div>
+                            </div>
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">Status</div>
+                                <div class="feature-metric-value">Ready</div>
+                            </div>
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">Mode</div>
+                                <div class="feature-metric-value">Browse</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </button>
 
+            <!-- Docking card -->
             <button type="button"
                     class="science-module science-module-docking"
                     id="dockingModule"
                     data-target-url="@Url.Action("New", "Job", new { domainId = Model.Id })"
                     aria-label="Enter Docking Computation">
-                <div class="science-module-shell">
-                    <div class="science-module-shell-inner" id="dockingShellInner">
-                        <div class="docking-entity" id="dockingEntity">
+                <div class="feature-card">
+                    <div class="feature-card-visual">
+                        <div class="docking-cartoon" id="dockingArt">
+                            <div class="dock-protein-block block-1"></div>
+                            <div class="dock-protein-block block-2"></div>
+                            <div class="dock-protein-block block-3"></div>
+                            <div class="dock-protein-block block-4"></div>
 
-                            <div class="dock-protein" id="dockProtein">
-                                <div class="dock-protein-shadow"></div>
+                            <div class="dock-pocket"></div>
+                            <div class="dock-pocket-ring"></div>
 
-                                <div class="dock-protein-ribbon dock-protein-ribbon-1"></div>
-                                <div class="dock-protein-ribbon dock-protein-ribbon-2"></div>
-                                <div class="dock-protein-ribbon dock-protein-ribbon-3"></div>
-                                <div class="dock-protein-ribbon dock-protein-ribbon-4"></div>
+                            <div class="dock-ligand-body"></div>
+                            <div class="dock-ligand-head"></div>
+                            <div class="dock-ligand-tail"></div>
 
-                                <div class="dock-protein-loop dock-protein-loop-1"></div>
-                                <div class="dock-protein-loop dock-protein-loop-2"></div>
-                                <div class="dock-protein-loop dock-protein-loop-3"></div>
+                            <div class="dock-link link-1"></div>
+                            <div class="dock-link link-2"></div>
 
-                                <div class="dock-protein-sheet dock-protein-sheet-1"></div>
-                                <div class="dock-protein-sheet dock-protein-sheet-2"></div>
+                            <div class="dock-spark spark-1"></div>
+                            <div class="dock-spark spark-2"></div>
+                        </div>
+                    </div>
 
-                                <div class="dock-pocket" id="dockPocket"></div>
-                                <div class="dock-pocket-halo" id="dockPocketHalo"></div>
+                    <div class="feature-card-info">
+                        <div class="feature-card-topline">
+                            <div>
+                                <div class="feature-card-title">Docking Computation</div>
+                                <div class="feature-card-subtitle">Binding Solver / Visual Card</div>
                             </div>
+                            <div class="feature-card-badge badge-purple">LIVE</div>
+                        </div>
 
-                            <div class="dock-ligand" id="dockLigand">
-                                <div class="dock-ligand-core"></div>
-                                <div class="dock-ligand-lobe dock-ligand-lobe-1"></div>
-                                <div class="dock-ligand-lobe dock-ligand-lobe-2"></div>
-                                <div class="dock-ligand-lobe dock-ligand-lobe-3"></div>
+                        <div class="feature-card-desc">
+                            A simplified docking card showing a clean protein pocket,
+                            ligand approach, and restrained interface glow in product style.
+                        </div>
 
-                                <div class="dock-ligand-atom dock-ligand-atom-o1"></div>
-                                <div class="dock-ligand-atom dock-ligand-atom-o2"></div>
-                                <div class="dock-ligand-atom dock-ligand-atom-n1"></div>
-                                <div class="dock-ligand-atom dock-ligand-atom-x1"></div>
+                        <div class="feature-card-tags">
+                            <span class="feature-tag">Docking</span>
+                            <span class="feature-tag">Ligand</span>
+                            <span class="feature-tag">Computation</span>
+                        </div>
 
-                                <div class="dock-ligand-specular"></div>
+                        <div class="feature-metrics">
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">Binding</div>
+                                <div class="feature-metric-value">Stable</div>
                             </div>
-
-                            <div class="dock-binding-glow" id="dockingGapGlow"></div>
-                            <div class="dock-interface-line dock-interface-line-1" id="dockingFieldLine1"></div>
-                            <div class="dock-interface-line dock-interface-line-2" id="dockingFieldLine2"></div>
-                            <div class="dock-interface-line dock-interface-line-3" id="dockingFieldLine3"></div>
-                            <div class="dock-contact-mist"></div>
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">Queue</div>
+                                <div class="feature-metric-value">Open</div>
+                            </div>
+                            <div class="feature-metric">
+                                <div class="feature-metric-label">State</div>
+                                <div class="feature-metric-value">Run</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="science-annotation" id="dockingAnnotation">
-                    <div class="science-annotation-line"></div>
-                    <div class="science-annotation-card">
-                        <div class="science-annotation-kicker"><span class="science-annotation-dot"></span>Binding Solver</div>
-                        <div class="science-annotation-title">Docking Computation</div>
-                    </div>
-                </div>
             </button>
+
         </div>
     </section>
 
     <div class="science-hint" id="scienceHint">
-        Approach the entities to activate them
+        Hover the cards to activate subtle motion
     </div>
 </div>
 
 @section Scripts {
-    <script>
-        (function () {
-            const canvasRoot = document.getElementById("scienceCanvas");
-            const bgCanvas = document.getElementById("scienceBgCanvas");
-            const bgCtx = bgCanvas.getContext("2d");
-
-            const proteinModule = document.getElementById("proteinModule");
-            const dockingModule = document.getElementById("dockingModule");
-            const scienceCopy = document.getElementById("scienceCopy");
-            const scienceHint = document.getElementById("scienceHint");
-
-            const modules = [
-                {
-                    kind: "protein",
-                    root: proteinModule,
-                    shellInner: document.getElementById("proteinShellInner"),
-                    annotation: document.getElementById("proteinAnnotation"),
-                    targetUrl: proteinModule.dataset.targetUrl,
-                    refs: {
-                        outer: document.getElementById("proteinOuter"),
-                        middle: document.getElementById("proteinMiddle"),
-                        structure1: document.getElementById("proteinStructure1"),
-                        structure2: document.getElementById("proteinStructure2"),
-                        core: document.getElementById("proteinCore"),
-                        network: document.getElementById("proteinNetwork"),
-                        topology: document.getElementById("proteinTopology"),
-                        rimWave: document.getElementById("proteinRimWave")
-                    },
-                    state: {
-                        current: 0,
-                        target: 0,
-                        dx: 0,
-                        dy: 0,
-                        offsetX: 0,
-                        offsetY: 0
-                    }
-                },
-                {
-                    kind: "docking",
-                    root: dockingModule,
-                    shellInner: document.getElementById("dockingShellInner"),
-                    annotation: document.getElementById("dockingAnnotation"),
-                    targetUrl: dockingModule.dataset.targetUrl,
-                    refs: {
-                        protein: document.getElementById("dockProtein"),
-                        pocket: document.getElementById("dockPocket"),
-                        pocketHalo: document.getElementById("dockPocketHalo"),
-                        ligand: document.getElementById("dockLigand"),
-                        gapGlow: document.getElementById("dockingGapGlow"),
-                        field1: document.getElementById("dockingFieldLine1"),
-                        field2: document.getElementById("dockingFieldLine2"),
-                        field3: document.getElementById("dockingFieldLine3")
-                    },
-                    state: {
-                        current: 0,
-                        target: 0,
-                        dx: 0,
-                        dy: 0,
-                        offsetX: 0,
-                        offsetY: 0
-                    }
-                }
-            ];
-
-            const globalState = {
-                pointerX: window.innerWidth * 0.5,
-                pointerY: window.innerHeight * 0.5,
-                entering: false,
-                bgParticles: []
-            };
-
-            function clamp(v, min, max) {
-                return Math.min(max, Math.max(min, v));
-            }
-
-            function lerp(a, b, t) {
-                return a + (b - a) * t;
-            }
-
-            function init() {
-                initEntrance();
-                initPointerSystem();
-                initClickTransitions();
-                initBackgroundCanvas();
-                startRenderLoop();
-            }
-
-            function initEntrance() {
-                setTimeout(() => {
-                    modules.forEach(m => m.root.classList.add("is-visible"));
-                }, 180);
-
-                setTimeout(() => {
-                    modules.forEach(m => m.root.classList.add("is-settled"));
-                }, 1250);
-            }
-
-            function initPointerSystem() {
-                window.addEventListener("pointermove", (e) => {
-                    globalState.pointerX = e.clientX;
-                    globalState.pointerY = e.clientY;
-                });
-
-                window.addEventListener("resize", () => {
-                    resizeBackgroundCanvas();
-                    createBackgroundParticles();
-                });
-            }
-
-            function initClickTransitions() {
-                proteinModule.addEventListener("click", () => enterSubspace("protein"));
-                dockingModule.addEventListener("click", () => enterSubspace("docking"));
-            }
-
-            function getModuleMetrics(module) {
-                const rect = module.root.getBoundingClientRect();
-                const cx = rect.left + rect.width / 2;
-                const cy = rect.top + rect.height / 2;
-                const dx = globalState.pointerX - cx;
-                const dy = globalState.pointerY - cy;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const radius = Math.max(rect.width * 1.0, 250);
-                const proximity = clamp(1 - dist / radius, 0, 1);
-
-                module.state.dx = dx;
-                module.state.dy = dy;
-                module.state.target = proximity;
-            }
-
-            function applyProteinPointerResponse(module, proximity, dx, dy) {
-                const { refs, shellInner, annotation, root } = module;
-                const maxShift = 11;
-                const shiftX = clamp(dx * 0.018, -maxShift, maxShift) * proximity;
-                const shiftY = clamp(dy * 0.018, -maxShift, maxShift) * proximity;
-
-                module.state.offsetX = lerp(module.state.offsetX, shiftX, 0.11);
-                module.state.offsetY = lerp(module.state.offsetY, shiftY, 0.11);
-
-                shellInner.style.transform =
-                    `translate3d(${module.state.offsetX.toFixed(2)}px, ${module.state.offsetY.toFixed(2)}px, 0) scale(${(1 + proximity * 0.038).toFixed(4)})`;
-
-                refs.outer.style.borderRadius =
-                    `${(43 - proximity * 4).toFixed(2)}% ${(57 + proximity * 4).toFixed(2)}% ${(50 + proximity * 2).toFixed(2)}% ${(50 - proximity * 2).toFixed(2)}% / ${(48 - proximity * 3).toFixed(2)}% ${(40 + proximity * 2.5).toFixed(2)}% ${(60 - proximity * 2.4).toFixed(2)}% ${(52 + proximity * 2.6).toFixed(2)}%`;
-                refs.outer.style.boxShadow =
-                    `inset 0 0 0 1px rgba(142, 198, 255, ${0.14 + proximity * 0.16}),
-                             0 0 ${34 + proximity * 34}px rgba(94, 181, 255, ${0.08 + proximity * 0.18})`;
-
-                refs.middle.style.transform =
-                    `translate3d(${(-module.state.offsetX * 0.18).toFixed(2)}px, ${(-module.state.offsetY * 0.18).toFixed(2)}px, 0)
-                             scale(${(1 + proximity * 0.07).toFixed(4)})`;
-
-                refs.structure1.style.transform =
-                    `translate3d(${(-6 + proximity * 9).toFixed(2)}px, ${(4 - proximity * 8).toFixed(2)}px, 0)
-                             rotate(${(-8 + proximity * 10).toFixed(2)}deg)
-                             scale(${(1 + proximity * 0.10).toFixed(4)})`;
-                refs.structure1.style.opacity = (0.28 + proximity * 0.26).toFixed(3);
-
-                refs.structure2.style.transform =
-                    `translate3d(${(4 - proximity * 7).toFixed(2)}px, ${(0 + proximity * 5).toFixed(2)}px, 0)
-                             rotate(${(8 - proximity * 8).toFixed(2)}deg)
-                             scale(${(1 + proximity * 0.12).toFixed(4)})`;
-                refs.structure2.style.opacity = (0.18 + proximity * 0.20).toFixed(3);
-
-                refs.core.style.transform =
-                    `translate3d(${(module.state.offsetX * 0.24).toFixed(2)}px, ${(module.state.offsetY * 0.24).toFixed(2)}px, 0)
-                             scale(${(1 + proximity * 0.18).toFixed(4)})`;
-                refs.core.style.boxShadow =
-                    `0 0 ${28 + proximity * 24}px rgba(94, 181, 255, ${0.18 + proximity * 0.20}),
-                             0 0 ${60 + proximity * 44}px rgba(94, 181, 255, ${0.08 + proximity * 0.10})`;
-
-                refs.network.style.opacity = (0.04 + proximity * 0.62).toFixed(3);
-                refs.topology.style.opacity = (0.06 + proximity * 0.54).toFixed(3);
-
-                refs.rimWave.style.opacity = (0.02 + proximity * 0.36).toFixed(3);
-                refs.rimWave.style.transform =
-                    `scale(${(1 + proximity * 0.05).toFixed(4)}) rotate(${(module.state.offsetX * 0.16).toFixed(2)}deg)`;
-
-                annotation.style.transform =
-                    `translate3d(${(module.state.offsetX * 0.24).toFixed(2)}px, ${(-2 - proximity * 4).toFixed(2)}px, 0)`;
-                annotation.style.filter = `blur(${(1 - proximity) * 0.35}px)`;
-
-                root.classList.toggle("is-interacting", proximity > 0.10);
-            }
-
-            function applyDockingPointerResponse(module, proximity, dx, dy) {
-                const { refs, shellInner, annotation, root } = module;
-                const maxShift = 8;
-                const shiftX = clamp(dx * 0.012, -maxShift, maxShift) * proximity;
-                const shiftY = clamp(dy * 0.012, -maxShift, maxShift) * proximity;
-
-                module.state.offsetX = lerp(module.state.offsetX, shiftX, 0.10);
-                module.state.offsetY = lerp(module.state.offsetY, shiftY, 0.10);
-
-                shellInner.style.transform =
-                    `translate3d(${module.state.offsetX.toFixed(2)}px, ${module.state.offsetY.toFixed(2)}px, 0) scale(${(1 + proximity * 0.022).toFixed(4)})`;
-
-                refs.protein.style.transform =
-                    `translate3d(${(-module.state.offsetX * 0.10).toFixed(2)}px, ${(-module.state.offsetY * 0.06).toFixed(2)}px, 0)
-                             rotate(${(-1.2 + proximity * 1.6).toFixed(2)}deg)`;
-
-                const ligandCloseX = 10 + proximity * 10;
-                const ligandCloseY = -2 - proximity * 4;
-                refs.ligand.style.transform =
-                    `translate3d(${(-ligandCloseX).toFixed(2)}px, ${ligandCloseY.toFixed(2)}px, 0)
-                             rotate(${(-6 + proximity * 8).toFixed(2)}deg)
-                             scale(${(1 + proximity * 0.06).toFixed(4)})`;
-
-                refs.pocket.style.opacity = (0.34 + proximity * 0.28).toFixed(3);
-                refs.pocketHalo.style.opacity = (0.20 + proximity * 0.52).toFixed(3);
-                refs.pocketHalo.style.transform = `scale(${(1 + proximity * 0.18).toFixed(4)})`;
-
-                refs.gapGlow.style.opacity = (0.30 + proximity * 0.62).toFixed(3);
-                refs.gapGlow.style.transform =
-                    `translate(-50%, -50%) rotate(-12deg) scale(${(1 + proximity * 0.30).toFixed(4)})`;
-
-                refs.field1.style.opacity = (0.02 + proximity * 0.64).toFixed(3);
-                refs.field2.style.opacity = (0.02 + proximity * 0.58).toFixed(3);
-                refs.field3.style.opacity = (0.00 + proximity * 0.46).toFixed(3);
-
-                annotation.style.transform =
-                    `translate3d(${(module.state.offsetX * 0.18).toFixed(2)}px, ${(-2 - proximity * 4).toFixed(2)}px, 0)`;
-                annotation.style.filter = `blur(${(1 - proximity) * 0.30}px)`;
-
-                root.classList.toggle("is-interacting", proximity > 0.10);
-            }
-
-            function updateModuleResponses() {
-                modules.forEach(module => {
-                    getModuleMetrics(module);
-                    module.state.current = lerp(module.state.current, module.state.target, 0.085);
-
-                    if (module.kind === "protein") {
-                        applyProteinPointerResponse(module, module.state.current, module.state.dx, module.state.dy);
-                    } else {
-                        applyDockingPointerResponse(module, module.state.current, module.state.dx, module.state.dy);
-                    }
-                });
-            }
-
-            function enterSubspace(kind) {
-                if (globalState.entering) return;
-                globalState.entering = true;
-
-                const chosen = modules.find(m => m.kind === kind);
-                const other = modules.find(m => m.kind !== kind);
-
-                canvasRoot.classList.add(kind === "protein" ? "entering-protein" : "entering-docking");
-                other.root.classList.add("fade-away");
-
-                if (kind === "protein") {
-                    animateProteinEnter(chosen);
-                } else {
-                    animateDockingEnter(chosen);
-                }
-
-                setTimeout(() => {
-                    window.location.href = chosen.targetUrl;
-                }, 900);
-            }
-
-            function animateProteinEnter(module) {
-                const { refs, shellInner, annotation } = module;
-
-                module.root.style.zIndex = "8";
-                refs.outer.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
-                refs.middle.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
-                refs.structure1.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 620ms ease";
-                refs.structure2.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 620ms ease";
-                refs.core.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), box-shadow 620ms ease, opacity 620ms ease";
-                refs.network.style.transition = "opacity 420ms ease";
-                refs.topology.style.transition = "opacity 420ms ease";
-                shellInner.style.transition = "transform 720ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
-
-                refs.outer.style.transform = "scale(0.95)";
-                refs.middle.style.transform = "scale(0.89)";
-                refs.structure1.style.transform = "translate3d(0,0,0) rotate(0deg) scale(0.84)";
-                refs.structure2.style.transform = "translate3d(0,0,0) rotate(0deg) scale(0.84)";
-                refs.structure1.style.opacity = "0.12";
-                refs.structure2.style.opacity = "0.08";
-                refs.core.style.transform = "scale(1.42)";
-                refs.core.style.boxShadow = "0 0 44px rgba(94,181,255,0.42), 0 0 92px rgba(94,181,255,0.18)";
-                refs.network.style.opacity = "0.92";
-                refs.topology.style.opacity = "0.86";
-                shellInner.style.transform = "translate3d(0,0,0) scale(1.10)";
-
-                setTimeout(() => {
-                    shellInner.style.transform = "translate3d(0,0,0) scale(1.20)";
-                    annotation.style.opacity = "0";
-                }, 240);
-            }
-
-            function animateDockingEnter(module) {
-                const { refs, shellInner, annotation } = module;
-
-                module.root.style.zIndex = "8";
-                refs.protein.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
-                refs.ligand.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
-                refs.pocket.style.transition = "opacity 320ms ease";
-                refs.pocketHalo.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 420ms ease";
-                refs.gapGlow.style.transition = "transform 620ms cubic-bezier(.18,.84,.22,1), opacity 420ms ease";
-                refs.field1.style.transition = "opacity 320ms ease";
-                refs.field2.style.transition = "opacity 320ms ease";
-                refs.field3.style.transition = "opacity 320ms ease";
-                shellInner.style.transition = "transform 720ms cubic-bezier(.18,.84,.22,1), filter 620ms ease";
-
-                refs.protein.style.transform = "translate3d(6px, -2px, 0) scale(1.02)";
-                refs.ligand.style.transform = "translate3d(-24px, -4px, 0) rotate(4deg) scale(1.10)";
-
-                refs.pocket.style.opacity = "0.78";
-                refs.pocketHalo.style.opacity = "1";
-                refs.pocketHalo.style.transform = "scale(1.28)";
-
-                refs.gapGlow.style.opacity = "1";
-                refs.gapGlow.style.transform = "translate(-50%, -50%) rotate(-12deg) scale(1.48)";
-
-                refs.field1.style.opacity = "0.96";
-                refs.field2.style.opacity = "0.90";
-                refs.field3.style.opacity = "0.78";
-
-                shellInner.style.transform = "translate3d(0,0,0) scale(1.10)";
-
-                setTimeout(() => {
-                    refs.protein.style.transform = "translate3d(10px, -3px, 0) scale(1.04)";
-                    refs.ligand.style.transform = "translate3d(-34px, -6px, 0) rotate(6deg) scale(1.14)";
-                    shellInner.style.transform = "translate3d(0,0,0) scale(1.18)";
-                    annotation.style.opacity = "0";
-                }, 240);
-            }
-
-            function startRenderLoop() {
-                function frame() {
-                    if (!globalState.entering) {
-                        updateModuleResponses();
-                    }
-                    requestAnimationFrame(frame);
-                }
-                frame();
-            }
-
-            function resizeBackgroundCanvas() {
-                const dpr = window.devicePixelRatio || 1;
-                const width = canvasRoot.offsetWidth;
-                const height = canvasRoot.offsetHeight;
-
-                bgCanvas.width = width * dpr;
-                bgCanvas.height = height * dpr;
-                bgCanvas.style.width = width + "px";
-                bgCanvas.style.height = height + "px";
-                bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            }
-
-            /* 粒子数量减半左右，退后为环境层 */
-            function createBackgroundParticles() {
-                const count = Math.min(24, Math.max(12, Math.floor(canvasRoot.offsetWidth / 64)));
-                globalState.bgParticles = [];
-
-                for (let i = 0; i < count; i++) {
-                    globalState.bgParticles.push({
-                        x: Math.random() * canvasRoot.offsetWidth,
-                        y: Math.random() * canvasRoot.offsetHeight,
-                        r: Math.random() * 1.1 + 0.35,
-                        vx: (Math.random() - 0.5) * 0.08,
-                        vy: (Math.random() - 0.5) * 0.06,
-                        a: Math.random() * 0.18 + 0.05
-                    });
-                }
-            }
-
-            function initBackgroundCanvas() {
-                resizeBackgroundCanvas();
-                createBackgroundParticles();
-                drawBackground();
-            }
-
-            function drawBackground() {
-                const w = canvasRoot.offsetWidth;
-                const h = canvasRoot.offsetHeight;
-                const particles = globalState.bgParticles;
-
-                bgCtx.clearRect(0, 0, w, h);
-
-                const glow = bgCtx.createRadialGradient(
-                    w * 0.50, h * 0.50, 0,
-                    w * 0.50, h * 0.50, Math.min(w, h) * 0.34
-                );
-                glow.addColorStop(0, "rgba(176, 195, 218, 0.04)");
-                glow.addColorStop(0.56, "rgba(176, 195, 218, 0.018)");
-                glow.addColorStop(1, "rgba(176, 195, 218, 0)");
-
-                bgCtx.fillStyle = glow;
-                bgCtx.fillRect(0, 0, w, h);
-
-                for (let i = 0; i < particles.length; i++) {
-                    const p1 = particles[i];
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const p2 = particles[j];
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < 118) {
-                            const alpha = (1 - dist / 118) * 0.022;
-                            bgCtx.strokeStyle = `rgba(104, 127, 154, ${alpha})`;
-                            bgCtx.lineWidth = 1;
-                            bgCtx.beginPath();
-                            bgCtx.moveTo(p1.x, p1.y);
-                            bgCtx.lineTo(p2.x, p2.y);
-                            bgCtx.stroke();
-                        }
-                    }
-                }
-
-                for (const p of particles) {
-                    p.x += p.vx;
-                    p.y += p.vy;
-
-                    if (p.x < -20) p.x = w + 20;
-                    if (p.x > w + 20) p.x = -20;
-                    if (p.y < -20) p.y = h + 20;
-                    if (p.y > h + 20) p.y = -20;
-
-                    bgCtx.beginPath();
-                    bgCtx.fillStyle = `rgba(105, 128, 152, ${p.a})`;
-                    bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    bgCtx.fill();
-                }
-
-                requestAnimationFrame(drawBackground);
-            }
-
-            window.addEventListener("load", init);
-        })();
-    </script>
+    <script src="~/js/pageIndex.js" asp-append-version="true"></script>
 }
