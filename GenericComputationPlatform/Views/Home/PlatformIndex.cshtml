@@ -12,12 +12,14 @@
     var knowledgeEvidence = new[]
     {
         new
-        {
+        {   
+            Eyebrow = "RA TARGET FILTERING",
             Title = "RA-oriented target selection",
             Desc = "The database does not begin from generic protein collections. It starts from targets linked to approved RA drugs and evidence from RA-related publications, then narrows them through three rounds of screening. The resulting 64 targets provide a focused and usable RA-oriented set for platform analysis."
         },
         new
         {
+            Eyebrow = "STRUCTURED RECORD VIEW",
             Title = "Structure-guided record interpretation",
             Desc = "Each protein entry is presented as a structured knowledge record. Users can review selected proteins, associated small-molecule ligands, and PyMOL-generated visualizations, with particular attention to the spatial 2D snapshot of the protein and its binding target state. Detailed record pages further provide annotations, structural references, external resources, and downloadable models for deeper exploration."
         },
@@ -119,11 +121,12 @@
             </div>
 
             <div class="ra-knowledge-grid">
-                <div class="ra-evidence-list">
+                <div class="ra-cap-editorial">
                     @foreach (var item in knowledgeEvidence)
                     {
-                        <article class="ra-evidence-item">
-                            <h3 class="ra-evidence-title">@item.Title</h3>
+                        <article class="ra-cap-item">
+                            <div class="ra-side-note-label">@item.Eyebrow</div>
+                            <h3 class="ra-cap-title">@item.Title</h3>
                             <p class="ra-body">@item.Desc</p>
                         </article>
                     }
