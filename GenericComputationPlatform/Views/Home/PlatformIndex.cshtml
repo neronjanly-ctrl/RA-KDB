@@ -13,13 +13,13 @@
     {
         new
         {
-            Title = "Disease-oriented target curation",
-            Desc = "The database begins from rheumatoid arthritis-relevant targets rather than generic records, so the knowledge layer already reflects disease context, target significance, and research usefulness."
+            Title = "RA-oriented target selection",
+            Desc = "The database does not begin from generic protein collections. It starts from targets linked to approved RA drugs and evidence from RA-related publications, then narrows them through three rounds of screening. The resulting 64 targets provide a focused and usable RA-oriented set for platform analysis."
         },
         new
         {
-            Title = "Structured interpretation for each record",
-            Desc = "Protein entries are organized as readable records with annotations, summaries, and linked biological meaning, making them appropriate for both expert review and downstream computational work."
+            Title = "Structure-guided record interpretation",
+            Desc = "Each protein entry is presented as a structured knowledge record. Users can review selected proteins, associated small-molecule ligands, and PyMOL-generated visualizations, with particular attention to the spatial 2D snapshot of the protein and its binding target state. Detailed record pages further provide annotations, structural references, external resources, and downloadable models for deeper exploration."
         },
     };
 
@@ -27,15 +27,15 @@
     {
         new
         {
-            Eyebrow = "Protein records",
-            Title = "Interpretable target cards",
-            Desc = "Researchers can review structured protein cards that summarize target identity, rheumatoid arthritis relevance, and supporting annotations before moving into docking-related work."
+            Eyebrow = "FLEXIBLE TARGET SELECTION",
+            Title = "Dock across supported protein targets",
+            Desc = "Select any number of platform-supported pre-screened protein targets for molecular docking and compare docking scores across multiple targets within a single workflow."
         },
         new
         {
-            Eyebrow = "Docking workflows",
-            Title = "Computational investigation",
-            Desc = "The docking module extends the knowledge layer into practical analysis, allowing users to organize target-ligand work and interpret outputs in the same disease-aware setting."
+            Eyebrow = "ONLINE SCORE ANALYSIS",
+            Title = "Interpret docking results with ease",
+            Desc = "Analyze docking score data online through a clear and structured interface, helping users understand key results without being overwhelmed by complex output."
         }
     };
 
@@ -105,14 +105,16 @@
             <div class="ra-banner-overlay ra-banner-overlay--light"></div>
             <div class="ra-banner-inner ra-container ra-banner-inner--compact">
                 <div class="ra-kicker">Knowledge Base</div>
-                <h2 class="ra-section-title">A disease-oriented knowledge layer designed to support interpretation</h2>
+                <h2 class="ra-section-title">A rheumatoid arthritis-oriented knowledge layer for target interpretation</h2>
             </div>
         </div>
 
         <div class="ra-module-body ra-container">
             <div class="ra-editorial-head">
                 <p class="ra-section-desc">
-                    The knowledge base is the platform's foundation. It explains where the records come from, how they are structured, and why they are suitable for rheumatoid arthritis-oriented interpretation before any docking step begins.
+                    The knowledge base is built specifically for rheumatoid arthritis (RA) interpretation. 
+                    Starting from approved RA drugs and RA-related literature, we performed three rounds of target screening and curated 64 platform-ready targets spanning four major pathway groups. 
+                    Before docking or downstream analysis, users can explore protein records, associated small-molecule ligands, and PyMOL-derived structural views that support interpretable target assessment.
                 </p>
             </div>
 
@@ -239,7 +241,7 @@
             <div class="ra-banner-overlay ra-banner-overlay--warm"></div>
             <div class="ra-banner-inner ra-container ra-banner-inner--compact">
                 <div class="ra-kicker">Docking</div>
-                <h2 class="ra-section-title">A computational module that extends knowledge records into practical analysis</h2>
+                <h2 class="ra-section-title">Molecular Docking for Target-Guided Drug Screening</h2>
             </div>
         </div>
 
@@ -247,7 +249,9 @@
             <div class="ra-cap-layout">
                 <div class="ra-cap-copy">
                     <p class="ra-section-desc">
-                        The docking module gives the platform operational value. It allows researchers to continue from readable target records into actual computational investigation while preserving the biological and disease-oriented context established by the knowledge base.
+                        This docking module enables researchers to submit compound SMILES, 
+                        evaluate binding against selected protein targets, 
+                        and prioritize candidate drugs through quantitative docking scores and visual analysis.
                     </p>
                 </div>
 
@@ -266,8 +270,8 @@
             <div class="ra-research-band">
                 <div class="ra-side-note-label">Research value</div>
                 <p>
-                    In this part, docking is designed for caculating the scores for different proteins 
-                    with certain drug given by you visitor.
+                    This platform supports flexible multi-target docking across platform-supported pre-screened proteins and offers online analysis of docking scores, 
+                    helping users identify promising compounds and interpret key results with greater ease.
                 </p>
             </div>
         </div>
