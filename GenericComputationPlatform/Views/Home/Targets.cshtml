@@ -674,30 +674,9 @@
 
                         <div class="ra-target-sub">
                             <div><strong>Gene:</strong> @protein.GeneSymbol</div>
-                            <div><strong>Binding site:</strong> @cavity.BindingSite</div>
-                        </div>
-
-                        <div class="ra-badges">
-                            <span class="ra-badge">RA target</span>
-                            <span class="ra-badge">Docking-ready</span>
-                            @if (protein.Tags != null && protein.Tags.Any())
-                            {
-                                <span class="ra-badge">@protein.Tags.First().Name</span>
-                            }
                         </div>
 
                         <div class="ra-target-actions">
-                            <button type="button"
-                                    class="btn-ra-secondary"
-                                    data-toggle="modal"
-                                    data-target="#imagePreviewModal"
-                                    data-title="@protein.ProteinName"
-                                    data-subtitle="@protein.GeneSymbol"
-                                    data-binding="@cavity.BindingSite"
-                                    data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
-                                Preview
-                            </button>
-
                             <a class="btn-ra-primary"
                                asp-controller="Protein"
                                asp-action="Details"
@@ -717,12 +696,10 @@
                 <table class="ra-table">
                     <thead>
                         <tr>
-                            <th>Preview</th>
                             <th>Protein</th>
                             <th>Gene / Symbol</th>
                             <th>Organism</th>
                             <th>UniProt / ChEMBL</th>
-                            <th>Compounds</th>
                             <th>Details</th>
                         </tr>
                     </thead>
@@ -755,7 +732,6 @@
                                             data-target="#imagePreviewModal"
                                             data-title="@protein.ProteinName"
                                             data-subtitle="@protein.GeneSymbol"
-                                            data-binding="@cavity.BindingSite"
                                             data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
                                         <img class="ra-table-thumb"
                                              src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png"
@@ -771,9 +747,6 @@
                                            asp-route-cavityId="@cavity.Id.StringifyId()">
                                             @protein.ProteinName
                                         </a>
-                                    </div>
-                                    <div class="ra-table-meta">
-                                        Binding site: @cavity.BindingSite
                                     </div>
                                 </td>
 
@@ -801,19 +774,6 @@
                                             <a target="_blank" href="@protein.Properties.Chembl.TargetUrl">
                                                 @protein.Properties.Chembl.Id
                                             </a>
-                                        }
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <div class="ra-table-meta">
-                                        @if (protein.BioactivityCount != 0 || protein.RawBioactivityCount != 0)
-                                        {
-                                            <span>@protein.BioactivityCount / @protein.RawBioactivityCount</span>
-                                        }
-                                        else
-                                        {
-                                            <span>—</span>
                                         }
                                     </div>
                                 </td>
