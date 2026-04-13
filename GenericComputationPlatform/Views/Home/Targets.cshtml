@@ -664,12 +664,7 @@
 
                     <div class="ra-target-body">
                         <div class="ra-target-title">
-                            <a asp-controller="Protein"
-                               asp-action="Details"
-                               asp-route-domainId="@Model.Domain.Id"
-                               asp-route-cavityId="@cavity.Id.StringifyId()">
-                                @protein.ProteinName
-                            </a>
+                            @protein.ProteinName
                         </div>
 
                         <div class="ra-target-sub">
@@ -696,6 +691,7 @@
                 <table class="ra-table">
                     <thead>
                         <tr>
+                            <th>Preview</th>
                             <th>Protein</th>
                             <th>Gene / Symbol</th>
                             <th>Organism</th>
@@ -741,18 +737,12 @@
 
                                 <td>
                                     <div class="ra-table-name">
-                                        <a asp-controller="Protein"
-                                           asp-action="Details"
-                                           asp-route-domainId="@Model.Domain.Id"
-                                           asp-route-cavityId="@cavity.Id.StringifyId()">
-                                            @protein.ProteinName
-                                        </a>
+                                        @protein.ProteinName
                                     </div>
                                 </td>
 
                                 <td>
                                     <div class="ra-table-name">@protein.GeneSymbol</div>
-                                    <div class="ra-table-meta">@(protein.ProteinSymbol)_@(protein.OrganismSymbol)</div>
                                 </td>
 
                                 <td>
@@ -850,7 +840,6 @@
                 <div style="line-height:1.85;">
                     <div><strong>Protein:</strong> <span id="imagePreviewProteinName"></span></div>
                     <div><strong>Gene:</strong> <span id="imagePreviewGene"></span></div>
-                    <div><strong>Binding site:</strong> <span id="imagePreviewBinding"></span></div>
                 </div>
             </div>
 
