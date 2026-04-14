@@ -28,6 +28,8 @@
         .Select(g => g.First())
         .OrderBy(o => o.Name)
         .ToList();
+
+    var overviewBanner = Url.Content("~/images/version1/bg_01.png");
 }
 
 @section Menu {
@@ -38,533 +40,58 @@
 }
 
 @section Styles {
-    <style>
-        :root {
-            --ra-bg: #f7f9fc;
-            --ra-surface: rgba(255,255,255,.85);
-            --ra-surface-strong: rgba(255,255,255,.96);
-            --ra-title: #162033;
-            --ra-text: #627089;
-            --ra-line: #dde6f2;
-            --ra-blue: #2f6bff;
-            --ra-blue-soft: rgba(47,107,255,.08);
-            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
-            --ra-shadow-card: 0 14px 28px rgba(20, 44, 84, .05);
-        }
-
-        body {
-            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(104,200,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
-            color: var(--ra-title);
-        }
-
-        .ra-db-page {
-            width: min(1460px, calc(100vw - 2rem));
-            margin: 0 auto;
-            padding: 2rem 0 5rem;
-        }
-
-        .ra-section + .ra-section {
-            margin-top: 1.8rem;
-        }
-
-        .ra-card-shell {
-            background: var(--ra-surface);
-            border: 1px solid var(--ra-line);
-            border-radius: 28px;
-            box-shadow: var(--ra-shadow);
-            backdrop-filter: blur(8px);
-        }
-
-        .ra-header {
-            padding: 2rem;
-        }
-
-        .ra-kicker {
-            display: inline-flex;
-            align-items: center;
-            padding: .42rem .95rem;
-            border-radius: 999px;
-            background: var(--ra-blue-soft);
-            color: var(--ra-blue);
-            font-size: .82rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .ra-title {
-            font-size: clamp(2.1rem, 3.6vw, 3.8rem);
-            line-height: 1.04;
-            font-weight: 800;
-            letter-spacing: -.04em;
-            margin-bottom: .9rem;
-        }
-
-        .ra-desc {
-            color: var(--ra-text);
-            font-size: 1.02rem;
-            line-height: 1.9;
-            max-width: 980px;
-        }
-
-        .ra-stats {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: .9rem;
-            margin-top: 1.4rem;
-        }
-
-        .ra-stat {
-            border: 1px solid var(--ra-line);
-            border-radius: 20px;
-            background: rgba(255,255,255,.96);
-            padding: 1rem;
-        }
-
-        .ra-stat-value {
-            font-size: 1.5rem;
-            font-weight: 780;
-            line-height: 1;
-            margin-bottom: .35rem;
-        }
-
-        .ra-stat-label {
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.6;
-        }
-
-        .ra-toolbar {
-            padding: 1.25rem 1.25rem 1rem;
-        }
-
-        .ra-toolbar-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .ra-search-wrap {
-            flex: 1 1 420px;
-        }
-
-        .ra-search {
-            width: 100%;
-            min-height: 48px;
-            border-radius: 999px;
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            padding: 0 1rem;
-            color: #24324a;
-            outline: none;
-        }
-
-        .ra-controls {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .ra-view-toggle,
-        .ra-page-size {
-            display: inline-flex;
-            align-items: center;
-            gap: .45rem;
-            padding: .35rem;
-            border-radius: 999px;
-            background: rgba(47,107,255,.06);
-            border: 1px solid rgba(47,107,255,.08);
-        }
-
-        .ra-toggle-btn {
-            border: 0;
-            background: transparent;
-            color: #30508f;
-            font-weight: 700;
-            border-radius: 999px;
-            min-height: 38px;
-            padding: 0 .95rem;
-            cursor: pointer;
-        }
-
-            .ra-toggle-btn.is-active {
-                background: #fff;
-                box-shadow: 0 6px 14px rgba(20, 44, 84, .06);
-                color: #1f2c44;
-            }
-
-        .ra-size-btn {
-            border: 0;
-            background: transparent;
-            color: #30508f;
-            font-weight: 700;
-            border-radius: 999px;
-            min-height: 38px;
-            min-width: 56px;
-            padding: 0 .8rem;
-            cursor: pointer;
-        }
-
-            .ra-size-btn.is-active {
-                background: #fff;
-                box-shadow: 0 6px 14px rgba(20, 44, 84, .06);
-                color: #1f2c44;
-            }
-
-        .ra-toolbar-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-        }
-
-        .ra-tag-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .6rem;
-        }
-
-        .ra-chip {
-            display: inline-flex;
-            align-items: center;
-            min-height: 36px;
-            padding: 0 .85rem;
-            border-radius: 999px;
-            background: #fff;
-            border: 1px solid var(--ra-line);
-            color: #2f405e;
-            text-decoration: none !important;
-            font-size: .9rem;
-            font-weight: 600;
-        }
-
-            .ra-chip.is-active {
-                background: rgba(47,107,255,.08);
-                border-color: rgba(47,107,255,.2);
-                color: var(--ra-blue);
-            }
-
-        .ra-result-meta {
-            color: var(--ra-text);
-            font-size: .95rem;
-            font-weight: 600;
-        }
-
-        .ra-results {
-            padding: 1.25rem;
-        }
-
-        .ra-card-view {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 1rem;
-        }
-
-        .ra-target-card {
-            border: 1px solid var(--ra-line);
-            border-radius: 24px;
-            background: rgba(255,255,255,.97);
-            overflow: hidden;
-            transition: transform .18s ease, box-shadow .18s ease;
-        }
-
-            .ra-target-card:hover {
-                transform: translateY(-2px);
-                box-shadow: var(--ra-shadow-card);
-            }
-
-        .ra-target-thumb-btn {
-            display: block;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            width: 100%;
-            cursor: pointer;
-        }
-
-        .ra-target-thumb {
-            width: 100%;
-            aspect-ratio: 16 / 10;
-            object-fit: cover;
-            display: block;
-            background: #eef3fa;
-        }
-
-        .ra-target-body {
-            padding: .95rem 1rem 1rem;
-        }
-
-        .ra-target-title {
-            font-size: 1.02rem;
-            font-weight: 740;
-            line-height: 1.45;
-            margin-bottom: .35rem;
-        }
-
-            .ra-target-title a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-                .ra-target-title a:hover {
-                    color: var(--ra-blue);
-                    text-decoration: none;
-                }
-
-        .ra-target-sub {
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.7;
-            margin-bottom: .8rem;
-        }
-
-        .ra-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .45rem;
-            margin-bottom: .9rem;
-        }
-
-        .ra-badge {
-            display: inline-flex;
-            align-items: center;
-            min-height: 28px;
-            padding: 0 .62rem;
-            border-radius: 999px;
-            background: rgba(47,107,255,.06);
-            color: #2e4e9b;
-            border: 1px solid rgba(47,107,255,.12);
-            font-size: .76rem;
-            font-weight: 650;
-        }
-
-        .ra-target-actions {
-            display: flex;
-            gap: .55rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-ra-primary,
-        .btn-ra-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 40px;
-            border-radius: 999px;
-            padding: 0 .9rem;
-            text-decoration: none !important;
-            font-weight: 700;
-            font-size: .9rem;
-        }
-
-        .btn-ra-primary {
-            color: #fff !important;
-            background: var(--ra-blue);
-        }
-
-        .btn-ra-secondary {
-            color: #24324a !important;
-            background: #fff;
-            border: 1px solid var(--ra-line);
-        }
-
-        .ra-table-view {
-            display: none;
-        }
-
-        .ra-table-shell {
-            border: 1px solid var(--ra-line);
-            border-radius: 24px;
-            overflow: hidden;
-            background: rgba(255,255,255,.97);
-        }
-
-        .ra-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-            .ra-table thead th {
-                background: rgba(47,107,255,.05);
-                color: #32517c;
-                text-transform: uppercase;
-                letter-spacing: .04em;
-                font-size: .84rem;
-                font-weight: 800;
-                padding: .95rem 1rem;
-                border-bottom: 1px solid var(--ra-line);
-            }
-
-            .ra-table tbody td {
-                padding: 1rem;
-                border-bottom: 1px solid var(--ra-line);
-                vertical-align: middle;
-            }
-
-            .ra-table tbody tr:last-child td {
-                border-bottom: 0;
-            }
-
-        .ra-table-thumb-btn {
-            display: inline-block;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-        }
-
-        .ra-table-thumb {
-            width: 78px;
-            border-radius: 14px;
-            display: block;
-        }
-
-        .ra-table-name {
-            font-weight: 740;
-            line-height: 1.55;
-        }
-
-            .ra-table-name a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-                .ra-table-name a:hover {
-                    color: var(--ra-blue);
-                }
-
-        .ra-table-meta {
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.7;
-        }
-
-        .ra-ref-links a {
-            display: inline-block;
-            color: var(--ra-blue);
-            text-decoration: none;
-            font-size: .92rem;
-            font-weight: 700;
-            margin-right: .75rem;
-            margin-bottom: .3rem;
-        }
-
-        .ra-pagination {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1.2rem;
-        }
-
-        .ra-page-info {
-            color: var(--ra-text);
-            font-size: .95rem;
-            font-weight: 600;
-        }
-
-        .ra-page-actions {
-            display: flex;
-            gap: .6rem;
-        }
-
-        .ra-page-btn {
-            min-width: 96px;
-            min-height: 40px;
-            border-radius: 999px;
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            color: #24324a;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-            .ra-page-btn:disabled {
-                opacity: .45;
-                cursor: not-allowed;
-            }
-
-        .ra-footer-actions {
-            display: flex;
-            gap: .8rem;
-            flex-wrap: wrap;
-            margin-top: 1.2rem;
-        }
-
-        .ra-empty {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--ra-text);
-            border: 1px dashed var(--ra-line);
-            border-radius: 22px;
-            background: rgba(255,255,255,.75);
-        }
-
-        @@media (max-width: 1399.98px) {
-            .ra-card-view {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @@media (max-width: 1199.98px) {
-            .ra-card-view,
-            .ra-stats {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @@media (max-width: 991.98px) {
-            .ra-card-view,
-            .ra-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .ra-header,
-            .ra-toolbar,
-            .ra-results {
-                padding: 1.25rem;
-            }
-
-            .ra-table-shell {
-                overflow-x: auto;
-            }
-
-            .ra-table {
-                min-width: 940px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/pageTargets.css" asp-append-version="true" />
 }
 
 <div class="ra-db-page">
     <!-- Header -->
-    <section class="ra-section ra-card-shell ra-header">
-        <div class="ra-kicker">Curated database • Light cards • Dense table</div>
+    <section class="ra-section ra-header-hero">
+        <div class="ra-hero-banner">
+            <img class="ra-hero-banner-image"
+                 src="@overviewBanner"
+                 alt="Rheumatoid arthritis protein research database" />
 
-        <h1 class="ra-title">RA Protein Database</h1>
+            <div class="ra-hero-banner-overlay"></div>
 
-        <p class="ra-desc">
-            Browse curated RA-related targets through a dual-view database interface: lightweight cards for quick
-            scanning and a denser table for structured comparison and detail access.
-        </p>
+            <div class="ra-hero-banner-inner">
+                <div class="ra-hero-copy">
+                    <div class="ra-hero-kicker">Curated RA protein database</div>
 
-        <div class="ra-stats">
-            <div class="ra-stat">
-                <div class="ra-stat-value">@totalProteins</div>
-                <div class="ra-stat-label">Unique proteins currently represented in this database view</div>
-            </div>
-            <div class="ra-stat">
-                <div class="ra-stat-value">@totalCavities</div>
-                <div class="ra-stat-label">Structure / binding-site entries currently displayed</div>
-            </div>
-            <div class="ra-stat">
-                <div class="ra-stat-value">20</div>
-                <div class="ra-stat-label">Default number of records shown per page</div>
+                    <h1 class="ra-hero-title">
+                        Rheumatoid Arthritis Protein Target Database
+                    </h1>
+
+                    <p class="ra-hero-desc">
+                        Explore curated rheumatoid arthritis related targets, protein records, and docking-ready
+                        structures in this research workspace designed for efficient browsing, comparison,
+                        and downstream computational analysis.
+                    </p>
+
+                    <div class="ra-hero-meta">
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">@totalProteins</span>
+                            <span class="ra-hero-meta-label">Proteins</span>
+                        </div>
+
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">@totalCavities</span>
+                            <span class="ra-hero-meta-label">Cavities</span>
+                        </div>
+
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">Data sources : </span>
+                            <span class="ra-hero-meta-label">Paper and Drug</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.TagName))
+                        {
+                            <div class="ra-hero-meta-item ra-hero-meta-item--tag">
+                                <span class="ra-hero-meta-value">@Model.TagName</span>
+                                <span class="ra-hero-meta-label">active tag</span>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     </section>
