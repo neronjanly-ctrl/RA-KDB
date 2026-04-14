@@ -22,14 +22,110 @@
 
     var totalCavities = cavities.Count;
 
-    var allTags = Model.Targets
-        .SelectMany(o => o.Tags ?? new List<ProteinTag>())
-        .GroupBy(o => o.Id)
-        .Select(g => g.First())
-        .OrderBy(o => o.Name)
-        .ToList();
-
     var overviewBanner = Url.Content("~/images/version1/bg_01.png");
+
+    const int defaultPageSize = 20;
+    const string allCategoryKey = "all";
+
+    var categoryDefinitions = new[]
+    {
+        new
+        {
+            Key = "inflammation-immune",
+            Name = "Inflammation & Immune Regulation",
+            Description = "Core RA inflammatory amplification, autoimmunity activation, cytokine signaling, and innate immune regulation.",
+            Symbols = new HashSet<string>(new[]
+            {
+                "AHR_HUMAN","BTK_HUMAN","CASP1_HUMAN","CCR5_HUMAN","CXCR1_HUMAN","CXCR4_HUMAN","DRB1_HUMAN","E2AK2_HUMAN","GCR_HUMAN","IKBA_HUMAN","IKKA_HUMAN","IKKB_HUMAN","IL2RB_HUMAN","IL2_HUMAN","IL6_HUMAN","JAK1_HUMAN","JAK2_HUMAN","NFKB1_HUMAN","NOS2_HUMAN","PADI4_HUMAN","RELB_HUMAN","STAT3_HUMAN","SYK_HUMAN","TF65_HUMAN","TLR7_HUMAN","TNFA_HUMAN","TYK2_HUMAN"
+            })
+        },
+        new
+        {
+            Key = "signal-proliferation",
+            Name = "Signal Transduction & Cell Proliferation",
+            Description = "Synoviocyte activation, kinase networks, and cell proliferation/migration signaling.",
+            Symbols = new HashSet<string>(new[]
+            {
+                "AKT1_HUMAN","FAK1_HUMAN","FAK2_HUMAN","FOXO3_HUMAN","HCK_HUMAN","HGF_HUMAN","KI20A_HUMAN","MET_HUMAN","MK01_HUMAN","MK14_HUMAN","PLK1_HUMAN","PTEN_HUMAN","PTN1_HUMAN","PTN22_HUMAN","RAF1_HUMAN","SRC_HUMAN"
+            })
+        },
+        new
+        {
+            Key = "tissue-remodeling",
+            Name = "Tissue Destruction & Synovial Remodeling",
+            Description = "Synovial invasion, matrix degradation, cytoskeleton remodeling, angiogenesis, and microenvironment changes.",
+            Symbols = new HashSet<string>(new[]
+            {
+                "MMP2_HUMAN","MMP8_HUMAN","MMP9_HUMAN","NOS3_HUMAN","RAC1_HUMAN","RHOA_HUMAN","VGFR2_HUMAN","HMR1_HUMAN","TNAP3_HUMAN"
+            })
+        },
+        new
+        {
+            Key = "metabolic-supportive",
+            Name = "Metabolic & Supportive Regulation",
+            Description = "Metabolic regulation, drug response, lipid inflammatory mediators, transport, and supportive control.",
+            Symbols = new HashSet<string>(new[]
+            {
+                "A1AG1_HUMAN","A1AG2_HUMAN","ABCG2_HUMAN","PD2R2_HUMAN","PE2R4_HUMAN","PGH1_HUMAN","PGH2_HUMAN","PPARA_HUMAN","PPARG_HUMAN","PPIA_HUMAN","S19A1_HUMAN","XCT_HUMAN"
+            })
+        }
+    };
+
+    string ResolveCategoryKey(string proteinSymbol)
+    {
+        if (string.IsNullOrWhiteSpace(proteinSymbol)) return "other";
+        var normalized = proteinSymbol.Trim().ToUpperInvariant();
+        return categoryDefinitions.FirstOrDefault(def => def.Symbols.Contains(normalized))?.Key ?? "other";
+    }
+
+    string ResolveCategoryName(string categoryKey)
+    {
+        if (categoryKey == "other") return "Other / Unclassified";
+        return categoryDefinitions.FirstOrDefault(def => def.Key == categoryKey)?.Name ?? "Other / Unclassified";
+    }
+
+    var cavityItems = cavities.Select(cavity =>
+    {
+        var protein = cavity.Protein;
+        var proteinTags = protein.Tags ?? new List<ProteinTag>();
+        var cavityId = cavity.Id.StringifyId();
+        var imagePath = $"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png";
+        var categoryKey = ResolveCategoryKey($"{protein.ProteinSymbol}_{protein.OrganismSymbol}");
+
+        var searchText = string.Join(" ",
+            new[]
+            {
+                protein.ProteinName,
+                protein.GeneSymbol,
+                protein.ProteinSymbol,
+                protein.Properties?.UniProt?.Id,
+                string.Join(" ", proteinTags.Select(t => t.Name))
+            }.Where(x => !string.IsNullOrWhiteSpace(x))
+        );
+
+        return new
+        {
+            Cavity = cavity,
+            Protein = protein,
+            CavityId = cavityId,
+            CategoryKey = categoryKey,
+            CategoryName = ResolveCategoryName(categoryKey),
+            SearchText = searchText,
+            ImageUrl = Url.Content(imagePath),
+            DetailsUrl = Url.Action("Details", "Protein", new { domainId = Model.Domain.Id, cavityId })
+        };
+    }).ToList();
+
+    var categoryStats = categoryDefinitions
+        .Select(def => new
+        {
+            def.Key,
+            def.Name,
+            def.Description,
+            Count = cavityItems.Count(item => item.CategoryKey == def.Key)
+        })
+        .Where(x => x.Count > 0)
+        .ToList();
 }
 
 @section Menu {
@@ -79,17 +175,14 @@
                         </div>
 
                         <div class="ra-hero-meta-item">
-                            <span class="ra-hero-meta-value">Data sources : </span>
+                            <span class="ra-hero-meta-value">Data sources :</span>
                             <span class="ra-hero-meta-label">Paper and Drug</span>
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(Model.TagName))
-                        {
-                            <div class="ra-hero-meta-item ra-hero-meta-item--tag">
-                                <span class="ra-hero-meta-value">@Model.TagName</span>
-                                <span class="ra-hero-meta-label">active tag</span>
-                            </div>
-                        }
+                        <div class="ra-result-meta">
+                            <span id="raVisibleCount">@cavityItems.Count</span> visible records
+                            <span id="raCategoryMeta"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,8 +201,8 @@
 
             <div class="ra-controls">
                 <div class="ra-view-toggle">
-                    <button class="ra-toggle-btn is-active" type="button" data-view="card">Card view</button>
-                    <button class="ra-toggle-btn" type="button" data-view="table">Table view</button>
+                    <button class="ra-toggle-btn is-active" type="button" data-view="card" aria-pressed="true">Card view</button>
+                    <button class="ra-toggle-btn" type="button" data-view="table" aria-pressed="false">Table view</button>
                 </div>
 
                 <div class="ra-page-size">
@@ -118,92 +211,105 @@
                 </div>
             </div>
         </div>
-
         <div class="ra-toolbar-bottom">
-            <div class="ra-tag-row">
-                <a class="ra-chip @(string.IsNullOrWhiteSpace(Model.TagId) ? "is-active" : null)"
-                   asp-controller="Home"
-                   asp-action="Targets"
-                   asp-route-domainId="@Model.Domain.Id"
-                   asp-route-tagId="">
-                    All tags
-                </a>
+            <div class="ra-category-panel" aria-label="Protein functional categories">
+                <div class="ra-category-row ra-category-row--all">
+                    <button type="button"
+                            class="ra-category-chip ra-category-chip--all is-active"
+                            data-category="@allCategoryKey"
+                            data-category-name="All categories"
+                            aria-pressed="true">
+                        <span class="ra-category-label">All categories</span>
+                        <span class="ra-category-count">@cavityItems.Count</span>
+                    </button>
+                </div>
 
-                @foreach (var tag in allTags)
+                @if (categoryStats.Count >= 3)
                 {
-                    <a class="ra-chip @(Model.TagId == tag.Id ? "is-active" : null)"
-                       asp-controller="Home"
-                       asp-action="Targets"
-                       asp-route-domainId="@Model.Domain.Id"
-                       asp-route-tagId="@tag.Id">
-                        @tag.Name
-                    </a>
+                    <div class="ra-category-row ra-category-row--main">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            var category = categoryStats[i];
+                            <button type="button"
+                                    class="ra-category-chip ra-category-chip--grid"
+                                    data-category="@category.Key"
+                                    data-category-name="@category.Name"
+                                    aria-pressed="false"
+                                    title="@category.Description">
+                                <span class="ra-category-label">@category.Name</span>
+                                <span class="ra-category-count">@category.Count</span>
+                            </button>
+                        }
+                    </div>
+                }
+
+                @if (categoryStats.Count > 3)
+                {
+                    <div class="ra-category-row ra-category-row--tail">
+                        @for (var i = 3; i < categoryStats.Count; i++)
+                        {
+                            var category = categoryStats[i];
+                            <button type="button"
+                                    class="ra-category-chip ra-category-chip--tail"
+                                    data-category="@category.Key"
+                                    data-category-name="@category.Name"
+                                    aria-pressed="false"
+                                    title="@category.Description">
+                                <span class="ra-category-label">@category.Name</span>
+                                <span class="ra-category-count">@category.Count</span>
+                            </button>
+                        }
+                    </div>
                 }
             </div>
 
             <div class="ra-result-meta">
-                <span id="raVisibleCount">@cavities.Count</span> visible records
-                @if (!string.IsNullOrWhiteSpace(Model.TagName))
-                {
-                    <span> • filtered by <strong>@Model.TagName</strong></span>
-                }
+                <span id="raVisibleCount">@cavityItems.Count</span> visible records
+                <span id="raCategoryMeta"></span>
             </div>
         </div>
+       
     </section>
 
     <!-- Results -->
     <section class="ra-section ra-card-shell ra-results">
         <!-- Card view -->
         <div id="raCardView" class="ra-card-view">
-            @foreach (var cavity in cavities)
+            @foreach (var item in cavityItems)
             {
-                var protein = cavity.Protein;
-                var proteinTags = protein.Tags ?? new List<ProteinTag>();
-
-                var searchText = string.Join(" ",
-                new[]
-                {
-            protein.ProteinName,
-            protein.GeneSymbol,
-            protein.ProteinSymbol,
-            protein.Properties?.UniProt?.Id,
-            string.Join(" ", proteinTags.Select(t => t.Name))
-                }.Where(s => !string.IsNullOrWhiteSpace(s))
-                );
-
                 <article class="ra-target-card ra-result-item"
                          data-kind="card"
-                         data-key="@cavity.Id.StringifyId()"
-                         data-search="@searchText">
+                         data-key="@item.CavityId"
+                         data-category="@item.CategoryKey"
+                         data-search="@item.SearchText">
 
                     <button type="button"
                             class="ra-target-thumb-btn"
                             data-toggle="modal"
                             data-target="#imagePreviewModal"
-                            data-title="@protein.ProteinName"
-                            data-subtitle="@protein.GeneSymbol"
-                            data-binding="@cavity.BindingSite"
-                            data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
+                            data-title="@item.Protein.ProteinName"
+                            data-subtitle="@item.Protein.GeneSymbol"
+                            data-binding="@item.Cavity.BindingSite"
+                            data-image="@item.ImageUrl">
                         <img class="ra-target-thumb"
-                             src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png"
-                             alt="@protein.ProteinName" />
+                             src="@item.ImageUrl"
+                             alt="@item.Protein.ProteinName" />
                     </button>
 
                     <div class="ra-target-body">
+                        <div class="ra-category-badge">@item.CategoryName</div>
+
                         <div class="ra-target-title">
-                            @protein.ProteinName
+                            @item.Protein.ProteinName
                         </div>
 
                         <div class="ra-target-sub">
-                            <div><strong>Gene:</strong> @protein.GeneSymbol</div>
+                            <div><strong>Gene:</strong> @item.Protein.GeneSymbol</div>
                         </div>
 
                         <div class="ra-target-actions">
                             <a class="btn-ra-primary"
-                               asp-controller="Protein"
-                               asp-action="Details"
-                               asp-route-domainId="@Model.Domain.Id"
-                               asp-route-cavityId="@cavity.Id.StringifyId()">
+                               href="@item.DetailsUrl">
                                 View details
                             </a>
                         </div>
@@ -227,69 +333,59 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var cavity in cavities)
+                        @foreach (var item in cavityItems)
                         {
-                            var protein = cavity.Protein;
-                            var proteinTags = protein.Tags ?? new List<ProteinTag>();
-
-                            var searchText = string.Join(" ",
-                            new[]
-                            {
-                        protein.ProteinName,
-                        protein.GeneSymbol,
-                        protein.ProteinSymbol,
-                        protein.Properties?.UniProt?.Id,
-                        string.Join(" ", proteinTags.Select(t => t.Name))
-                            }.Where(s => !string.IsNullOrWhiteSpace(s))
-                            );
-
                             <tr class="ra-result-item"
                                 data-kind="table"
-                                data-key="@cavity.Id.StringifyId()"
-                                data-search="@searchText">
+                                data-key="@item.CavityId"
+                                data-category="@item.CategoryKey"
+                                data-search="@item.SearchText">
 
                                 <td>
                                     <button type="button"
                                             class="ra-table-thumb-btn"
                                             data-toggle="modal"
                                             data-target="#imagePreviewModal"
-                                            data-title="@protein.ProteinName"
-                                            data-subtitle="@protein.GeneSymbol"
-                                            data-image="@Url.Content($"~/images/s/{cavity.ProteinId}-{cavity.BindingSite}-model_1.png")">
+                                            data-title="@item.Protein.ProteinName"
+                                            data-subtitle="@item.Protein.GeneSymbol"
+                                            data-binding="@item.Cavity.BindingSite"
+                                            data-image="@item.ImageUrl">
                                         <img class="ra-table-thumb"
-                                             src="~/images/s/@(cavity.ProteinId)-@(cavity.BindingSite)-model_1.png"
-                                             alt="@protein.ProteinName" />
+                                             src="@item.ImageUrl"
+                                             alt="@item.Protein.ProteinName" />
                                     </button>
                                 </td>
 
                                 <td>
                                     <div class="ra-table-name">
-                                        @protein.ProteinName
+                                        @item.Protein.ProteinName
                                     </div>
                                 </td>
 
                                 <td>
-                                    <div class="ra-table-name">@protein.GeneSymbol</div>
+                                    <div class="ra-table-name">@item.Protein.GeneSymbol</div>
+                                    <div class="ra-table-meta">@item.CategoryName</div>
+                                    <div class="ra-table-meta">@(item.Protein.ProteinSymbol)_@(item.Protein.OrganismSymbol)</div>
                                 </td>
 
                                 <td>
                                     <div class="ra-table-meta">
-                                        @protein.Organism?.Replace(";", "; ")
+                                        @item.Protein.Organism?.Replace(";", "; ")
                                     </div>
                                 </td>
 
                                 <td>
                                     <div class="ra-ref-links">
-                                        @if (protein.Properties?.UniProt != null)
+                                        @if (item.Protein.Properties?.UniProt != null)
                                         {
-                                            <a target="_blank" href="@protein.Properties.UniProt.Url">
-                                                @protein.Properties.UniProt.Id
+                                            <a target="_blank" href="@item.Protein.Properties.UniProt.Url">
+                                                @item.Protein.Properties.UniProt.Id
                                             </a>
                                         }
-                                        @if (protein.Properties?.Chembl != null)
+                                        @if (item.Protein.Properties?.Chembl != null)
                                         {
-                                            <a target="_blank" href="@protein.Properties.Chembl.TargetUrl">
-                                                @protein.Properties.Chembl.Id
+                                            <a target="_blank" href="@item.Protein.Properties.Chembl.TargetUrl">
+                                                @item.Protein.Properties.Chembl.Id
                                             </a>
                                         }
                                     </div>
@@ -297,10 +393,7 @@
 
                                 <td>
                                     <a class="btn-ra-primary"
-                                       asp-controller="Protein"
-                                       asp-action="Details"
-                                       asp-route-domainId="@Model.Domain.Id"
-                                       asp-route-cavityId="@cavity.Id.StringifyId()">
+                                       href="@item.DetailsUrl">
                                         Details
                                     </a>
                                 </td>
@@ -311,7 +404,7 @@
             </div>
         </div>
 
-        @if (!cavities.Any())
+        @if (!cavityItems.Any())
         {
             <div class="ra-empty mt-3">
                 No targets are available for the current filter.
@@ -364,9 +457,10 @@
                      alt=""
                      style="width:100%; border-radius:16px; margin-bottom:1rem; background:#eef3fa;" />
 
-                <div style="line-height:1.85;">
+                <div class="ra-modal-meta">
                     <div><strong>Protein:</strong> <span id="imagePreviewProteinName"></span></div>
                     <div><strong>Gene:</strong> <span id="imagePreviewGene"></span></div>
+                    <div><strong>Binding site:</strong> <span id="imagePreviewBinding"></span></div>
                 </div>
             </div>
 
@@ -383,36 +477,41 @@
             const searchInput = document.getElementById("raSearchInput");
             const viewButtons = Array.from(document.querySelectorAll(".ra-view-toggle .ra-toggle-btn"));
             const sizeButtons = Array.from(document.querySelectorAll(".ra-page-size .ra-size-btn"));
+            const categoryButtons = Array.from(document.querySelectorAll(".ra-category-chip"));
 
             const cardView = document.getElementById("raCardView");
             const tableView = document.getElementById("raTableView");
 
             const visibleCount = document.getElementById("raVisibleCount");
+            const categoryMeta = document.getElementById("raCategoryMeta");
             const currentPageLabel = document.getElementById("raCurrentPage");
             const totalPagesLabel = document.getElementById("raTotalPages");
             const prevPageBtn = document.getElementById("raPrevPage");
             const nextPageBtn = document.getElementById("raNextPage");
 
-            let currentView = "card";
-            let pageSize = 20;
-            let currentPage = 1;
+            const allCardItems = Array.from(document.querySelectorAll('.ra-result-item[data-kind="card"]'));
+            const allTableItems = Array.from(document.querySelectorAll('.ra-result-item[data-kind="table"]'));
 
-            function allItems(kind) {
-                return Array.from(document.querySelectorAll('.ra-result-item[data-kind="' + kind + '"]'));
-            }
+            let currentView = "card";
+            let pageSize = @defaultPageSize;
+            let currentPage = 1;
+            let currentCategory = "@allCategoryKey";
 
             function filteredItems(kind) {
                 const query = (searchInput.value || "").trim().toLowerCase();
-                return allItems(kind).filter(item => {
+                const source = kind === "card" ? allCardItems : allTableItems;
+
+                return source.filter(item => {
                     const text = (item.dataset.search || "").toLowerCase();
-                    return !query || text.includes(query);
+                    const category = item.dataset.category || "other";
+                    const categoryMatched = currentCategory === "@allCategoryKey" || category === currentCategory;
+                    return categoryMatched && (!query || text.includes(query));
                 });
             }
 
             function applyPagination() {
-                const cardItems = filteredItems("card");
-                const tableItems = filteredItems("table");
-                const total = cardItems.length;
+                const filteredCardItems = filteredItems("card");
+                const total = filteredCardItems.length;
 
                 const totalPages = Math.max(1, Math.ceil(total / pageSize));
                 if (currentPage > totalPages) currentPage = totalPages;
@@ -420,14 +519,14 @@
                 const start = (currentPage - 1) * pageSize;
                 const end = start + pageSize;
 
-                const visibleKeys = new Set(cardItems.slice(start, end).map(x => x.dataset.key));
+                const visibleKeys = new Set(filteredCardItems.slice(start, end).map(x => x.dataset.key));
 
-                allItems("card").forEach(item => {
+                allCardItems.forEach(item => {
                     const shouldShow = visibleKeys.has(item.dataset.key) && currentView === "card";
                     item.style.display = shouldShow ? "" : "none";
                 });
 
-                allItems("table").forEach(item => {
+                allTableItems.forEach(item => {
                     const shouldShow = visibleKeys.has(item.dataset.key) && currentView === "table";
                     item.style.display = shouldShow ? "table-row" : "none";
                 });
@@ -436,6 +535,12 @@
                 tableView.style.display = currentView === "table" ? "block" : "none";
 
                 visibleCount.textContent = total.toString();
+
+                const activeCategoryLabel = categoryButtons.find(btn => btn.classList.contains("is-active"))?.getAttribute("data-category-name");
+                categoryMeta.textContent = currentCategory === "@allCategoryKey"
+                    ? ""
+                    : ` • category: ${activeCategoryLabel || currentCategory}`;
+
                 currentPageLabel.textContent = currentPage.toString();
                 totalPagesLabel.textContent = totalPages.toString();
 
@@ -445,8 +550,13 @@
 
             viewButtons.forEach(btn => {
                 btn.addEventListener("click", function () {
-                    viewButtons.forEach(x => x.classList.remove("is-active"));
+                    viewButtons.forEach(x => {
+                        x.classList.remove("is-active");
+                        x.setAttribute("aria-pressed", "false");
+                    });
+
                     this.classList.add("is-active");
+                    this.setAttribute("aria-pressed", "true");
                     currentView = this.getAttribute("data-view") || "card";
                     applyPagination();
                 });
@@ -456,15 +566,34 @@
                 btn.addEventListener("click", function () {
                     sizeButtons.forEach(x => x.classList.remove("is-active"));
                     this.classList.add("is-active");
-                    pageSize = parseInt(this.getAttribute("data-size") || "20");
+                    pageSize = parseInt(this.getAttribute("data-size") || "20", 10);
                     currentPage = 1;
                     applyPagination();
                 });
             });
 
+            categoryButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    categoryButtons.forEach(x => {
+                        x.classList.remove("is-active");
+                        x.setAttribute("aria-pressed", "false");
+                    });
+
+                    this.classList.add("is-active");
+                    this.setAttribute("aria-pressed", "true");
+                    currentCategory = this.getAttribute("data-category") || "@allCategoryKey";
+                    currentPage = 1;
+                    applyPagination();
+                });
+            });
+
+            let searchDebounceTimer;
             searchInput.addEventListener("input", function () {
-                currentPage = 1;
-                applyPagination();
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function () {
+                    currentPage = 1;
+                    applyPagination();
+                }, 180);
             });
 
             prevPageBtn.addEventListener("click", function () {
@@ -475,11 +604,13 @@
             });
 
             nextPageBtn.addEventListener("click", function () {
-                currentPage++;
-                applyPagination();
+                const totalPages = parseInt(totalPagesLabel.textContent || "1", 10);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    applyPagination();
+                }
             });
 
-            // Image preview modal
             $('#imagePreviewModal').on('show.bs.modal', function (event) {
                 const trigger = $(event.relatedTarget);
                 const title = trigger.data('title') || 'Preview';

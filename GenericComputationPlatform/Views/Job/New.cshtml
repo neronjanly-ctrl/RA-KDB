@@ -6,6 +6,7 @@
 
     int maxLigands = _appSettings.Value.Options.MaxInputLigands;
     string userName = "John";
+    var dockingBanner = Url.Content("~/images/version1/bg_02.png");
 
     if (User.Identity.IsAuthenticated)
     {
@@ -26,298 +27,63 @@
 }
 
 @section Styles {
-    <style>
-        :root {
-            --ra-bg: #f7f9fc;
-            --ra-surface: rgba(255,255,255,.86);
-            --ra-surface-strong: rgba(255,255,255,.96);
-            --ra-title: #162033;
-            --ra-text: #627089;
-            --ra-line: #dde6f2;
-            --ra-blue: #2f6bff;
-            --ra-blue-soft: rgba(47,107,255,.08);
-            --ra-cyan: #68c8d0;
-            --ra-warning: #ffb454;
-            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
-            --ra-shadow-card: 0 14px 28px rgba(20, 44, 84, .05);
-        }
-
-        body {
-            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(104,200,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
-            color: var(--ra-title);
-        }
-
-        .ra-docking-page {
-            width: min(1460px, calc(100vw - 2rem));
-            margin: 0 auto;
-            padding: 2rem 0 5rem;
-        }
-
-        .ra-section + .ra-section {
-            margin-top: 1.8rem;
-        }
-
-        .ra-card-shell {
-            background: var(--ra-surface);
-            border: 1px solid var(--ra-line);
-            border-radius: 28px;
-            box-shadow: var(--ra-shadow);
-            backdrop-filter: blur(8px);
-        }
-
-        .ra-hero {
-            padding: 2rem;
-        }
-
-        .ra-kicker {
-            display: inline-flex;
-            align-items: center;
-            padding: .42rem .95rem;
-            border-radius: 999px;
-            background: var(--ra-blue-soft);
-            color: var(--ra-blue);
-            font-size: .82rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .ra-title {
-            font-size: clamp(2.2rem, 3.8vw, 4.2rem);
-            line-height: 1.03;
-            font-weight: 800;
-            letter-spacing: -.04em;
-            margin-bottom: .9rem;
-        }
-
-        .ra-desc {
-            color: var(--ra-text);
-            font-size: 1.04rem;
-            line-height: 1.9;
-            max-width: 980px;
-        }
-
-        .ra-pill-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .75rem;
-            margin-top: 1.4rem;
-        }
-
-        .ra-pill {
-            display: inline-flex;
-            align-items: center;
-            min-height: 38px;
-            padding: 0 .9rem;
-            border-radius: 999px;
-            background: #fff;
-            border: 1px solid var(--ra-line);
-            color: #24324a;
-            font-weight: 650;
-            font-size: .92rem;
-        }
-
-        .ra-grid {
-            display: grid;
-            grid-template-columns: 1.2fr .8fr;
-            gap: 1.5rem;
-            align-items: start;
-        }
-
-        .ra-form-card,
-        .ra-side-card {
-            padding: 1.5rem;
-        }
-
-        .ra-section-title {
-            font-size: 1.45rem;
-            font-weight: 760;
-            margin-bottom: .75rem;
-            line-height: 1.3;
-        }
-
-        .ra-section-desc {
-            color: var(--ra-text);
-            line-height: 1.8;
-            margin-bottom: 1.1rem;
-        }
-
-        .ra-subtitle {
-            font-size: .84rem;
-            font-weight: 800;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--ra-blue);
-            margin-bottom: .7rem;
-        }
-
-        .ra-form-shell {
-            border: 1px solid var(--ra-line);
-            border-radius: 24px;
-            background: rgba(255,255,255,.95);
-            padding: 1.2rem;
-        }
-
-        .job-name-row,
-        .mol-name-row,
-        .mol-row {
-            margin-bottom: 1rem;
-            padding: 1rem 1rem .8rem;
-            border: 1px solid var(--ra-line);
-            border-radius: 20px;
-            background: #fff;
-        }
-
-            .job-name-row label,
-            .mol-name-row label,
-            .mol-row label {
-                font-weight: 700;
-                color: #22324a;
-            }
-
-            .job-name-row .form-control,
-            .mol-name-row .form-control {
-                min-height: 46px;
-                border-radius: 14px;
-                border-color: var(--ra-line);
-            }
-
-        .mol-editor {
-            border: 1px solid var(--ra-line);
-            border-radius: 16px;
-            overflow: hidden;
-            background: #fff;
-        }
-
-        .ra-action-bar {
-            display: flex;
-            align-items: center;
-            gap: .8rem;
-            flex-wrap: wrap;
-            margin-top: 1.1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--ra-line);
-        }
-
-            .ra-action-bar .btn {
-                min-height: 44px;
-                border-radius: 999px;
-                padding: 0 1rem;
-                font-weight: 700;
-            }
-
-        .ra-action-note {
-            color: var(--ra-text);
-            font-size: .93rem;
-            line-height: 1.7;
-        }
-
-        .ra-side-stack {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .ra-info-card {
-            border: 1px solid var(--ra-line);
-            border-radius: 22px;
-            background: rgba(255,255,255,.95);
-            padding: 1.2rem 1.1rem;
-            box-shadow: var(--ra-shadow-card);
-        }
-
-        .ra-info-title {
-            font-size: 1.02rem;
-            font-weight: 740;
-            margin-bottom: .55rem;
-        }
-
-        .ra-info-body {
-            color: var(--ra-text);
-            line-height: 1.82;
-            font-size: .95rem;
-        }
-
-        .ra-info-list {
-            padding-left: 1.1rem;
-            margin-bottom: 0;
-        }
-
-            .ra-info-list li + li {
-                margin-top: .45rem;
-            }
-
-        .ra-footer-actions {
-            display: flex;
-            gap: .8rem;
-            flex-wrap: wrap;
-            margin-top: 1.2rem;
-        }
-
-        .btn-ra-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 42px;
-            border-radius: 999px;
-            padding: 0 1rem;
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            color: #24324a !important;
-            font-weight: 700;
-            text-decoration: none !important;
-        }
-
-        .btn-ra-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 42px;
-            border-radius: 999px;
-            padding: 0 1rem;
-            background: var(--ra-blue);
-            color: #fff !important;
-            font-weight: 700;
-            text-decoration: none !important;
-        }
-
-        @@media (max-width: 991.98px) {
-            .ra-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .ra-hero,
-            .ra-form-card,
-            .ra-side-card {
-                padding: 1.25rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/pageDocking.css" asp-append-version="true" />
 }
 
 <div class="ra-docking-page">
     <!-- Hero -->
-    <section class="ra-section ra-card-shell ra-hero">
-        <div class="ra-kicker">Docking workspace • Multi-ligand submission • RA-focused</div>
+    <section class="ra-section ra-header-hero">
+        <div class="ra-hero-banner">
+            <img class="ra-hero-banner-image"
+                 src="@dockingBanner"
+                 alt="Rheumatoid arthritis docking workspace" />
 
-        <h1 class="ra-title">Docking workspace for curated RA targets</h1>
+            <div class="ra-hero-banner-overlay"></div>
 
-        <p class="ra-desc">
-            Submit one or more molecules to the current rheumatoid arthritis target panel and create a new docking job.
-            This workspace is designed as the operational entry point that connects your curated RA protein database
-            with downstream computational exploration and result analysis.
-        </p>
+            <div class="ra-hero-banner-inner">
+                <div class="ra-hero-copy">
+                    <div class="ra-hero-kicker">RA-focused Docking workspace</div>
 
-        <div class="ra-pill-row">
-            <span class="ra-pill">@Model.Name target panel</span>
-            <span class="ra-pill">Up to @maxLigands ligands</span>
-            <span class="ra-pill">SMILES / editor-based input</span>
-            <span class="ra-pill">Job-based workflow</span>
+                    <h1 class="ra-hero-title">
+                        Docking workspace for curated RA targets
+                    </h1>
+
+                    <p class="ra-hero-desc">
+                        Submit one or more molecules to the current rheumatoid arthritis target panel and launch a new
+                        docking job within a unified research workflow that connects curated protein records with
+                        downstream computational analysis.
+                    </p>
+
+                    <div class="ra-hero-meta">
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">@Model.Name</span>
+                            <span class="ra-hero-meta-label">target panel</span>
+                        </div>
+
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">@maxLigands</span>
+                            <span class="ra-hero-meta-label">max ligands</span>
+                        </div>
+
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">SMILES</span>
+                            <span class="ra-hero-meta-label">input mode</span>
+                        </div>
+
+                        <div class="ra-hero-meta-item">
+                            <span class="ra-hero-meta-value">Job-based</span>
+                            <span class="ra-hero-meta-label">workflow</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Main content -->
     <section class="ra-section ra-grid">
         <!-- Left: form -->
-        <div class="ra-card-shell ra-form-card">
+        <div class="ra-card-shell ra-form-card ra-worksurface">
             <div class="ra-subtitle">Submission form</div>
             <h2 class="ra-section-title">Create a new docking job</h2>
             <p class="ra-section-desc">
@@ -404,7 +170,7 @@
         </div>
 
         <!-- Right: helper content -->
-        <div class="ra-card-shell ra-side-card">
+        <div class="ra-card-shell ra-side-card ra-worksurface">
             <div class="ra-subtitle">Workflow guidance</div>
             <h2 class="ra-section-title">How this docking step fits into the platform</h2>
             <p class="ra-section-desc">
@@ -413,7 +179,7 @@
 
             <div class="ra-side-stack">
                 <article class="ra-info-card">
-                    <div class="ra-info-title">How it works</div>
+                    <div class="ra-info-title">Workflow</div>
                     <div class="ra-info-body">
                         <ul class="ra-info-list">
                             <li>Create a job name for this submission.</li>
@@ -424,7 +190,7 @@
                 </article>
 
                 <article class="ra-info-card">
-                    <div class="ra-info-title">Submission rules</div>
+                    <div class="ra-info-title">Validation rules</div>
                     <div class="ra-info-body">
                         <ul class="ra-info-list">
                             <li>You can submit one drug's structure in this job.</li>
@@ -435,9 +201,9 @@
                 </article>
 
                 <article class="ra-info-card">
-                    <div class="ra-info-title">After submission</div>
+                    <div class="ra-info-title">Outputs</div>
                     <div class="ra-info-body">
-                        Once the job is created, you can wait for the docking scores computed by our platform 
+                        Once the job is created, you can wait for the docking scores computed by our platform
                         and see the Spider Plot Picture.
                     </div>
                 </article>
