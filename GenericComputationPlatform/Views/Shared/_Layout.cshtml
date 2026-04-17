@@ -124,6 +124,7 @@
     .site-navbar .container {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         padding-left: 6px;
         padding-right: 20px;
     }
@@ -182,6 +183,22 @@
 
     .site-navbar .navbar-nav {
         align-items: center;
+    }
+
+    .site-navbar .navbar-toggler {
+        margin-left: auto;
+        border: 1px solid #D6DAE0;
+        padding: .3rem .45rem;
+        border-radius: .45rem;
+    }
+
+    .site-navbar .navbar-toggler:focus {
+        outline: 0;
+        box-shadow: 0 0 0 .2rem rgba(111, 66, 193, .18);
+    }
+
+    .site-navbar .navbar-collapse {
+        flex: 1 1 auto;
     }
 
     .site-navbar .navbar-nav .nav-item,
@@ -280,8 +297,17 @@
     }
 
     @@media (max-width: 991.98px) {
+        .navbar.site-navbar {
+            min-height: 72px;
+            padding-top: .35rem;
+            padding-bottom: .35rem;
+        }
+
         .site-navbar .navbar-brand.brand-lockup {
             gap: 10px;
+            min-height: 56px;
+            height: auto;
+            margin-right: .5rem;
         }
 
         .site-navbar .brand-lockup-logo {
@@ -299,6 +325,27 @@
 
         .site-navbar .brand-lockup-line2 {
             font-size: 0.82rem;
+        }
+
+        .site-navbar .navbar-collapse {
+            width: 100%;
+            order: 4;
+            margin-top: .5rem;
+            padding-top: .5rem;
+            border-top: 1px solid #E5EAF1;
+        }
+
+        .site-navbar .navbar-nav {
+            align-items: flex-start;
+        }
+
+        .site-navbar .navbar-nav .nav-item-with-separator + .nav-item-with-separator::before,
+        .site-navbar .navbar-collapse + .site-auth-link::before {
+            content: none;
+        }
+
+        .site-navbar .site-auth-link {
+            margin-left: .75rem;
         }
     }
 
@@ -421,7 +468,7 @@
 </style>
 </head>
 <body>
-    <nav class="navbar sticky-top navbar-expand navbar-light mb-4 site-navbar"
+    <nav class="navbar sticky-top navbar-expand-lg navbar-light mb-4 site-navbar"
          style="background-color:@navbarBackgroundColor; border-bottom-color:@navbarBorderColor;">
         <div class="container">
             <a asp-controller="Home"
@@ -434,6 +481,16 @@
                     <span class="brand-lockup-line2">Rheumatoid Arthritis Knowledge & Docking Platform</span>
                 </span>
             </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarMenu"
+                    aria-controls="navbarMenu"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
             <div class="collapse navbar-collapse text-nowrap justify-content-end" id="navbarMenu">
                 <ul class="navbar-nav ml-auto">

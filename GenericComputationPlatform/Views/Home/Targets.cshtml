@@ -15,13 +15,6 @@
         .ThenBy(o => o.BindingSite)
         .ToList();
 
-    var totalProteins = cavities
-        .Select(o => o.ProteinId)
-        .Distinct()
-        .Count();
-
-    var totalCavities = cavities.Count;
-
     var topBanner = Url.Content("~/images/version1/bg_01.png");
 
     const string allCategoryKey = "all";
@@ -105,6 +98,7 @@
         return new
         {
             CavityId = cavityId,
+            BindingSite = cavity.BindingSite,
             ProteinName = protein.ProteinName,
             GeneSymbol = protein.GeneSymbol,
             ProteinSymbol = protein.ProteinSymbol,
@@ -144,13 +138,11 @@
 }
 
 <div class="ra-platform-home">
-
     <section class="ra-overview ra-module ra-module--dark" id="top">
         <div class="ra-banner">
             <img src="@topBanner" alt="RA Protein Database" />
             <div class="ra-banner-overlay"></div>
             <div class="ra-banner-inner ra-container">
-                <div class="ra-kicker">Curated Protein Database</div>
                 <h1 class="ra-hero-title">Rheumatoid Arthritis Protein Target Database</h1>
                 <p class="ra-hero-desc">
                     Explore curated rheumatoid arthritis related targets, protein records, and docking-ready structures
@@ -177,8 +169,8 @@
                     </div>
                     <div class="ra-controls">
                         <div class="ra-view-toggle">
-                            <button class="ra-toggle-btn is-active" type="button" data-view="card" aria-pressed="true">Card view</button>
-                            <button class="ra-toggle-btn" type="button" data-view="table" aria-pressed="false">Table view</button>
+                            <button class="ra-toggle-btn" type="button" data-view="card" aria-pressed="false">Card view</button>
+                            <button class="ra-toggle-btn is-active" type="button" data-view="table" aria-pressed="true">Table view</button>
                         </div>
                         <div class="ra-page-size">
                             <button class="ra-size-btn is-active" type="button" data-size="20">20</button>
@@ -186,12 +178,16 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="ra-toolbar-bottom">
                     <div class="ra-category-panel" aria-label="Protein functional categories">
                         <div class="ra-category-row ra-category-row--all">
-                            <button type="button" class="ra-category-chip ra-category-chip--all is-active" data-category="@allCategoryKey" data-category-name="All categories" aria-pressed="true">
+                            <button type="button"
+                                    class="ra-category-chip ra-category-chip--all is-active"
+                                    data-category="@allCategoryKey"
+                                    data-category-name="All categories"
+                                    aria-pressed="true">
                                 <span class="ra-category-label">All categories</span>
-                                <span class="ra-category-count">@cavityItems.Count</span>
                             </button>
                         </div>
 
@@ -201,9 +197,13 @@
                                 @for (var i = 0; i < 3; i++)
                                 {
                                     var category = categoryStats[i];
-                                    <button type="button" class="ra-category-chip ra-category-chip--grid" data-category="@category.Key" data-category-name="@category.Name" aria-pressed="false" title="@category.Description">
+                                    <button type="button"
+                                            class="ra-category-chip ra-category-chip--grid"
+                                            data-category="@category.Key"
+                                            data-category-name="@category.Name"
+                                            aria-pressed="false"
+                                            title="@category.Description">
                                         <span class="ra-category-label">@category.Name</span>
-                                        <span class="ra-category-count">@category.Count</span>
                                     </button>
                                 }
                             </div>
@@ -215,36 +215,25 @@
                                 @for (var i = 3; i < categoryStats.Count; i++)
                                 {
                                     var category = categoryStats[i];
-                                    <button type="button" class="ra-category-chip ra-category-chip--tail" data-category="@category.Key" data-category-name="@category.Name" aria-pressed="false" title="@category.Description">
+                                    <button type="button"
+                                            class="ra-category-chip ra-category-chip--tail"
+                                            data-category="@category.Key"
+                                            data-category-name="@category.Name"
+                                            aria-pressed="false"
+                                            title="@category.Description">
                                         <span class="ra-category-label">@category.Name</span>
-                                        <span class="ra-category-count">@category.Count</span>
                                     </button>
                                 }
                             </div>
                         }
                     </div>
-                    <div class="ra-result-meta">
-                        <span id="raVisibleCount">@cavityItems.Count</span> visible records
-                        <span id="raCategoryMeta"></span>
-                    </div>
+
                 </div>
             </div>
-        </div>
-    </section>
 
-    <section class="ra-module ra-module--paper" id="data">
-        <div class="ra-banner ra-banner--section ra-banner--warm">
-            <div class="ra-banner-overlay ra-banner-overlay--warm"></div>
-            <div class="ra-banner-inner ra-container ra-banner-inner--compact">
-                <div class="ra-kicker">Results</div>
-                <h2 class="ra-section-title">Target Records & Structures</h2>
-            </div>
-        </div>
-
-        <div class="ra-module-body ra-container">
-            <div class="ra-card-shell ra-results">
+            <div class="ra-card-shell ra-results mt-4">
                 <div id="raCardView" class="ra-card-view"></div>
-                <div id="raTableView" class="ra-table-view" style="display:none;"></div>
+                <div id="raTableView" class="ra-table-view"></div>
 
                 <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
                     No targets are available for the current filter.
@@ -255,16 +244,22 @@
                         Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
                     </div>
                     <div class="ra-page-actions">
-                        <button class="ra-page-btn" id="raPrevPage">Previous</button>
-                        <button class="ra-page-btn" id="raNextPage">Next</button>
+                        <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
+                        <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
                     </div>
                 </div>
 
                 <div class="ra-footer-actions">
-                    <a class="btn-ra-secondary" asp-controller="Home" asp-action="Index" asp-route-domainId="@Model.Domain.Id">
+                    <a class="btn-ra-secondary"
+                       asp-controller="Home"
+                       asp-action="Index"
+                       asp-route-domainId="@Model.Domain.Id">
                         Back to RA Workspace
                     </a>
-                    <a class="btn-ra-primary" asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Domain.Id">
+                    <a class="btn-ra-primary"
+                       asp-controller="Job"
+                       asp-action="New"
+                       asp-route-domainId="@Model.Domain.Id">
                         Continue to Docking
                     </a>
                 </div>
@@ -275,7 +270,7 @@
 
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content" style="border-radius: 24px; overflow:hidden;">
+        <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
             <div class="modal-header">
                 <h5 class="modal-title" id="imagePreviewTitle">Preview</h5>
                 <button type="button" class="close ml-2" data-dismiss="modal" aria-label="Close">
@@ -303,9 +298,9 @@
             const allItems = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(cavityItems));
 
             const searchInput = document.getElementById("raSearchInput");
-            const viewButtons = [...document.querySelectorAll(".ra-view-toggle .ra-toggle-btn")];
-            const sizeButtons = [...document.querySelectorAll(".ra-page-size .ra-size-btn")];
-            const categoryButtons = [...document.querySelectorAll(".ra-category-chip")];
+            const viewButtons = Array.from(document.querySelectorAll(".ra-view-toggle .ra-toggle-btn"));
+            const sizeButtons = Array.from(document.querySelectorAll(".ra-page-size .ra-size-btn"));
+            const categoryButtons = Array.from(document.querySelectorAll(".ra-category-chip"));
 
             const cardView = document.getElementById("raCardView");
             const tableView = document.getElementById("raTableView");
@@ -318,18 +313,108 @@
             const prevPageBtn = document.getElementById("raPrevPage");
             const nextPageBtn = document.getElementById("raNextPage");
 
-            let currentView = "card";
+            let currentView = "table";
             let pageSize = 20;
             let currentPage = 1;
             let currentCategory = "all";
 
+            function safeText(value) {
+                return value ?? "";
+            }
+
             function getFilteredData() {
                 const q = (searchInput.value || "").trim().toLowerCase();
+
                 return allItems.filter(item => {
                     const catMatch = currentCategory === "all" || item.CategoryKey === currentCategory;
-                    const searchMatch = !q || (item.SearchText || "").toLowerCase().includes(q);
+                    const searchMatch = !q || safeText(item.SearchText).toLowerCase().includes(q);
                     return catMatch && searchMatch;
                 });
+            }
+
+            function renderCardView(pageItems) {
+                cardView.innerHTML = "";
+
+                pageItems.forEach(item => {
+                    const html = `
+                                <article class="ra-target-card">
+                                    <button type="button"
+                                            class="ra-target-thumb-btn"
+                                            data-toggle="modal"
+                                            data-target="#imagePreviewModal"
+                                            data-title="${safeText(item.ProteinName)}"
+                                            data-subtitle="${safeText(item.GeneSymbol)}"
+                                            data-binding="${safeText(item.BindingSite)}"
+                                            data-image="${safeText(item.ImageUrl)}">
+                                        <img class="ra-target-thumb" src="${safeText(item.ImageUrl)}" alt="${safeText(item.ProteinName)}">
+                                    </button>
+                                    <div class="ra-target-body">
+                                        <div class="ra-target-title">${safeText(item.ProteinName)}</div>
+                                        <div class="ra-target-sub"><strong>Gene:</strong> ${safeText(item.GeneSymbol)}</div>
+                                        <div class="ra-target-actions">
+                                            <a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">View details</a>
+                                        </div>
+                                    </div>
+                                </article>`;
+                    cardView.insertAdjacentHTML("beforeend", html);
+                });
+            }
+
+            function renderTableView(pageItems) {
+                let html = `
+                            <div class="ra-table-shell">
+                                <table class="ra-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Preview</th>
+                                            <th>Protein</th>
+                                            <th>Gene / Symbol</th>
+                                            <th>Binding Site</th>
+                                            <th>Organism</th>
+                                            <th>UniProt / ChEMBL</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+                pageItems.forEach(item => {
+                    const uniprot = item.UniProt
+                        ? `<a target="_blank" rel="noopener noreferrer" href="${item.UniProt.Url}">${item.UniProt.Id}</a>`
+                        : "";
+
+                    const chembl = item.Chembl
+                        ? `<a target="_blank" rel="noopener noreferrer" href="${item.Chembl.TargetUrl}">${item.Chembl.Id}</a>`
+                        : "";
+
+                    html += `
+                                <tr>
+                                    <td>
+                                        <button type="button"
+                                                class="ra-table-thumb-btn"
+                                                data-toggle="modal"
+                                                data-target="#imagePreviewModal"
+                                                data-image="${safeText(item.ImageUrl)}"
+                                                data-title="${safeText(item.ProteinName)}"
+                                                data-subtitle="${safeText(item.GeneSymbol)}"
+                                                data-binding="${safeText(item.BindingSite)}">
+                                            <img class="ra-table-thumb" src="${safeText(item.ImageUrl)}" alt="${safeText(item.ProteinName)}">
+                                        </button>
+                                    </td>
+                                    <td><div class="ra-table-name">${safeText(item.ProteinName)}</div></td>
+                                    <td><div class="ra-table-name">${safeText(item.GeneSymbol)}</div></td>
+                                    <td><div class="ra-table-meta">${safeText(item.BindingSite)}</div></td>
+                                    <td><div class="ra-table-meta">${safeText(item.Organism).replace(/;/g, "; ")}</div></td>
+                                    <td><div class="ra-ref-links">${uniprot} ${chembl}</div></td>
+                                    <td><a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">Details</a></td>
+                                </tr>`;
+                });
+
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>`;
+
+                tableView.innerHTML = html;
             }
 
             function render() {
@@ -345,71 +430,9 @@
                 tableView.innerHTML = "";
 
                 if (currentView === "card") {
-                    pageItems.forEach(item => {
-                        const html = `
-                                        <article class="ra-target-card">
-                                            <button type="button" class="ra-target-thumb-btn" data-toggle="modal" data-target="#imagePreviewModal"
-                                                data-title="${item.ProteinName}"
-                                                data-subtitle="${item.GeneSymbol}"
-                                                data-binding="${item.BindingSite}"
-                                                data-image="${item.ImageUrl}">
-                                                <img class="ra-target-thumb" src="${item.ImageUrl}" alt="${item.ProteinName}">
-                                            </button>
-                                            <div class="ra-target-body">
-                                                <div class="ra-target-title">${item.ProteinName}</div>
-                                                <div class="ra-target-sub"><strong>Gene:</strong> ${item.GeneSymbol}</div>
-                                                <div class="ra-target-actions">
-                                                    <a class="btn-ra-primary" href="${item.DetailsUrl}">View details</a>
-                                                </div>
-                                            </div>
-                                        </article>`;
-                        cardView.insertAdjacentHTML("beforeend", html);
-                    });
-                }
-
-                if (currentView === "table") {
-                    let html = `<div class="ra-table-shell"><table class="ra-table"><thead>
-                                    <tr>
-                                        <th>Preview</th>
-                                        <th>Protein</th>
-                                        <th>Gene / Symbol</th>
-                                        <th>Organism</th>
-                                        <th>UniProt / ChEMBL</th>
-                                        <th>Details</th>
-                                    </tr>
-                                    </thead><tbody>`;
-
-                    pageItems.forEach(item => {
-                        const uniprot = item.UniProt
-                            ? `<a target="_blank" href="${item.UniProt.Url}">${item.UniProt.Id}</a>`
-                            : "";
-                        const chembl = item.Chembl
-                            ? `<a target="_blank" href="${item.Chembl.TargetUrl}">${item.Chembl.Id}</a>`
-                            : "";
-
-                        html += `
-                                        <tr>
-                                            <td>
-                                                <button class="ra-table-thumb-btn" data-toggle="modal" data-target="#imagePreviewModal"
-                                                    data-image="${item.ImageUrl}"
-                                                    data-title="${item.ProteinName}"
-                                                    data-subtitle="${item.GeneSymbol}"
-                                                    data-binding="${item.BindingSite}">
-                                                    <img class="ra-table-thumb" src="${item.ImageUrl}">
-                                                </button>
-                                            </td>
-                                            <td><div class="ra-table-name">${item.ProteinName}</div></td>
-                                            <td>
-                                                <div class="ra-table-name">${item.GeneSymbol}</div>
-                                            </td>
-                                            <td><div class="ra-table-meta">${item.Organism?.Replace(";", "; ") || ''}</div></td>
-                                            <td><div class="ra-ref-links">${uniprot} ${chembl}</div></td>
-                                            <td><a class="btn-ra-primary" href="${item.DetailsUrl}">Details</a></td>
-                                        </tr>`;
-                    });
-
-                    html += `</tbody></table></div>`;
-                    tableView.innerHTML = html;
+                    renderCardView(pageItems);
+                } else {
+                    renderTableView(pageItems);
                 }
 
                 cardView.style.display = currentView === "card" ? "grid" : "none";
@@ -428,8 +451,12 @@
 
             viewButtons.forEach(btn => {
                 btn.addEventListener("click", () => {
-                    viewButtons.forEach(b => b.classList.remove("is-active"));
+                    viewButtons.forEach(b => {
+                        b.classList.remove("is-active");
+                        b.setAttribute("aria-pressed", "false");
+                    });
                     btn.classList.add("is-active");
+                    btn.setAttribute("aria-pressed", "true");
                     currentView = btn.dataset.view;
                     render();
                 });
@@ -439,7 +466,7 @@
                 btn.addEventListener("click", () => {
                     sizeButtons.forEach(b => b.classList.remove("is-active"));
                     btn.classList.add("is-active");
-                    pageSize = parseInt(btn.dataset.size);
+                    pageSize = parseInt(btn.dataset.size, 10);
                     currentPage = 1;
                     render();
                 });
@@ -447,8 +474,12 @@
 
             categoryButtons.forEach(btn => {
                 btn.addEventListener("click", () => {
-                    categoryButtons.forEach(b => b.classList.remove("is-active"));
+                    categoryButtons.forEach(b => {
+                        b.classList.remove("is-active");
+                        b.setAttribute("aria-pressed", "false");
+                    });
                     btn.classList.add("is-active");
+                    btn.setAttribute("aria-pressed", "true");
                     currentCategory = btn.dataset.category;
                     currentPage = 1;
                     render();
@@ -465,20 +496,26 @@
             });
 
             prevPageBtn.addEventListener("click", () => {
-                if (currentPage > 1) { currentPage--; render(); }
+                if (currentPage > 1) {
+                    currentPage--;
+                    render();
+                }
             });
 
             nextPageBtn.addEventListener("click", () => {
-                const total = parseInt(totalPagesLabel.textContent);
-                if (currentPage < total) { currentPage++; render(); }
+                const total = parseInt(totalPagesLabel.textContent, 10);
+                if (currentPage < total) {
+                    currentPage++;
+                    render();
+                }
             });
 
             $("#imagePreviewModal").on("show.bs.modal", function (e) {
                 const t = $(e.relatedTarget);
-                $("#imagePreviewProteinName").text(t.data("title"));
-                $("#imagePreviewGene").text(t.data("subtitle"));
-                $("#imagePreviewBinding").text(t.data("binding"));
-                $("#imagePreviewTarget").attr("src", t.data("image"));
+                $("#imagePreviewProteinName").text(t.data("title") || "");
+                $("#imagePreviewGene").text(t.data("subtitle") || "");
+                $("#imagePreviewBinding").text(t.data("binding") || "");
+                $("#imagePreviewTarget").attr("src", t.data("image") || "");
             });
 
             render();
