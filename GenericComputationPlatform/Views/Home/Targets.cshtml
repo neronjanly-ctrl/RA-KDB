@@ -19,49 +19,7 @@
 
     const string allCategoryKey = "all";
 
-    var categoryDefinitions = new[]
-    {
-        new
-        {
-            Key = "inflammation-immune",
-            Name = "Inflammation & Immune Regulation",
-            Description = "Core RA inflammatory amplification, autoimmunity activation, cytokine signaling, and innate immune regulation.",
-            Symbols = new HashSet<string>(new[]
-            {
-                "AHR_HUMAN","BTK_HUMAN","CASP1_HUMAN","CCR5_HUMAN","CXCR1_HUMAN","CXCR4_HUMAN","DRB1_HUMAN","E2AK2_HUMAN","GCR_HUMAN","IKBA_HUMAN","IKKA_HUMAN","IKKB_HUMAN","IL2RB_HUMAN","IL2_HUMAN","IL6_HUMAN","JAK1_HUMAN","JAK2_HUMAN","NFKB1_HUMAN","NOS2_HUMAN","PADI4_HUMAN","RELB_HUMAN","STAT3_HUMAN","SYK_HUMAN","TF65_HUMAN","TLR7_HUMAN","TNFA_HUMAN","TYK2_HUMAN"
-            })
-        },
-        new
-        {
-            Key = "signal-proliferation",
-            Name = "Signal Transduction & Cell Proliferation",
-            Description = "Synoviocyte activation, kinase networks, and cell proliferation/migration signaling.",
-            Symbols = new HashSet<string>(new[]
-            {
-                "AKT1_HUMAN","FAK1_HUMAN","FAK2_HUMAN","FOXO3_HUMAN","HCK_HUMAN","HGF_HUMAN","KI20A_HUMAN","MET_HUMAN","MK01_HUMAN","MK14_HUMAN","PLK1_HUMAN","PTEN_HUMAN","PTN1_HUMAN","PTN22_HUMAN","RAF1_HUMAN","SRC_HUMAN"
-            })
-        },
-        new
-        {
-            Key = "tissue-remodeling",
-            Name = "Tissue Destruction & Synovial Remodeling",
-            Description = "Synovial invasion, matrix degradation, cytoskeleton remodeling, angiogenesis, and microenvironment changes.",
-            Symbols = new HashSet<string>(new[]
-            {
-                "MMP2_HUMAN","MMP8_HUMAN","MMP9_HUMAN","NOS3_HUMAN","RAC1_HUMAN","RHOA_HUMAN","VGFR2_HUMAN","HMR1_HUMAN","TNAP3_HUMAN"
-            })
-        },
-        new
-        {
-            Key = "metabolic-supportive",
-            Name = "Metabolic & Supportive Regulation",
-            Description = "Metabolic regulation, drug response, lipid inflammatory mediators, transport, and supportive control.",
-            Symbols = new HashSet<string>(new[]
-            {
-                "A1AG1_HUMAN","A1AG2_HUMAN","ABCG2_HUMAN","PD2R2_HUMAN","PE2R4_HUMAN","PGH1_HUMAN","PGH2_HUMAN","PPARA_HUMAN","PPARG_HUMAN","PPIA_HUMAN","S19A1_HUMAN","XCT_HUMAN"
-            })
-        }
-    };
+    var categoryDefinitions = RaTargetCategories.All;
 
     string ResolveCategoryKey(string proteinSymbol)
     {
@@ -306,8 +264,6 @@
             const tableView = document.getElementById("raTableView");
             const emptyState = document.getElementById("raEmptyState");
 
-            const visibleCount = document.getElementById("raVisibleCount");
-            const categoryMeta = document.getElementById("raCategoryMeta");
             const currentPageLabel = document.getElementById("raCurrentPage");
             const totalPagesLabel = document.getElementById("raTotalPages");
             const prevPageBtn = document.getElementById("raPrevPage");
@@ -317,9 +273,69 @@
             let pageSize = 20;
             let currentPage = 1;
             let currentCategory = "all";
+            let totalPages = 1;
 
             function safeText(value) {
                 return value ?? "";
+            }
+
+            function renderPreviewButton(item, buttonClass, imageClass) {
+                return `
+                            <button type="button"
+                                    class="${buttonClass}"
+                                    data-toggle="modal"
+                                    data-target="#imagePreviewModal"
+                                    data-image="${safeText(item.ImageUrl)}"
+                                    data-title="${safeText(item.ProteinName)}"
+                                    data-subtitle="${safeText(item.GeneSymbol)}"
+                                    data-binding="${safeText(item.BindingSite)}">
+                                <img class="${imageClass}" src="${safeText(item.ImageUrl)}" alt="${safeText(item.ProteinName)}">
+                            </button>`;
+            }
+
+            function renderCardItem(item) {
+                return `
+                            <article class="ra-target-card">
+                                ${renderPreviewButton(item, "ra-target-thumb-btn", "ra-target-thumb")}
+                                <div class="ra-target-body">
+                                    <div class="ra-target-title">${safeText(item.ProteinName)}</div>
+                                    <div class="ra-target-sub"><strong>Gene:</strong> ${safeText(item.GeneSymbol)}</div>
+                                    <div class="ra-target-actions">
+                                        <a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">View details</a>
+                                    </div>
+                                </div>
+                            </article>`;
+            }
+
+            function renderReferenceLinks(item) {
+                const refs = [];
+
+                if (item.UniProt) {
+                    refs.push(
+                        `<a target="_blank" rel="noopener noreferrer" href="${safeText(item.UniProt.Url)}">${safeText(item.UniProt.Id)}</a>`
+                    );
+                }
+
+                if (item.Chembl) {
+                    refs.push(
+                        `<a target="_blank" rel="noopener noreferrer" href="${safeText(item.Chembl.TargetUrl)}">${safeText(item.Chembl.Id)}</a>`
+                    );
+                }
+
+                return refs.join(" ");
+            }
+
+            function renderTableRow(item) {
+                return `
+                            <tr>
+                                <td>${renderPreviewButton(item, "ra-table-thumb-btn", "ra-table-thumb")}</td>
+                                <td><div class="ra-table-name">${safeText(item.ProteinName)}</div></td>
+                                <td><div class="ra-table-name">${safeText(item.GeneSymbol)}</div></td>
+                                <td><div class="ra-table-meta">${safeText(item.BindingSite)}</div></td>
+                                <td><div class="ra-table-meta">${safeText(item.Organism).replace(/;/g, "; ")}</div></td>
+                                <td><div class="ra-ref-links">${renderReferenceLinks(item)}</div></td>
+                                <td><a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">Details</a></td>
+                            </tr>`;
             }
 
             function getFilteredData() {
@@ -333,35 +349,13 @@
             }
 
             function renderCardView(pageItems) {
-                cardView.innerHTML = "";
-
-                pageItems.forEach(item => {
-                    const html = `
-                                <article class="ra-target-card">
-                                    <button type="button"
-                                            class="ra-target-thumb-btn"
-                                            data-toggle="modal"
-                                            data-target="#imagePreviewModal"
-                                            data-title="${safeText(item.ProteinName)}"
-                                            data-subtitle="${safeText(item.GeneSymbol)}"
-                                            data-binding="${safeText(item.BindingSite)}"
-                                            data-image="${safeText(item.ImageUrl)}">
-                                        <img class="ra-target-thumb" src="${safeText(item.ImageUrl)}" alt="${safeText(item.ProteinName)}">
-                                    </button>
-                                    <div class="ra-target-body">
-                                        <div class="ra-target-title">${safeText(item.ProteinName)}</div>
-                                        <div class="ra-target-sub"><strong>Gene:</strong> ${safeText(item.GeneSymbol)}</div>
-                                        <div class="ra-target-actions">
-                                            <a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">View details</a>
-                                        </div>
-                                    </div>
-                                </article>`;
-                    cardView.insertAdjacentHTML("beforeend", html);
-                });
+                cardView.innerHTML = pageItems.map(renderCardItem).join("");
             }
 
             function renderTableView(pageItems) {
-                let html = `
+                const rows = pageItems.map(renderTableRow).join("");
+
+                tableView.innerHTML = `
                             <div class="ra-table-shell">
                                 <table class="ra-table">
                                     <thead>
@@ -375,78 +369,49 @@
                                             <th>Details</th>
                                         </tr>
                                     </thead>
-                                    <tbody>`;
-
-                pageItems.forEach(item => {
-                    const uniprot = item.UniProt
-                        ? `<a target="_blank" rel="noopener noreferrer" href="${item.UniProt.Url}">${item.UniProt.Id}</a>`
-                        : "";
-
-                    const chembl = item.Chembl
-                        ? `<a target="_blank" rel="noopener noreferrer" href="${item.Chembl.TargetUrl}">${item.Chembl.Id}</a>`
-                        : "";
-
-                    html += `
-                                <tr>
-                                    <td>
-                                        <button type="button"
-                                                class="ra-table-thumb-btn"
-                                                data-toggle="modal"
-                                                data-target="#imagePreviewModal"
-                                                data-image="${safeText(item.ImageUrl)}"
-                                                data-title="${safeText(item.ProteinName)}"
-                                                data-subtitle="${safeText(item.GeneSymbol)}"
-                                                data-binding="${safeText(item.BindingSite)}">
-                                            <img class="ra-table-thumb" src="${safeText(item.ImageUrl)}" alt="${safeText(item.ProteinName)}">
-                                        </button>
-                                    </td>
-                                    <td><div class="ra-table-name">${safeText(item.ProteinName)}</div></td>
-                                    <td><div class="ra-table-name">${safeText(item.GeneSymbol)}</div></td>
-                                    <td><div class="ra-table-meta">${safeText(item.BindingSite)}</div></td>
-                                    <td><div class="ra-table-meta">${safeText(item.Organism).replace(/;/g, "; ")}</div></td>
-                                    <td><div class="ra-ref-links">${uniprot} ${chembl}</div></td>
-                                    <td><a class="btn-ra-primary" href="${safeText(item.DetailsUrl)}">Details</a></td>
-                                </tr>`;
-                });
-
-                html += `
+                                    <tbody>
+                                        ${rows}
                                     </tbody>
                                 </table>
                             </div>`;
-
-                tableView.innerHTML = html;
             }
 
             function render() {
                 const filtered = getFilteredData();
                 const total = filtered.length;
-                const totalPages = Math.ceil(total / pageSize) || 1;
-                currentPage = Math.min(currentPage, totalPages);
+
+                totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                if (currentPage < 1) {
+                    currentPage = 1;
+                }
 
                 const start = (currentPage - 1) * pageSize;
                 const pageItems = filtered.slice(start, start + pageSize);
 
-                cardView.innerHTML = "";
-                tableView.innerHTML = "";
-
                 if (currentView === "card") {
                     renderCardView(pageItems);
+                    cardView.style.display = "grid";
+                    tableView.style.display = "none";
+                    tableView.innerHTML = "";
                 } else {
                     renderTableView(pageItems);
+                    tableView.style.display = "block";
+                    cardView.style.display = "none";
+                    cardView.innerHTML = "";
                 }
 
-                cardView.style.display = currentView === "card" ? "grid" : "none";
-                tableView.style.display = currentView === "table" ? "block" : "none";
                 emptyState.style.display = total === 0 ? "block" : "none";
 
-                visibleCount.textContent = total;
                 currentPageLabel.textContent = currentPage;
                 totalPagesLabel.textContent = totalPages;
+
                 prevPageBtn.disabled = currentPage <= 1;
                 nextPageBtn.disabled = currentPage >= totalPages;
-
-                const activeCat = document.querySelector(".ra-category-chip.is-active")?.dataset.categoryName;
-                categoryMeta.textContent = currentCategory === "all" ? "" : ` • category: ${activeCat}`;
             }
 
             viewButtons.forEach(btn => {
@@ -455,6 +420,7 @@
                         b.classList.remove("is-active");
                         b.setAttribute("aria-pressed", "false");
                     });
+
                     btn.classList.add("is-active");
                     btn.setAttribute("aria-pressed", "true");
                     currentView = btn.dataset.view;
@@ -466,7 +432,8 @@
                 btn.addEventListener("click", () => {
                     sizeButtons.forEach(b => b.classList.remove("is-active"));
                     btn.classList.add("is-active");
-                    pageSize = parseInt(btn.dataset.size, 10);
+
+                    pageSize = parseInt(btn.dataset.size, 10) || 20;
                     currentPage = 1;
                     render();
                 });
@@ -478,9 +445,10 @@
                         b.classList.remove("is-active");
                         b.setAttribute("aria-pressed", "false");
                     });
+
                     btn.classList.add("is-active");
                     btn.setAttribute("aria-pressed", "true");
-                    currentCategory = btn.dataset.category;
+                    currentCategory = btn.dataset.category || "all";
                     currentPage = 1;
                     render();
                 });
@@ -503,8 +471,7 @@
             });
 
             nextPageBtn.addEventListener("click", () => {
-                const total = parseInt(totalPagesLabel.textContent, 10);
-                if (currentPage < total) {
+                if (currentPage < totalPages) {
                     currentPage++;
                     render();
                 }
