@@ -15,7 +15,7 @@
         .ThenBy(o => o.BindingSite)
         .ToList();
 
-    var topBanner = Url.Content("~/images/version1/bg_01.png");
+    var topBanner = Url.Content("~/images/version1/target_1.png");
 
     const string allCategoryKey = "all";
 
@@ -92,20 +92,26 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/pageTargets.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pageFeatures.css" asp-append-version="true" />
 }
 
 <div class="ra-platform-home">
-    <section class="ra-overview ra-module ra-module--dark" id="top">
-        <div class="ra-banner">
+    <section class="ra-section ra-header-hero">
+        <div class="ra-hero-banner">
             <img src="@topBanner" alt="RA Protein Database" />
-            <div class="ra-banner-overlay"></div>
-            <div class="ra-banner-inner ra-container">
-                <h1 class="ra-hero-title">Rheumatoid Arthritis Protein Target Database</h1>
-                <p class="ra-hero-desc">
-                    Explore curated rheumatoid arthritis related targets, protein records, and docking-ready structures
-                    in this research workspace designed for efficient browsing, comparison, and computational analysis.
-                </p>
+            <div class="ra-hero-banner-overlay"></div>
+
+            <div class="ra-hero-banner-inner">
+                <div class="ra-hero-copy">
+
+                    <h1 class="ra-hero-title">
+                        Knowledgebase workspace for curated RA targets
+                    </h1>           
+                    <p class="ra-hero-desc">
+                        Explore curated rheumatoid arthritis related targets, protein records, and docking-ready structures
+                        in this research workspace designed for efficient browsing, comparison, and computational analysis.
+                    </p>
+                </div>
             </div>
         </div>
     </section>

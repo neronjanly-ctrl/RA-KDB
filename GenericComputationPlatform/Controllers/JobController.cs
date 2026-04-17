@@ -25,6 +25,7 @@ public partial class JobController : Controller
     private readonly AppSettings _appSettings;
     private readonly JobClient _jobClient;
     private readonly DomainClient _domainClient;
+    private readonly ProteinClient _proteinClient;
     private readonly ResultClient _resultClient;
     private readonly LigandClient _ligandClient;
     private readonly DrugModelMock _mock;
@@ -33,6 +34,7 @@ public partial class JobController : Controller
         IOptions<AppSettings> appSettings,
         JobClient jobClient,
         DomainClient domainClient,
+        ProteinClient proteinClient,
         ResultClient resultClient,
         LigandClient ligandClient,
         DrugModelMock mock)
@@ -40,6 +42,7 @@ public partial class JobController : Controller
         _appSettings = appSettings.Value;
         _jobClient = jobClient;
         _domainClient = domainClient;
+        _proteinClient = proteinClient;
         _resultClient = resultClient;
         _ligandClient = ligandClient;
         _mock = mock;
@@ -79,12 +82,18 @@ public partial class JobController : Controller
             return NotFound();
 
         ViewBag.Keywords = domain.Keywords;
+        ViewBag.Proteins = await _proteinClient.ListByDomainAsync(domainId, null);
 
         return View(domain);
     }
 
     [HttpPost("create")]
-    public virtual async Task<ActionResult<int?>> Create(string domainId, [FromForm] string jobName, [FromForm] JobLigandInputModel[] ligands, [FromForm] bool isPrivate)
+    public virtual async Task<ActionResult<int?>> Create(
+        string domainId,
+        [FromForm] string jobName,
+        [FromForm] JobLigandInputModel[] ligands,
+        [FromForm] bool isPrivate,
+        [FromForm] string[] selectedProteinIds)
     {
         if (ligands.Length < 1)
             return BadRequest();
@@ -104,6 +113,7 @@ public partial class JobController : Controller
             Smiles = ligands.Select(o => o.Smiles).ToArray(),
             IsPrivate = isPrivate,
             UserId = User.Identity.Name?.ToLower(),
+            SelectedProteinIds = selectedProteinIds?.Distinct().ToArray(),
         });
 
         return job.Id;
