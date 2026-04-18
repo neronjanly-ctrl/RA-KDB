@@ -89,12 +89,16 @@ public partial class JobController : Controller
 
     [HttpPost("create")]
     public virtual async Task<ActionResult<int?>> Create(
-        string domainId,
-        [FromForm] string jobName,
-        [FromForm] JobLigandInputModel[] ligands,
-        [FromForm] bool isPrivate,
-        [FromForm] string[] selectedProteinIds)
+    string domainId,
+    [FromForm] string jobName,
+    [FromForm] JobLigandInputModel[] ligands,
+    [FromForm] bool isPrivate,
+    [FromForm] string[] selectedProteinIds)
     {
+        Console.WriteLine($"[GCP Create] domainId={domainId}, jobName={jobName}");
+        Console.WriteLine($"[GCP Create] selectedProteinIds count = {selectedProteinIds?.Length ?? 0}");
+        Console.WriteLine($"[GCP Create] selectedProteinIds = {string.Join(",", selectedProteinIds ?? Array.Empty<string>())}");
+
         if (ligands == null || ligands.Length < 1)
             return BadRequest();
 
@@ -118,6 +122,7 @@ public partial class JobController : Controller
 
         return job.Id;
     }
+
     [HttpPost("rename/{jobId:int}")]
     public virtual async Task<IActionResult> Rename(string domainId, int jobId, [FromForm] string newName)
     {

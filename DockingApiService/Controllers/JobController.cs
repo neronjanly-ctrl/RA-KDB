@@ -413,7 +413,9 @@ public class JobController : ControllerBase
             }
         }
 
-        (string name, long id)[] ligandIds = model.LigandNames.Zip(model.Smiles.Select(o => o.ComputeHashInt64())).ToArray();
+        (string name, long id)[] ligandIds = model.LigandNames
+            .Zip(model.Smiles.Select(o => o.ComputeHashInt64()))
+            .ToArray();
 
         // remove duplicate domains
         model.DomainIds = model.DomainIds.Distinct().ToArray();
@@ -453,6 +455,7 @@ public class JobController : ControllerBase
                 .Select(o => o.Id)
                 .Distinct()
                 .LongCountAsync();
+
             if (availableCount != selectedProteinIds.Length)
                 return BadRequest("Some selected proteins are outside the current domain.");
         }
@@ -480,7 +483,7 @@ public class JobController : ControllerBase
             Stage2 = new StageStat { TargetCount = stages[2] * ligandIds.Length },
             AllStages = new StageStat { TargetCount = stages.Sum() * ligandIds.Length },
 
-            IpAddress = HttpContext.Connection.RemoteIpAddress.ToString(),
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
             UserId = model.UserId,
             IsPrivate = model.IsPrivate,
 
@@ -491,22 +494,26 @@ public class JobController : ControllerBase
         job.Create();
         await _ctx.Jobs.AddAsync(job);
 
-        if (selectedProteinIds.Length > 0)
-        {
-            foreach ((string _, long ligandId) in ligandIds)
-            {
-                foreach (Cavity cavity in selectedCavities)
-                {
-                    Result result = new();
-                    result.Init(job.Id, ligandId, cavity.Id, cavity);
-                    await _ctx.Results.AddAsync(result);
-                }
-            }
-        }
-
         try
         {
             await _ctx.SaveChangesAsync();
+
+            if (selectedProteinIds.Length > 0)
+            {
+                foreach ((string _, long ligandId) in ligandIds)
+                {
+                    foreach (Cavity cavity in selectedCavities)
+                    {
+                        Result result = new();
+                        result.Init(job.Id, ligandId, cavity.Id, cavity);
+                        result.Job = job;
+                        result.Cavity = cavity;
+                        _ctx.Results.Add(result);
+                    }
+                }
+
+                await _ctx.SaveChangesAsync();
+            }
 
             BackgroundJob.Enqueue<ComputationBackgroundJob>(o => o.InitJob(job.Id));
 
@@ -514,7 +521,8 @@ public class JobController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Conflict(ex);
+            Console.WriteLine(ex.ToString());
+            return Conflict("Failed to create job.");
         }
     }
 
