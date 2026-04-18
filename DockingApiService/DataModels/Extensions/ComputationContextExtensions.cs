@@ -120,18 +120,6 @@ public static class ComputationContextExtensions
 
     public static async Task<IQueryable<Cavity>> GetJobCavities(this ComputationContext context, int jobId)
     {
-        long[] existingResultCavityIds = await context.Results
-            .Where(o => o.JobId == jobId)
-            .Select(o => o.CavityId)
-            .Distinct()
-            .ToArrayAsync();
-        if (existingResultCavityIds.Length > 0)
-        {
-            IIncludableQueryable<Cavity, Protein> selectedCavities = context.Cavities
-                .Where(o => existingResultCavityIds.Contains(o.Id))
-                .Include(o => o.Protein);
-            return selectedCavities;
-        }
         // get all protein cavities for a job
         long[] cavityIds = await context.GetJobDomains(jobId)
             .SelectMany(o => o.DomainProteins)
@@ -228,14 +216,6 @@ public static class ComputationContextExtensions
             .Include(o => o.Protein)
             .Distinct();
     }
-    public static IQueryable<Cavity> GetProteinCavities(this ComputationContext context, string[] proteinIds)
-    {
-        return context.Proteins
-            .Where(o => proteinIds.Contains(o.Id))
-            .SelectMany(o => o.Cavities)
-            .Include(o => o.Protein)
-            .Distinct();
-    }
 
     public static IQueryable<Result> GetCavityResults(this ComputationContext context, long cavityId)
     {
@@ -262,22 +242,6 @@ public static class ComputationContextExtensions
         // stage[0]: docking stages
         // stage[1]: hunting stages
         // stage[2]: prediction stages
-        if (cavityMeta.Length == 0)
-            return new int[3];
-
-        int[] stages = cavityMeta
-            .Select(o => new[] { o.StructureCount, o.HasActiveChemblCompounds ? 1 : 0, o.HasTrainedModels ? 1 : 0 })
-            .Aggregate((a, b) => new[] { a[0] + b[0], a[1] + b[1], a[2] + b[2] });
-
-        return stages;
-    }
-
-    public static async Task<int[]> CalcStagesForProteins(this ComputationContext context, string[] proteinIds)
-    {
-        var cavityMeta = await context.GetProteinCavities(proteinIds)
-            .Select(o => new { o.StructureCount, o.Protein.HasActiveChemblCompounds, o.Protein.HasChemblCompounds, o.Protein.HasTrainedModels })
-            .ToArrayAsync();
-
         if (cavityMeta.Length == 0)
             return new int[3];
 

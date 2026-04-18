@@ -365,23 +365,6 @@ function hookJobCreateButtons() {
             return;
         }
 
-        const isSelectedMode = $("input[name='targetMode']:checked").val() === "selected";
-        if (isSelectedMode) {
-            const selectedTargets = $(".target-checkbox:checked").map((_, el) => $(el).val() as string).get();
-            if (selectedTargets.length === 0) {
-                $("#targetRequired").addClass("show").show();
-                submitting = false;
-                return;
-            }
-            $("#targetRequired").hide().removeClass("show");
-
-            selectedTargets.forEach((value, index) => {
-                formData[`SelectedProteinIds[${index}]`] = value;
-            });
-        } else {
-            $("#targetRequired").hide().removeClass("show");
-        }
-
         setCreateMessage(`Creating new job "${jobName}"...`, false);
 
         formData["MZ-CSRF"] = $("input[name='MZ-CSRF']").val(),
@@ -479,6 +462,7 @@ interface Prediction {
     activity: string;
     confidenceLevel: number;
 };
+
 function setupJobHubConnection() {
     const hubUrl = $("a#jobhub").attr("href");
     if (hubUrl === undefined)

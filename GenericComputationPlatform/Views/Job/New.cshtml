@@ -1,15 +1,12 @@
 ﻿@model Domain
 @inject IOptions<AppSettings> _appSettings
-@using System.Linq
 
 @{
     ViewData["Title"] = "Docking Workspace";
 
     int maxLigands = _appSettings.Value.Options.MaxInputLigands;
     string userName = "John";
-    var dockingBanner = Url.Content("~/images/version1/docking_1.png");
-    var proteins = ViewBag.Proteins as IEnumerable<Protein> ?? Enumerable.Empty<Protein>();
-
+  
     if (User.Identity.IsAuthenticated && !string.IsNullOrEmpty(User.Identity.Name))
     {
         int idx = User.Identity.Name.IndexOf('@');
@@ -32,252 +29,45 @@
     <link rel="stylesheet" href="~/css/pageFeatures.css" asp-append-version="true" />
 }
 
-<div class="ra-docking-page">
-    <section class="ra-section ra-header-hero">
-        <div class="ra-hero-banner">
-            <img class="ra-hero-banner-image"
-                 src="@dockingBanner"
-                 alt="Rheumatoid arthritis docking workspace" />
 
-            <div class="ra-hero-banner-overlay"></div>
+<h1 class="ra-hero-title-docking">RA Docking workspace</h1>
+<hr />
 
-            <div class="ra-hero-banner-inner">
-                <div class="ra-hero-copy">
-                    <h1 class="ra-hero-title">
-                        Docking workspace for curated RA targets
-                    </h1>
-
-                    <p class="ra-hero-desc">
-                        Submit one or more molecules to the current rheumatoid arthritis target panel and launch a new
-                        docking job within a unified research workflow that connects curated protein records with
-                        downstream computational analysis.
-                    </p>
-                </div>
+<form asp-controller="Job" asp-action="Create" asp-route-domainId="@Model.Id" asp-antiforgery="true" method="post">
+    <div class="form-group row job-name-row">
+        <label class="col-sm-2 col-form-label" for="jobName">
+            <span class="bg-info mr-2">&nbsp;</span>
+            <strong>Job Name</strong>
+        </label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="jobName" name="jobName" placeholder="e.g. @userName's drug01-@Model.Id.ToUpper()" />
+            <div class="alert alert-danger fade collapse mt-2" role="alert" id="jobNameRequired">
+                <strong>Job Name</strong> is required.
             </div>
+            <small class="form-text text-muted">Provide a mnemonic name of the job for your convenience. Visible to the public.</small>
         </div>
-    </section>
-
-    <section class="ra-section ra-job-builder" id="create-job">
-        <div class="ra-editorial-head">
-            <div class="ra-subtitle">Submission form</div>
-            <h2 class="ra-section-title">Create a new docking job</h2>
-            <p class="ra-section-desc">
-                Provide a job name, add one or more molecules, and submit the job to the current RA domain.
-            </p>
+    </div>
+  
+    <div class="form-group row">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-10">
+            <a asp-controller="Job" asp-action="Details" asp-route-domainId="@Model.Id" asp-route-jobId="0" class="d-none"></a>
+            <button id="create" class="btn btn-warning">Create Job</button>
+            <button id="addmol" class="btn btn-primary">Add Molecule</button>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <input type="checkbox" class="ml-4" id="isPrivate" name="isPrivate" />
+                <label for="isPrivate" title="Only the creator can access the job. Others can only see the job name.">
+                    <strong>Private job</strong>
+                </label>
+            }
+            <small class="form-text text-info" id="formMessage"></small>
         </div>
-
-        <div class="ra-form-shell">
-            <form asp-controller="Job"
-                  asp-action="Create"
-                  asp-route-domainId="@Model.Id"
-                  asp-antiforgery="true"
-                  method="post"
-                  id="createJobForm">
-
-                <div class="ra-form-section">
-                    <div class="form-group row job-name-row mb-0">
-                        <label class="col-sm-3 col-form-label" for="jobName">
-                            <strong>Job Name</strong>
-                        </label>
-                        <div class="col-sm-9">
-                            <input type="text"
-                                   class="form-control"
-                                   id="jobName"
-                                   name="jobName"
-                                   placeholder="e.g. @userName's ligand-panel-@Model.Id.ToUpper()" />
-
-                            <div class="alert alert-danger fade collapse mt-2" role="alert" id="jobNameRequired">
-                                <strong>Job Name</strong> is required.
-                            </div>
-
-                            <small class="form-text text-muted">
-                                Give the job a meaningful name so you can identify it later in All Jobs.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ra-form-section">
-                    <div class="form-group row mb-0">
-                        <label class="col-sm-3 col-form-label">
-                            <strong>Target Scope</strong>
-                        </label>
-                        <div class="col-sm-9">
-                            <div class="ra-form-card">
-                                <div class="form-check">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="targetMode"
-                                           id="targetModeAll"
-                                           value="all"
-                                           checked />
-                                    <label class="form-check-label" for="targetModeAll">
-                                        One-click all RA targets (default)
-                                    </label>
-                                </div>
-
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="targetMode"
-                                           id="targetModeSelected"
-                                           value="selected" />
-                                    <label class="form-check-label" for="targetModeSelected">
-                                        Dock with selected targets only
-                                    </label>
-                                </div>
-
-                                <div id="targetSelectionPanel"
-                                     class="border rounded p-3 ra-target-panel"
-                                     style="display:none;">
-                                    @foreach (var protein in proteins.OrderBy(o => o.Id))
-                                    {
-                                        <div class="form-check">
-                                            <input class="form-check-input target-checkbox"
-                                                   type="checkbox"
-                                                   id="target-@protein.Id"
-                                                   name="selectedProteinIds"
-                                                   value="@protein.Id" />
-                                            <label class="form-check-label" for="target-@protein.Id">
-                                                <strong>@protein.GeneSymbol</strong>
-                                                <span class="text-muted">(@protein.Id)</span>
-                                            </label>
-                                        </div>
-                                    }
-                                </div>
-
-                                <div class="alert alert-danger fade collapse mt-2"
-                                     role="alert"
-                                     id="targetRequired">
-                                    Please select at least one target when using
-                                    <strong>selected targets</strong> mode.
-                                </div>
-
-                                <div class="ra-inline-help mt-2">
-                                    Keep default for full-panel docking, or switch to selected mode for custom target subsets.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 恢复旧功能依赖的 molecule name + JME editor -->
-                <div class="ra-form-section legacy-molecule-anchor" id="moleculeBuilderSection">
-                    <div class="ra-form-card">
-                        <div class="mb-3">
-                            <h4 class="mb-1">Molecule Input</h4>
-                            <div class="ra-inline-help">
-                                Add a molecule name, then draw or paste MOL / SDF / SMILES in the editor.
-                                This section preserves the original create-job molecule workflow.
-                            </div>
-                        </div>
-
-                        <div class="form-group row mol-name-row">
-                            <label class="col-sm-3 col-form-label" for="LigandName">
-                                <strong>Molecule Name</strong>
-                            </label>
-                            <div class="col-sm-9">
-                                <input type="text"
-                                       class="form-control d-inline-block"
-                                       id="LigandName"
-                                       name="LigandName" />
-
-                                <div class="alert alert-danger fade collapse mt-2"
-                                     role="alert"
-                                     id="ligandNameRequired">
-                                    <strong>Molecule Name</strong> is required.
-                                </div>
-
-                                <small class="form-text text-muted">
-                                    Provide the name of the molecule to be computed.
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="form-group row mol-row mb-0">
-                            <label class="col-sm-3 col-form-label" for="JME">
-                                <strong>Molecule</strong>
-                            </label>
-                            <div class="col-sm-9">
-                                <div class="ra-molecule-shell">
-                                    <div code="JME.class"
-                                         name="JME"
-                                         id="JME"
-                                         class="mol-editor"
-                                         width="100%"
-                                         height="380px">
-                                        You must enable JavaScript for using this site.
-                                    </div>
-                                </div>
-
-                                <div class="alert alert-danger fade collapse mt-2"
-                                     role="alert"
-                                     id="moleculeRequired">
-                                    <strong>Molecule</strong> is required.
-                                </div>
-
-                                <small class="form-text text-muted">
-                                    Draw a molecule or paste MOL, SDF or SMILES via clicking on the blue double-triangle
-                                    button on the right of the toolbar.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ra-form-section">
-                    <div class="ra-action-bar">
-                        <a asp-controller="Job"
-                           asp-action="Details"
-                           asp-route-domainId="@Model.Id"
-                           asp-route-jobId="0"
-                           class="d-none"></a>
-
-                        <button id="create" class="btn btn-warning" type="button">Create Job</button>
-                        <button id="addmol" class="btn btn-primary" type="button">Add Molecule</button>
-
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <div class="d-inline-flex align-items-center ml-md-3">
-                                <input type="checkbox" class="mr-2" id="isPrivate" name="isPrivate" />
-                                <label for="isPrivate"
-                                       class="mb-0"
-                                       title="Only the creator can access the job. Others can only see the job name.">
-                                    <strong>Private job</strong>
-                                </label>
-                            </div>
-                        }
-
-                        <small class="form-text text-info mb-0" id="formMessage"></small>
-                    </div>
-
-                    <div class="ra-action-note mt-3">
-                        Tip: duplicate ligand names and duplicate structures are typically rejected by the existing validation logic.
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <div class="ra-footer-actions">
-            <a class="btn-ra-secondary"
-               asp-controller="Home"
-               asp-action="Targets"
-               asp-route-domainId="@Model.Id">
-                Browse Protein Database
-            </a>
-
-            <a class="btn-ra-secondary"
-               asp-controller="Job"
-               asp-action="List"
-               asp-route-domainId="@Model.Id">
-                View All Jobs
-            </a>
-        </div>
-    </section>
+    </div>
 
     <section class="ra-section ra-guidance-section">
         <div class="ra-editorial-head">
-            <div class="ra-subtitle">Workflow guidance</div>
+            <div class="ra-kicker">Docking guidance</div>
             <h2 class="ra-section-title">How this docking step fits into the platform</h2>
             <p class="ra-section-desc">
                 This page turns curated target knowledge into a runnable computational task.
@@ -318,69 +108,13 @@
             </article>
         </div>
     </section>
+</form>
 
-    <section class="ra-section">
-        <div class="ra-footer-actions">
-            <a class="btn-ra-secondary"
-               asp-controller="Home"
-               asp-action="Index"
-               asp-route-domainId="@Model.Id">
-                Back to RA Workspace
-            </a>
-
-            <a class="btn-ra-primary"
-               asp-controller="Job"
-               asp-action="List"
-               asp-route-domainId="@Model.Id">
-                Open All Jobs
-            </a>
-        </div>
-    </section>
-</div>
 
 @section Scripts {
     <script src="~/lib/jsme/jsme.nocache.js"></script>
     <script type="text/javascript">
-        (function () {
-            function toggleTargetSelection() {
-                const isSelectedMode = $("#targetModeSelected").prop("checked");
-                $("#targetSelectionPanel").toggle(isSelectedMode);
-
-                if (!isSelectedMode) {
-                    $("#targetRequired").hide().removeClass("show");
-                }
-            }
-
-            function validateTargetSelectionBeforeCreate() {
-                const isSelectedMode = $("#targetModeSelected").prop("checked");
-                if (!isSelectedMode) {
-                    $("#targetRequired").hide().removeClass("show");
-                    return true;
-                }
-
-                const checkedCount = $(".target-checkbox:checked").length;
-                if (checkedCount > 0) {
-                    $("#targetRequired").hide().removeClass("show");
-                    return true;
-                }
-
-                $("#targetRequired").show().addClass("show");
-                return false;
-            }
-
-            $("input[name='targetMode']").on("change", toggleTargetSelection);
-            toggleTargetSelection();
-
-            hookJobCreateButtons();
-            setMaxLigands(@maxLigands);
-
-            $("#create").on("click.raTargetValidation", function (e) {
-                if (!validateTargetSelectionBeforeCreate()) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    return false;
-                }
-            });
-        })();
+        hookJobCreateButtons();
+        setMaxLigands(@maxLigands);
     </script>
 }
