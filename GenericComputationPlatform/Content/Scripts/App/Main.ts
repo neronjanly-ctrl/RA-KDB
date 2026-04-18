@@ -365,25 +365,45 @@ function hookJobCreateButtons() {
             return;
         }
 
+        const targetMode = $("input[name='targetMode']:checked").val() as string || "all";
+        formData["TargetMode"] = targetMode;
+
+        if (targetMode === "selected") {
+            const selectedTargets = $(".target-checkbox:checked").map((_, el) => $(el).val() as string).get();
+
+            if (selectedTargets.length === 0) {
+                $("#targetRequired").addClass("show").show();
+                submitting = false;
+                return;
+            }
+
+            $("#targetRequired").hide().removeClass("show");
+
+            selectedTargets.forEach((value, index) => {
+                formData[`SelectedProteinIds[${index}]`] = value;
+            });
+        } else {
+            $("#targetRequired").hide().removeClass("show");
+        }
+
         setCreateMessage(`Creating new job "${jobName}"...`, false);
 
-        formData["MZ-CSRF"] = $("input[name='MZ-CSRF']").val(),
+        formData["MZ-CSRF"] = $("input[name='MZ-CSRF']").val();
 
-            $.post($("form").prop("action"),
-                formData,
-                data => {
-                    //console.log(data);
-                    if (data) {
-                        setCreateMessage("Created successfully.", false);
-                        window.location.href = url.replace(/0$/, data);
-                    } else {
-                        setCreateMessage(`Failed to create new job.`, true);
-                    }
-                    submitting = false;
-                }).fail(data => {
-                    setCreateMessage(`Failed: ${data.statusText}`, true);
-                    submitting = false;
-                });
+        $.post($("form").prop("action"),
+            formData,
+            data => {
+                if (data) {
+                    setCreateMessage("Created successfully.", false);
+                    window.location.href = url.replace(/0$/, data);
+                } else {
+                    setCreateMessage(`Failed to create new job.`, true);
+                }
+                submitting = false;
+            }).fail(data => {
+                setCreateMessage(`Failed: ${data.statusText}`, true);
+                submitting = false;
+            });
     });
 
     $(".mol-name-row input").focus(ev => toggleMolRow(ev.target));

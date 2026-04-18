@@ -36,4 +36,9 @@ public class CreateJobModel
     /// The email of the user who is creating this job. Null for anonymous users.
     /// </summary>
     public string UserId { get; set; }
+
+    /// <summary>
+    /// Optional subset of proteins to dock against. If null or empty, all proteins in <see cref="DomainIds"/> are used.
+    /// </summary>
+    public string[] SelectedProteinIds { get; set; }
 }

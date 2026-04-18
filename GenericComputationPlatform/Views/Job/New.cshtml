@@ -1,12 +1,15 @@
 ﻿@model Domain
 @inject IOptions<AppSettings> _appSettings
+@using System.Linq
 
 @{
     ViewData["Title"] = "Docking Workspace";
 
     int maxLigands = _appSettings.Value.Options.MaxInputLigands;
     string userName = "John";
-  
+    //add2
+    var proteins = ViewBag.Proteins as IEnumerable<Protein> ?? Enumerable.Empty<Protein>();
+
     if (User.Identity.IsAuthenticated && !string.IsNullOrEmpty(User.Identity.Name))
     {
         int idx = User.Identity.Name.IndexOf('@');
@@ -45,6 +48,51 @@
                 <strong>Job Name</strong> is required.
             </div>
             <small class="form-text text-muted">Provide a mnemonic name of the job for your convenience. Visible to the public.</small>
+        </div>
+    </div>
+    //add3
+    <div class="form-group row mt-4">
+        <label class="col-sm-2 col-form-label">
+            <strong>Target scope</strong>
+        </label>
+        <div class="col-sm-10">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="targetMode" id="targetModeAll" value="all" checked />
+                <label class="form-check-label" for="targetModeAll">
+                    One-click all RA targets (default)
+                </label>
+            </div>
+
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="targetMode" id="targetModeSelected" value="selected" />
+                <label class="form-check-label" for="targetModeSelected">
+                    Dock with selected targets only
+                </label>
+            </div>
+
+            <div id="targetSelectionPanel" class="border rounded p-2" style="max-height:220px; overflow:auto; display:none;">
+                @foreach (var protein in proteins.OrderBy(o => o.Id))
+                {
+                    <div class="form-check">
+                        <input class="form-check-input target-checkbox"
+                               type="checkbox"
+                               id="target-@protein.Id"
+                               name="selectedProteinIds"
+                               value="@protein.Id" />
+                        <label class="form-check-label" for="target-@protein.Id">
+                            <strong>@protein.GeneSymbol</strong> <span class="text-muted">(@protein.Id)</span>
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="alert alert-danger fade collapse mt-2" role="alert" id="targetRequired">
+                Please select at least one target when using <strong>selected targets</strong> mode.
+            </div>
+
+            <small class="form-text text-muted">
+                Keep default for full-panel docking, or switch to selected mode for custom target subsets.
+            </small>
         </div>
     </div>
   
@@ -114,6 +162,18 @@
 @section Scripts {
     <script src="~/lib/jsme/jsme.nocache.js"></script>
     <script type="text/javascript">
+        function syncTargetModeUI() {
+            const isSelectedMode = $("#targetModeSelected").prop("checked");
+            $("#targetSelectionPanel").toggle(isSelectedMode);
+
+            if (!isSelectedMode) {
+                $("#targetRequired").hide().removeClass("show");
+            }
+        }
+
+        $("input[name='targetMode']").on("change", syncTargetModeUI);
+        syncTargetModeUI();
+
         hookJobCreateButtons();
         setMaxLigands(@maxLigands);
     </script>

@@ -420,6 +420,14 @@ public class JobController : ControllerBase
         Domain[] domains = await _ctx.Domains
             .Where(o => model.DomainIds.Contains(o.Id))
             .ToArrayAsync();
+        if (domains.Length != model.DomainIds.Length)
+            return BadRequest("Some domains are invalid.");
+
+        string[] selectedProteinIds = model.SelectedProteinIds?
+            .Where(o => !string.IsNullOrWhiteSpace(o))
+            .Select(o => o.Trim())
+            .Distinct()
+            .ToArray() ?? Array.Empty<string>();
 
         for (int i = 0; i < model.Smiles.Length; i++)
         {
@@ -437,10 +445,27 @@ public class JobController : ControllerBase
             }
         }
 
-        int proteinCount = await _ctx.GetDomainProteins(model.DomainIds).CountAsync();
-        int[] stages = await _ctx.CalcStagesForDomains(model.DomainIds);
-        int resultCount = await _ctx.GetDomainCativies(model.DomainIds).CountAsync() * ligandIds.Length;
-        
+        IQueryable<Protein> domainProteins = _ctx.GetDomainProteins(model.DomainIds);
+        if (selectedProteinIds.Length > 0)
+        {
+            long availableCount = await domainProteins
+                .Where(o => selectedProteinIds.Contains(o.Id))
+                .Select(o => o.Id)
+                .Distinct()
+                .LongCountAsync();
+            if (availableCount != selectedProteinIds.Length)
+                return BadRequest("Some selected proteins are outside the current domain.");
+        }
+
+        string[] effectiveProteinIds = selectedProteinIds.Length == 0
+            ? await domainProteins.Select(o => o.Id).Distinct().ToArrayAsync()
+            : selectedProteinIds;
+
+        int proteinCount = effectiveProteinIds.Length;
+        int[] stages = await _ctx.CalcStagesForProteins(effectiveProteinIds);
+        Cavity[] selectedCavities = await _ctx.GetProteinCavities(effectiveProteinIds).ToArrayAsync();
+        int resultCount = selectedCavities.Length * ligandIds.Length;
+
         Job job = new()
         {
             Name = model.JobName,
@@ -466,6 +491,18 @@ public class JobController : ControllerBase
         job.Create();
         await _ctx.Jobs.AddAsync(job);
 
+        if (selectedProteinIds.Length > 0)
+        {
+            foreach ((string _, long ligandId) in ligandIds)
+            {
+                foreach (Cavity cavity in selectedCavities)
+                {
+                    Result result = new();
+                    result.Init(job.Id, ligandId, cavity.Id, cavity);
+                    await _ctx.Results.AddAsync(result);
+                }
+            }
+        }
 
         try
         {
