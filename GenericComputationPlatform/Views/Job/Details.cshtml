@@ -20,6 +20,7 @@
     <div id="jobStatusAlert" class="alert alert-warning d-none" role="alert"></div>
     <p class="lead">
         <a class="btn btn-primary btn-lg" href="@(Context.UseCardOutputDisplay() ? Url.Action("CardView", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id, pageNum = 1 }) : Url.Action("TableViewAll", "Job", new { domainId = Model.DomainId, jobId = Model.Job.Id }))" role="button">See Detailed Output</a>
+        <a class="btn btn-outline-primary btn-lg" asp-controller="Job" asp-action="Analytics" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">See Analytics</a>
         <a class="btn btn-outline-primary btn-lg" asp-controller="Job" asp-action="Report" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Job.Id">Download CSV <i class="fa fa-download"></i></a>
     </p>
 </div>

@@ -1,0 +1,143 @@
+@using System.Globalization
+@using System.Text.Json
+@model GenericComputationPlatform.ViewModels.Analytics.JobAnalyticsPageModel
+@{
+    ViewData["Title"] = $"{Model.Summary.Job.Name} #{Model.Summary.Job.Id} Analytics";
+}
+
+<div class="jumbotron py-4">
+    <h1 class="display-5">@ViewData["Title"]</h1>
+    <p class="mb-1">Analytics configuration for this page is independent and <strong>does not affect Spider Plot thresholds</strong>.</p>
+    <p class="mb-1 text-muted">Prediction fields are display-only and are excluded from analytics scoring/ranking/filtering.</p>
+    <div class="small text-muted">Applied aggregate method: @Model.Summary.AppliedConfig.AnalysisParams.AggregateMethod, Top N: @Model.Summary.AppliedConfig.AnalysisParams.TopN</div>
+
+    @if (Model.Summary.Validation.Errors.Count > 0)
+    {
+        <div class="alert alert-danger mt-3 mb-0">
+            <strong>Errors:</strong>
+            <ul class="mb-0">
+                @foreach (var err in Model.Summary.Validation.Errors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (Model.Summary.Validation.Warnings.Count > 0)
+    {
+        <div class="alert alert-warning mt-3 mb-0">
+            <strong>Warnings:</strong>
+            <ul class="mb-0">
+                @foreach (var warning in Model.Summary.Validation.Warnings)
+                {
+                    <li>@warning</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Total rows</div><div class="h4 mb-0">@Model.Summary.TotalRows</div></div></div></div>
+    <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Analyzable rows</div><div class="h4 mb-0">@Model.Summary.AnalyzableRows</div></div></div></div>
+    <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Excluded (docking missing)</div><div class="h4 mb-0">@Model.Summary.ExcludedByMissingDocking</div></div></div></div>
+    <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Excluded (similarity missing)</div><div class="h4 mb-0">@Model.Summary.ExcludedByMissingSimilarity</div></div></div></div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Mean docking</div><div class="h4 mb-0">@(Model.Summary.MeanDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</div></div></div></div>
+    <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Median docking</div><div class="h4 mb-0">@(Model.Summary.MedianDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</div></div></div></div>
+    <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">High Priority count</div><div class="h4 mb-0">@Model.Summary.HighPriorityCount</div></div></div></div>
+</div>
+
+<h3>Top N Candidates</h3>
+<table class="table table-striped table-hover table-maxwidth mt-3 w-100">
+    <thead>
+        <tr>
+            <th>Protein Symbol</th>
+            <th>Gene Symbol</th>
+            <th>Docking aggregate</th>
+            <th>Docking Std</th>
+            <th>Similarity</th>
+            <th>Priority Score</th>
+            <th>Candidate Class</th>
+            <th>Compare</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model.Summary.TopCandidates)
+        {
+            <tr>
+                <td>@row.ProteinSymbol</td>
+                <td>@row.GeneSymbol</td>
+                <td>@(row.DockingEffectiveScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
+                <td>@(row.DockingStd?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
+                <td>@(row.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
+                <td>@(row.PriorityScore?.ToString("F2", CultureInfo.InvariantCulture) ?? "N/A")</td>
+                <td>@row.CandidateClass</td>
+                <td><a href="@row.CompareUrl" target="_blank">Compare</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <h4>Grouped by Protein</h4>
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Protein</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <tbody>
+                @foreach (var group in Model.Summary.GroupedByProtein.Take(10))
+                {
+                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-4">
+        <h4>Grouped by Gene</h4>
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Gene</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <tbody>
+                @foreach (var group in Model.Summary.GroupedByGene.Take(10))
+                {
+                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-4">
+        <h4>Grouped by Ligand</h4>
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Ligand</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <tbody>
+                @foreach (var group in Model.Summary.GroupedByLigand.Take(10))
+                {
+                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReport" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
+    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReportFull" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id">Download Full Analysis CSV <i class="fa fa-download"></i></a>
+</div>
+
+@section Menu {
+    @{
+        ViewData["ActiveMenu"] = "docking";
+        ViewData["JobNavDomainId"] = Model.DomainId;
+        ViewData["JobNavJobId"] = Model.Summary.Job.Id;
+        ViewData["JobNavActive"] = "analytics";
+    }
+    <partial name="_RaWorkspaceMenu" />
+    <partial name="_RaJobContextMenu" />
+}
+
+@section Scripts {
+    <script>
+        window.jobAnalyticsPayload = @Html.Raw(JsonSerializer.Serialize(Model.FrontendPayload));
+    </script>
+}

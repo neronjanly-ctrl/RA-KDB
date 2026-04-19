@@ -2,6 +2,7 @@
 using GenericComputationPlatform;
 using GenericComputationPlatform.Mocks;
 using GenericComputationPlatform.Providers;
+using GenericComputationPlatform.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -89,6 +90,7 @@ builder.Services.AddScoped<JobClient>();
 builder.Services.AddScoped<LigandClient>();
 builder.Services.AddScoped<ProteinClient>();
 builder.Services.AddScoped<ResultClient>();
+builder.Services.AddScoped<IJobAnalyticsService, JobAnalyticsService>();
 
 builder.Services.Configure<CookiePolicyOptions>(options =>
 {
