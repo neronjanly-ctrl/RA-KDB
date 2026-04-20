@@ -30,7 +30,6 @@
 <div class="jumbotron py-4">
     <h1 class="display-5">@ViewData["Title"]</h1>
     <p class="mb-1">Analytics configuration for this page is independent and <strong>does not affect Spider Plot thresholds</strong>.</p>
-    <p class="mb-1 text-muted">Prediction fields are display-only and are excluded from analytics scoring/ranking/filtering.</p>
     <div class="small text-muted">Applied aggregate method: @Model.Summary.AppliedConfig.AnalysisParams.AggregateMethod, Top N: @Model.Summary.AppliedConfig.AnalysisParams.TopN</div>
 
     @if (Model.Summary.Validation.Errors.Count > 0)
@@ -187,56 +186,82 @@
         window.jobAnalyticsPayload = @Html.Raw(JsonSerializer.Serialize(Model.FrontendPayload));
         (function () {
             const payload = window.jobAnalyticsPayload || {};
-            const fig = payload.figures || {};
+            console.log("Analytics payload", payload);
+            console.log("Analytics payload Figures", payload.Figures, payload.figures);
+
+            const fig = payload.Figures || payload.figures || {};
             if (!window.Chart) return;
 
             const to2 = v => (typeof v === "number" ? v.toFixed(2) : "N/A");
             const classColor = c => c === "High" ? "#d9534f" : c === "Moderate" ? "#f0ad4e" : "#5bc0de";
+            const get = (obj, pascal, camel) => obj?.[pascal] ?? obj?.[camel];
 
             new Chart(document.getElementById("chart-docking"), {
                 type: "bar",
-                data: { labels: fig.dockingDistribution?.labels || [], datasets: [{ label: "Count", data: fig.dockingDistribution?.counts || [], backgroundColor: "#4e79a7" }] }
+                data: {
+                    labels: get(get(fig, "DockingDistribution", "dockingDistribution"), "Labels", "labels") || [],
+                    datasets: [{
+                        label: "Count",
+                        data: get(get(fig, "DockingDistribution", "dockingDistribution"), "Counts", "counts") || [],
+                        backgroundColor: "#4e79a7"
+                    }]
+                }
             });
 
             new Chart(document.getElementById("chart-similarity"), {
                 type: "bar",
-                data: { labels: fig.similarityDistribution?.labels || [], datasets: [{ label: "Count", data: fig.similarityDistribution?.counts || [], backgroundColor: "#59a14f" }] }
+                data: {
+                    labels: get(get(fig, "SimilarityDistribution", "similarityDistribution"), "Labels", "labels") || [],
+                    datasets: [{
+                        label: "Count",
+                        data: get(get(fig, "SimilarityDistribution", "similarityDistribution"), "Counts", "counts") || [],
+                        backgroundColor: "#59a14f"
+                    }]
+                }
             });
 
             new Chart(document.getElementById("chart-top-bar"), {
                 type: "bar",
-                data: { labels: fig.topCandidatesBar?.labels || [], datasets: [{ label: "Priority Score", data: fig.topCandidatesBar?.priorityScores || [], backgroundColor: "#9c755f" }] },
+                data: {
+                    labels: get(get(fig, "TopCandidatesBar", "topCandidatesBar"), "Labels", "labels") || [],
+                    datasets: [{
+                        label: "Priority Score",
+                        data: get(get(fig, "TopCandidatesBar", "topCandidatesBar"), "PriorityScores", "priorityScores") || [],
+                        backgroundColor: "#9c755f"
+                    }]
+                },
                 options: { indexAxis: 'y' }
             });
 
-            const box = fig.modelBoxplot?.models || [];
+            const box = get(get(fig, "ModelBoxplot", "modelBoxplot"), "Models", "models") || [];
             new Chart(document.getElementById("chart-boxplot"), {
                 type: "bar",
                 data: {
-                    labels: box.map(o => o.model),
+                    labels: box.map(o => o.Model ?? o.model),
                     datasets: [
-                        { label: "Q1", data: box.map(o => o.q1), backgroundColor: "#e0ecf8", stack: "s" },
-                        { label: "IQR", data: box.map(o => o.q3 - o.q1), backgroundColor: "#4e79a7", stack: "s" }
+                        { label: "Q1", data: box.map(o => o.Q1 ?? o.q1), backgroundColor: "#e0ecf8", stack: "s" },
+                        { label: "IQR", data: box.map(o => (o.Q3 ?? o.q3) - (o.Q1 ?? o.q1)), backgroundColor: "#4e79a7", stack: "s" }
                     ]
                 },
-                options: { plugins: { tooltip: { callbacks: { afterBody: (ctx) => { const i = ctx[0].dataIndex; const b = box[i]; return [`min ${to2(b.min)}`, `median ${to2(b.median)}`, `max ${to2(b.max)}`]; } } } } }
+                options: { plugins: { tooltip: { callbacks: { afterBody: (ctx) => { const i = ctx[0].dataIndex; const b = box[i]; return [`min ${to2(b.Min ?? b.min)}`, `median ${to2(b.Median ?? b.median)}`, `max ${to2(b.Max ?? b.max)}`]; } } } } }
             });
 
             new Chart(document.getElementById("chart-priority-scatter"), {
                 type: "bubble",
                 data: {
-                    datasets: (fig.priorityScatter?.points || []).map(p => ({
-                        label: p.label,
-                        data: [{ x: p.x, y: p.y, r: Math.max(3, Math.sqrt((p.size || 1) / 2)) }],
-                        backgroundColor: classColor(p.candidateClass)
+                    datasets: (get(get(fig, "PriorityScatter", "priorityScatter"), "Points", "points") || []).map(p => ({
+                        label: p.Label ?? p.label,
+                        data: [{ x: p.X ?? p.x, y: p.Y ?? p.y, r: Math.max(3, Math.sqrt(((p.Size ?? p.size) || 1) / 2)) }],
+                        backgroundColor: classColor(p.CandidateClass ?? p.candidateClass)
                     }))
                 },
                 options: { scales: { x: { title: { display: true, text: "Docking (aggregate)" } }, y: { min: 0, max: 1, title: { display: true, text: "Similarity" } } } }
             });
 
             const heatmapEl = document.getElementById("chart-heatmap");
-            const labels = fig.modelCorrelationHeatmap?.labels || [];
-            const matrix = fig.modelCorrelationHeatmap?.matrix || [];
+            const heatmap = get(fig, "ModelCorrelationHeatmap", "modelCorrelationHeatmap") || {};
+            const labels = get(heatmap, "Labels", "labels") || [];
+            const matrix = get(heatmap, "Matrix", "matrix") || [];
             let html = "<table class='table table-sm table-bordered mb-0'><thead><tr><th></th>" + labels.map(l => `<th>${l}</th>`).join("") + "</tr></thead><tbody>";
             for (let i = 0; i < labels.length; i++) {
                 html += `<tr><th>${labels[i]}</th>`;

@@ -704,7 +704,7 @@ public class JobAnalyticsService : IJobAnalyticsService
             ExcludedByMissingDocking = rows.Count(o => o.ExclusionReasons.Contains("Missing docking score")),
             ExcludedByMissingSimilarity = rows.Count(o => o.ExclusionReasons.Contains("Missing similarity score")),
             MeanDocking = docking.Count > 0 ? docking.Average() : null,
-            MedianDocking = docking.Count > 0 ? docking[docking.Count / 2] : null,
+            MedianDocking = docking.Count > 0 ? GetMedian(docking) : null,
             HighPriorityCount = analyzable.Count(o => o.CandidateClass == "High"),
             AppliedConfig = config,
             TopCandidates = analyzable.OrderBy(o => o.PriorityRank).Take(config.AnalysisParams.TopN).ToList(),
@@ -720,12 +720,15 @@ public class JobAnalyticsService : IJobAnalyticsService
 
         return summary;
     }
-
     private static JobAnalyticsFigures BuildFigures(List<JobAnalyticsRow> analyzable, JobAnalyticsConfig config)
     {
+        IEnumerable<float?> flattenedDockingScores = analyzable
+            .SelectMany(o => o.DockingScores)
+            .Where(o => o.HasValue);
+
         return new JobAnalyticsFigures
         {
-            DockingDistribution = BuildHistogram(analyzable.Select(o => o.DockingEffectiveScore), 12),
+            DockingDistribution = BuildHistogram(flattenedDockingScores, 12),
             ModelBoxplot = BuildModelBoxplot(analyzable),
             SimilarityDistribution = BuildHistogram(analyzable.Select(o => o.SimilarityScore), 10),
             PriorityScatter = BuildPriorityScatter(analyzable, config),
@@ -733,7 +736,6 @@ public class JobAnalyticsService : IJobAnalyticsService
             ModelCorrelationHeatmap = BuildCorrelationHeatmap(analyzable),
         };
     }
-
     private static HistogramFigure BuildHistogram(IEnumerable<float?> values, int bins)
     {
         List<float> numeric = values.Where(o => o.HasValue).Select(o => o!.Value).ToList();
@@ -808,7 +810,7 @@ public class JobAnalyticsService : IJobAnalyticsService
                 X = o.DockingEffectiveScore,
                 Y = o.SimilarityScore,
                 Size = config.PlotParams.ScatterSizeBase + config.PlotParams.ScatterSizeScale * (o.PriorityScore ?? 0) / 100f,
-                Label = $"{o.LigandName} / {o.ProteinSymbol}",
+                Label = o.ProteinSymbol,
                 CandidateClass = o.CandidateClass,
                 Priority = o.PriorityScore
             }).ToList()
@@ -820,7 +822,7 @@ public class JobAnalyticsService : IJobAnalyticsService
         TopCandidatesBarFigure figure = new();
         foreach (JobAnalyticsRow row in analyzable.OrderBy(o => o.PriorityRank).Take(topN))
         {
-            figure.Labels.Add($"{row.LigandName}/{row.ProteinSymbol}");
+            figure.Labels.Add(row.ProteinSymbol);
             figure.PriorityScores.Add(row.PriorityScore ?? 0f);
         }
 
@@ -829,14 +831,18 @@ public class JobAnalyticsService : IJobAnalyticsService
 
     private static CorrelationHeatmapFigure BuildCorrelationHeatmap(List<JobAnalyticsRow> analyzable)
     {
-        Dictionary<string, List<float?>> series = new()
+        int modelCount = analyzable.Count == 0 ? 0 : analyzable.Max(o => o.DockingScores.Count);
+        Dictionary<string, List<float?>> series = new();
+        for (int i = 0; i < modelCount; i++)
         {
-            ["Docking"] = analyzable.Select(o => o.DockingEffectiveScore).ToList(),
-            ["Similarity"] = analyzable.Select(o => o.SimilarityScore).ToList(),
-            ["Consistency"] = analyzable.Select(o => o.ConsistencyScore).ToList(),
-            ["RuleBonus"] = analyzable.Select(o => (float?)o.RuleBonusNorm).ToList(),
-            ["Priority"] = analyzable.Select(o => o.PriorityScore).ToList(),
-        };
+            int modelIndex = i;
+            series[$"Model {i + 1}"] = analyzable
+                .Select(o => o.DockingScores.Count > modelIndex ? o.DockingScores[modelIndex] : null)
+                .ToList();
+        }
+
+        if (series.Count == 0)
+            return new CorrelationHeatmapFigure();
 
         List<string> labels = series.Keys.ToList();
         CorrelationHeatmapFigure figure = new()
@@ -889,6 +895,7 @@ public class JobAnalyticsService : IJobAnalyticsService
 
         return (sorted[mid - 1] + sorted[mid]) / 2f;
     }
+
     private static float GetPercentile(List<float> sortedValues, float percentile)
     {
         if (sortedValues == null || sortedValues.Count == 0)
@@ -906,6 +913,7 @@ public class JobAnalyticsService : IJobAnalyticsService
         float weight = rank - low;
         return sortedValues[low] + (sortedValues[high] - sortedValues[low]) * weight;
     }
+
     private static float GetPearson(IReadOnlyList<float?> x, IReadOnlyList<float?> y)
     {
         List<(float x, float y)> paired = new();
@@ -930,6 +938,7 @@ public class JobAnalyticsService : IJobAnalyticsService
 
         return cov / denom;
     }
+
     private static float? GetAggregateDocking(JobAnalyticsRow row, string method)
     {
         return method switch
