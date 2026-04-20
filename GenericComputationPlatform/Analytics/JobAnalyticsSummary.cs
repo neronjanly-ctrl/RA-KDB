@@ -19,7 +19,6 @@ public class JobAnalyticsSummary
     public List<JobAnalyticsGroupSummary> GroupedByProtein { get; set; } = new();
     public List<JobAnalyticsGroupSummary> GroupedByGene { get; set; } = new();
     public List<JobAnalyticsGroupSummary> GroupedByLigand { get; set; } = new();
-    public Dictionary<string, object> DistributionStats { get; set; } = new();
     public JobAnalyticsFigures Figures { get; set; } = new();
     public JobAnalyticsConfig AppliedConfig { get; set; } = new();
     public JobAnalyticsValidationResult Validation { get; set; } = new();

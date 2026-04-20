@@ -1,6 +1,7 @@
 @using System.Globalization
 @using System.Collections.Generic
 @using System.Text.Json
+@using Microsoft.AspNetCore.Routing
 @model GenericComputationPlatform.ViewModels.Analytics.JobAnalyticsPageModel
 @{
     ViewData["Title"] = $"{Model.Summary.Job.Name} #{Model.Summary.Job.Id} Analytics";
@@ -25,6 +26,13 @@
                 ["plotParams.scatterSizeBase"] = cfg.PlotParams.ScatterSizeBase.ToString(CultureInfo.InvariantCulture),
                 ["plotParams.scatterSizeScale"] = cfg.PlotParams.ScatterSizeScale.ToString(CultureInfo.InvariantCulture),
             };
+    var exportRouteConfig = new RouteValueDictionary(routeConfig)
+            {
+                ["domainId"] = Model.DomainId,
+                ["jobId"] = Model.Summary.Job.Id
+            };
+    var summaryReportUrl = Url.Action("AnalyticsReport", "Job", exportRouteConfig) ?? "#";
+    var fullReportUrl = Url.Action("AnalyticsReportFull", "Job", exportRouteConfig) ?? "#";
 }
 
 <div class="jumbotron py-4">
@@ -71,6 +79,25 @@
     <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">High Priority count</div><div class="h4 mb-0">@Model.Summary.HighPriorityCount</div></div></div></div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">Current Config Summary</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3"><div class="small text-muted">Aggregate method</div><div>@cfg.AnalysisParams.AggregateMethod</div></div>
+            <div class="col-md-3"><div class="small text-muted">Top N</div><div>@cfg.AnalysisParams.TopN</div></div>
+            <div class="col-md-3"><div class="small text-muted">Docking threshold</div><div>@cfg.PlatformDefaults.DockingThreshold.ToString("F3", CultureInfo.InvariantCulture)</div></div>
+            <div class="col-md-3"><div class="small text-muted">Similarity thresholds</div><div>interaction: @cfg.PlatformDefaults.SimilarityThresholdInteraction.ToString("F3", CultureInfo.InvariantCulture), known: @cfg.PlatformDefaults.SimilarityThresholdKnown.ToString("F3", CultureInfo.InvariantCulture)</div></div>
+        </div>
+        <hr class="my-2" />
+        <div class="row">
+            <div class="col-md-4"><div class="small text-muted">Rule bonus</div><div>all-models-pass: @cfg.RuleBonus.AllModelsPassBonus, interaction: @cfg.RuleBonus.InteractionBonus, known: @cfg.RuleBonus.KnownCompoundBonus</div></div>
+            <div class="col-md-4"><div class="small text-muted">Priority weights</div><div>docking: @cfg.PriorityWeights.DockingWeight, similarity: @cfg.PriorityWeights.SimilarityWeight, consistency: @cfg.PriorityWeights.ConsistencyWeight, ruleBonus: @cfg.PriorityWeights.RuleBonusWeight</div></div>
+            <div class="col-md-4"><div class="small text-muted">Analysis/plot params</div><div>highPriorityStd: @cfg.AnalysisParams.HighPriorityStdThreshold.ToString("F2", CultureInfo.InvariantCulture), moderateDocking: @cfg.AnalysisParams.ModerateDockingThreshold.ToString("F2", CultureInfo.InvariantCulture), moderateSimilarity: @cfg.AnalysisParams.ModerateSimilarityThreshold.ToString("F2", CultureInfo.InvariantCulture), scatterBase: @cfg.PlotParams.ScatterSizeBase.ToString("F1", CultureInfo.InvariantCulture), scatterScale: @cfg.PlotParams.ScatterSizeScale.ToString("F1", CultureInfo.InvariantCulture)</div></div>
+        </div>
+        <div class="small text-muted mt-2">This summary is sourced from the current AppliedConfig and is the same config used by charts, Top N/group tables, and CSV exports.</div>
+    </div>
+</div>
+
 <form method="post" asp-controller="Job" asp-action="Analytics" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" class="card card-body mb-4">
     <div class="row">
         <div class="col-md-2"><label class="small">Top N</label><input class="form-control form-control-sm" type="number" name="analysisParams.topN" min="1" value="@cfg.AnalysisParams.TopN" /></div>
@@ -80,7 +107,41 @@
         <div class="col-md-2"><label class="small">Similarity known</label><input class="form-control form-control-sm" type="number" step="0.01" name="platformDefaults.similarityThresholdKnown" value="@cfg.PlatformDefaults.SimilarityThresholdKnown.ToString(CultureInfo.InvariantCulture)" /></div>
         <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary btn-block">Run Analysis</button></div>
     </div>
-    @foreach (var kv in routeConfig.Where(k => !new[] { "analysisParams.topN", "analysisParams.aggregateMethod", "platformDefaults.dockingThreshold", "platformDefaults.similarityThresholdInteraction", "platformDefaults.similarityThresholdKnown" }.Contains(k.Key)))
+    <div class="row mt-2">
+        <div class="col-md-2"><label class="small">Bonus all-models-pass</label><input class="form-control form-control-sm" type="number" step="1" name="ruleBonus.allModelsPassBonus" value="@cfg.RuleBonus.AllModelsPassBonus.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Bonus interaction</label><input class="form-control form-control-sm" type="number" step="1" name="ruleBonus.interactionBonus" value="@cfg.RuleBonus.InteractionBonus.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Bonus known</label><input class="form-control form-control-sm" type="number" step="1" name="ruleBonus.knownCompoundBonus" value="@cfg.RuleBonus.KnownCompoundBonus.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">High priority max std</label><input class="form-control form-control-sm" type="number" step="0.05" name="analysisParams.highPriorityStdThreshold" value="@cfg.AnalysisParams.HighPriorityStdThreshold.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Weight docking</label><input class="form-control form-control-sm" type="number" step="1" name="priorityWeights.dockingWeight" value="@cfg.PriorityWeights.DockingWeight.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Weight similarity</label><input class="form-control form-control-sm" type="number" step="1" name="priorityWeights.similarityWeight" value="@cfg.PriorityWeights.SimilarityWeight.ToString(CultureInfo.InvariantCulture)" /></div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-2"><label class="small">Weight consistency</label><input class="form-control form-control-sm" type="number" step="1" name="priorityWeights.consistencyWeight" value="@cfg.PriorityWeights.ConsistencyWeight.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Weight rule bonus</label><input class="form-control form-control-sm" type="number" step="1" name="priorityWeights.ruleBonusWeight" value="@cfg.PriorityWeights.RuleBonusWeight.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Moderate docking</label><input class="form-control form-control-sm" type="number" step="0.1" name="analysisParams.moderateDockingThreshold" value="@cfg.AnalysisParams.ModerateDockingThreshold.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Moderate similarity</label><input class="form-control form-control-sm" type="number" step="0.01" name="analysisParams.moderateSimilarityThreshold" value="@cfg.AnalysisParams.ModerateSimilarityThreshold.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Scatter size base</label><input class="form-control form-control-sm" type="number" step="1" name="plotParams.scatterSizeBase" value="@cfg.PlotParams.ScatterSizeBase.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Scatter size scale</label><input class="form-control form-control-sm" type="number" step="0.1" name="plotParams.scatterSizeScale" value="@cfg.PlotParams.ScatterSizeScale.ToString(CultureInfo.InvariantCulture)" /></div>
+    </div>
+    @foreach (var kv in routeConfig.Where(k => !new[] {
+                "analysisParams.topN",
+                "analysisParams.aggregateMethod",
+                "platformDefaults.dockingThreshold",
+                "platformDefaults.similarityThresholdInteraction",
+                "platformDefaults.similarityThresholdKnown",
+                "ruleBonus.allModelsPassBonus",
+                "ruleBonus.interactionBonus",
+                "ruleBonus.knownCompoundBonus",
+                "priorityWeights.dockingWeight",
+                "priorityWeights.similarityWeight",
+                "priorityWeights.consistencyWeight",
+                "priorityWeights.ruleBonusWeight",
+                "analysisParams.highPriorityStdThreshold",
+                "analysisParams.moderateDockingThreshold",
+                "analysisParams.moderateSimilarityThreshold",
+                "plotParams.scatterSizeBase",
+                "plotParams.scatterSizeScale"
+             }.Contains(k.Key)))
     {
         <input type="hidden" name="@kv.Key" value="@kv.Value" />
     }
@@ -90,9 +151,12 @@
     <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Docking distribution</div><div class="card-body"><canvas id="chart-docking"></canvas></div></div></div>
     <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Similarity distribution</div><div class="card-body"><canvas id="chart-similarity"></canvas></div></div></div>
     <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Top candidates bar</div><div class="card-body"><canvas id="chart-top-bar"></canvas></div></div></div>
-    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Model boxplot</div><div class="card-body"><canvas id="chart-boxplot"></canvas></div></div></div>
+    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Model boxplot</div><div class="card-body"><canvas id="chart-boxplot"></canvas><div class="small text-muted mt-2">Temporary pseudo-boxplot; planned migration to a true boxplot chart component/plugin.</div></div></div></div>
     <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Priority scatter</div><div class="card-body"><canvas id="chart-priority-scatter"></canvas></div></div></div>
-    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Model correlation heatmap</div><div class="card-body"><div id="chart-heatmap" class="table-responsive"></div></div></div></div>
+    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Model correlation heatmap</div><div class="card-body"><div id="chart-heatmap" class="table-responsive"></div><div class="small text-muted mt-2">Table-based fallback heatmap; planned migration to a dedicated heatmap chart implementation.</div></div></div></div>
+</div>
+<div class="alert alert-light border small">
+    <strong>Stage 3 plan:</strong> upgrade boxplot/heatmap to dedicated chart components first; then consider AJAX partial recompute and cross-chart/table interactions.
 </div>
 
 <h3>Top N Candidates</h3>
@@ -165,8 +229,8 @@
 </div>
 
 <div class="mt-4">
-    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReport" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" asp-all-route-data="routeConfig">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
-    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReportFull" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" asp-all-route-data="routeConfig">Download Full Analysis CSV <i class="fa fa-download"></i></a>
+    <a class="btn btn-outline-primary" href="@summaryReportUrl">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
+    <a class="btn btn-outline-primary" href="@fullReportUrl">Download Full Analysis CSV <i class="fa fa-download"></i></a>
 </div>
 
 @section Menu {
@@ -193,31 +257,100 @@
             if (!window.Chart) return;
 
             const to2 = v => (typeof v === "number" ? v.toFixed(2) : "N/A");
-            const classColor = c => c === "High" ? "#d9534f" : c === "Moderate" ? "#f0ad4e" : "#5bc0de";
+            const priorityClassToGroup = (point) => {
+                if (point.PassSimilarityKnown ?? point.passSimilarityKnown) return "known-like";
+                if (point.PassSimilarityInteraction ?? point.passSimilarityInteraction) return "interaction-pass";
+                const c = (point.CandidateClass ?? point.candidateClass ?? "").toLowerCase();
+                if (c === "high") return "high";
+                if (c === "moderate") return "moderate";
+                return "low";
+            };
+            const groupColor = {
+                "known-like": "#7c3aed",
+                "interaction-pass": "#0f766e",
+                "high": "#dc2626",
+                "moderate": "#f59e0b",
+                "low": "#2563eb"
+            };
             const get = (obj, pascal, camel) => obj?.[pascal] ?? obj?.[camel];
+            const pluginId = "analytics-threshold-lines";
+            const thresholdLinePlugin = {
+                id: pluginId,
+                afterDatasetsDraw(chart, args, pluginOptions) {
+                    const lines = pluginOptions?.lines || [];
+                    const min = pluginOptions?.min;
+                    const max = pluginOptions?.max;
+                    if (!lines.length || typeof min !== "number" || typeof max !== "number" || min === max) return;
+                    const { left, right, top, bottom } = chart.chartArea || {};
+                    if (left === undefined) return;
+                    const ctx = chart.ctx;
+                    lines.forEach((line) => {
+                        if (typeof line.value !== "number") return;
+                        const ratio = (line.value - min) / (max - min);
+                        const x = left + ratio * (right - left);
+                        if (x < left || x > right) return;
+                        ctx.save();
+                        ctx.strokeStyle = line.color || "#111";
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([6, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(x, top);
+                        ctx.lineTo(x, bottom);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = line.color || "#111";
+                        ctx.font = "11px sans-serif";
+                        if (line.label) ctx.fillText(line.label, x + 4, top + 12);
+                        ctx.restore();
+                    });
+                }
+            };
+            Chart.register(thresholdLinePlugin);
+
+            const buildHistogramOptions = (histogram) => {
+                const xAxisTitle = get(histogram, "XAxisTitle", "xAxisTitle");
+                const yAxisTitle = get(histogram, "YAxisTitle", "yAxisTitle");
+                return {
+                    scales: {
+                        x: { title: { display: !!xAxisTitle, text: xAxisTitle || "" } },
+                        y: { title: { display: !!yAxisTitle, text: yAxisTitle || "" } }
+                    },
+                    plugins: {
+                        [pluginId]: {
+                            lines: get(histogram, "ThresholdLines", "thresholdLines") || [],
+                            min: get(histogram, "Min", "min"),
+                            max: get(histogram, "Max", "max")
+                        }
+                    }
+                };
+            };
+
+            const dockingFigure = get(fig, "DockingDistribution", "dockingDistribution") || {};
 
             new Chart(document.getElementById("chart-docking"), {
                 type: "bar",
                 data: {
-                    labels: get(get(fig, "DockingDistribution", "dockingDistribution"), "Labels", "labels") || [],
+                    labels: get(dockingFigure, "Labels", "labels") || [],
                     datasets: [{
                         label: "Count",
-                        data: get(get(fig, "DockingDistribution", "dockingDistribution"), "Counts", "counts") || [],
+                        data: get(dockingFigure, "Counts", "counts") || [],
                         backgroundColor: "#4e79a7"
                     }]
-                }
+                },
+                options: buildHistogramOptions(dockingFigure)
             });
-
+            const similarityFigure = get(fig, "SimilarityDistribution", "similarityDistribution") || {};
             new Chart(document.getElementById("chart-similarity"), {
                 type: "bar",
                 data: {
-                    labels: get(get(fig, "SimilarityDistribution", "similarityDistribution"), "Labels", "labels") || [],
+                    labels: get(similarityFigure, "Labels", "labels") || [], 
                     datasets: [{
                         label: "Count",
-                        data: get(get(fig, "SimilarityDistribution", "similarityDistribution"), "Counts", "counts") || [],
+                        data: get(similarityFigure, "Counts", "counts") || [], 
                         backgroundColor: "#59a14f"
                     }]
-                }
+                },
+                options: buildHistogramOptions(similarityFigure)
             });
 
             new Chart(document.getElementById("chart-top-bar"), {
@@ -246,16 +379,68 @@
                 options: { plugins: { tooltip: { callbacks: { afterBody: (ctx) => { const i = ctx[0].dataIndex; const b = box[i]; return [`min ${to2(b.Min ?? b.min)}`, `median ${to2(b.Median ?? b.median)}`, `max ${to2(b.Max ?? b.max)}`]; } } } } }
             });
 
+            const priorityPoints = get(get(fig, "PriorityScatter", "priorityScatter"), "Points", "points") || [];
+            const groupedPoints = priorityPoints.reduce((acc, p) => {
+                const key = priorityClassToGroup(p);
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(p);
+                return acc;
+            }, {});
+
             new Chart(document.getElementById("chart-priority-scatter"), {
                 type: "bubble",
                 data: {
-                    datasets: (get(get(fig, "PriorityScatter", "priorityScatter"), "Points", "points") || []).map(p => ({
-                        label: p.Label ?? p.label,
-                        data: [{ x: p.X ?? p.x, y: p.Y ?? p.y, r: Math.max(3, Math.sqrt(((p.Size ?? p.size) || 1) / 2)) }],
-                        backgroundColor: classColor(p.CandidateClass ?? p.candidateClass)
+                    datasets: Object.entries(groupedPoints).map(([groupName, points]) => ({
+                        label: groupName,
+                        data: points.map((p) => ({
+                            x: p.X ?? p.x,
+                            y: p.Y ?? p.y,
+                            r: Math.max(3, Math.sqrt(((p.Size ?? p.size) || 1) / 2)),
+                            rawPoint: p
+                        })),
+                        backgroundColor: groupColor[groupName] || "#6b7280",
+                        borderColor: (ctx) => {
+                            const rp = ctx.raw?.rawPoint || {};
+                            const rank = rp.PriorityRank ?? rp.priorityRank;
+                            return (typeof rank === "number" && rank > 0 && rank <= (payload.AppliedConfig?.AnalysisParams?.TopN ?? payload.appliedConfig?.analysisParams?.topN ?? 10))
+                                ? "#111111"
+                                : "#374151";
+                        },
+                        borderWidth: (ctx) => {
+                            const rp = ctx.raw?.rawPoint || {};
+                            const rank = rp.PriorityRank ?? rp.priorityRank;
+                            return (typeof rank === "number" && rank > 0 && rank <= (payload.AppliedConfig?.AnalysisParams?.TopN ?? payload.appliedConfig?.analysisParams?.topN ?? 10))
+                                ? 2.2
+                                : 1;
+                        }
                     }))
                 },
-                options: { scales: { x: { title: { display: true, text: "Docking (aggregate)" } }, y: { min: 0, max: 1, title: { display: true, text: "Similarity" } } } }
+                options: {
+                    scales: {
+                        x: { title: { display: true, text: "Docking (aggregate)" } },
+                        y: { min: 0, max: 1, title: { display: true, text: "Similarity" } }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const rawPoint = items?.[0]?.raw?.rawPoint || {};
+                                    return rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "Candidate";
+                                },
+                                label: (ctx) => {
+                                    const rawPoint = ctx.raw?.rawPoint || {};
+                                    return [
+                                        `protein: ${rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "N/A"}`,
+                                        `docking: ${to2(rawPoint.Docking ?? rawPoint.docking ?? rawPoint.X ?? rawPoint.x)}`,
+                                        `similarity: ${to2(rawPoint.Similarity ?? rawPoint.similarity ?? rawPoint.Y ?? rawPoint.y)}`,
+                                        `priority: ${to2(rawPoint.Priority ?? rawPoint.priority)}`,
+                                        `class: ${priorityClassToGroup(rawPoint)}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
             const heatmapEl = document.getElementById("chart-heatmap");

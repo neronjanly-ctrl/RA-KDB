@@ -692,7 +692,10 @@ public class JobAnalyticsService : IJobAnalyticsService
     private static JobAnalyticsSummary BuildSummary(string domainId, Job job, List<JobAnalyticsRow> rows, JobAnalyticsConfig config)
     {
         List<JobAnalyticsRow> analyzable = rows.Where(o => o.IsAnalyzable).ToList();
-        List<float> docking = analyzable.Where(o => o.DockingEffectiveScore.HasValue).Select(o => o.DockingEffectiveScore.Value).OrderBy(o => o).ToList();
+        List<float> docking = analyzable
+           .Where(o => o.DockingEffectiveScore.HasValue)
+           .Select(o => o.DockingEffectiveScore!.Value)
+           .ToList();
 
         JobAnalyticsSummary summary = new()
         {
@@ -714,10 +717,6 @@ public class JobAnalyticsService : IJobAnalyticsService
             Figures = BuildFigures(analyzable, config),
         };
 
-        summary.DistributionStats["priority_score"] = analyzable.Select(o => o.PriorityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
-        summary.DistributionStats["docking"] = analyzable.Select(o => o.DockingEffectiveScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
-        summary.DistributionStats["similarity"] = analyzable.Select(o => o.SimilarityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
-
         return summary;
     }
     private static JobAnalyticsFigures BuildFigures(List<JobAnalyticsRow> analyzable, JobAnalyticsConfig config)
@@ -728,23 +727,67 @@ public class JobAnalyticsService : IJobAnalyticsService
 
         return new JobAnalyticsFigures
         {
-            DockingDistribution = BuildHistogram(flattenedDockingScores, 12),
+            DockingDistribution = BuildHistogram(
+                flattenedDockingScores,
+                bins: 12,
+                xAxisTitle: "Docking score",
+                yAxisTitle: "Count",
+                thresholds: new List<HistogramThresholdLine>
+                {
+                    new()
+                    {
+                        Value = config.PlatformDefaults.DockingThreshold,
+                        Label = "Docking threshold",
+                        Color = "#111827"
+                    }
+                }),
             ModelBoxplot = BuildModelBoxplot(analyzable),
-            SimilarityDistribution = BuildHistogram(analyzable.Select(o => o.SimilarityScore), 10),
+            SimilarityDistribution = BuildHistogram(
+                analyzable.Select(o => o.SimilarityScore),
+                bins: 10,
+                xAxisTitle: "Similarity score",
+                yAxisTitle: "Count",
+                thresholds: new List<HistogramThresholdLine>
+                {
+                    new()
+                    {
+                        Value = config.PlatformDefaults.SimilarityThresholdInteraction,
+                        Label = "Interaction threshold",
+                        Color = "#0f766e"
+                    },
+                    new()
+                    {
+                        Value = config.PlatformDefaults.SimilarityThresholdKnown,
+                        Label = "Known threshold",
+                        Color = "#7c3aed"
+                    }
+                }),
             PriorityScatter = BuildPriorityScatter(analyzable, config),
             TopCandidatesBar = BuildTopCandidatesBar(analyzable, config.AnalysisParams.TopN),
             ModelCorrelationHeatmap = BuildCorrelationHeatmap(analyzable),
         };
     }
-    private static HistogramFigure BuildHistogram(IEnumerable<float?> values, int bins)
+    private static HistogramFigure BuildHistogram(
+        IEnumerable<float?> values,
+        int bins,
+        string xAxisTitle,
+        string yAxisTitle,
+        List<HistogramThresholdLine> thresholds = null)
     {
         List<float> numeric = values.Where(o => o.HasValue).Select(o => o!.Value).ToList();
-        HistogramFigure figure = new();
+        HistogramFigure figure = new()
+        {
+            XAxisTitle = xAxisTitle,
+            YAxisTitle = yAxisTitle,
+            ThresholdLines = thresholds ?? new List<HistogramThresholdLine>(),
+        };
         if (numeric.Count == 0 || bins <= 0)
             return figure;
 
         float min = numeric.Min();
         float max = numeric.Max();
+        figure.Min = min;
+        figure.Max = max;
         float range = max - min;
         if (Math.Abs(range) < 0.00001f)
         {
@@ -811,8 +854,14 @@ public class JobAnalyticsService : IJobAnalyticsService
                 Y = o.SimilarityScore,
                 Size = config.PlotParams.ScatterSizeBase + config.PlotParams.ScatterSizeScale * (o.PriorityScore ?? 0) / 100f,
                 Label = o.ProteinSymbol,
+                Protein = o.ProteinSymbol,
                 CandidateClass = o.CandidateClass,
-                Priority = o.PriorityScore
+                Priority = o.PriorityScore,
+                Docking = o.DockingEffectiveScore,
+                Similarity = o.SimilarityScore,
+                PriorityRank = o.PriorityRank,
+                PassSimilarityInteraction = o.PassSimilarityInteraction,
+                PassSimilarityKnown = o.PassSimilarityKnown,
             }).ToList()
         };
     }

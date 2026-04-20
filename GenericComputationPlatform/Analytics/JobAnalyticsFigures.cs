@@ -16,6 +16,18 @@ public class HistogramFigure
 {
     public List<string> Labels { get; set; } = new();
     public List<int> Counts { get; set; } = new();
+    public string XAxisTitle { get; set; }
+    public string YAxisTitle { get; set; }
+    public float? Min { get; set; }
+    public float? Max { get; set; }
+    public List<HistogramThresholdLine> ThresholdLines { get; set; } = new();
+}
+
+public class HistogramThresholdLine
+{
+    public float Value { get; set; }
+    public string Label { get; set; }
+    public string Color { get; set; }
 }
 
 public class ModelBoxplotFigure
@@ -44,8 +56,14 @@ public class PriorityScatterPoint
     public float? Y { get; set; }
     public float Size { get; set; }
     public string Label { get; set; }
+    public string Protein { get; set; }
     public string CandidateClass { get; set; }
     public float? Priority { get; set; }
+    public float? Docking { get; set; }
+    public float? Similarity { get; set; }
+    public int? PriorityRank { get; set; }
+    public bool PassSimilarityInteraction { get; set; }
+    public bool PassSimilarityKnown { get; set; }
 }
 
 public class TopCandidatesBarFigure
