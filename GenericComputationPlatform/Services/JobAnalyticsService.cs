@@ -1,0 +1,772 @@
+using CommonTools;
+using DockingApiClient;
+using DockingDataModels;
+using GenericComputationPlatform.Analytics;
+using GenericComputationPlatform.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Routing;
+
+namespace GenericComputationPlatform.Services;
+
+public class JobAnalyticsService : IJobAnalyticsService
+{
+    private readonly JobClient _jobClient;
+    private readonly ResultClient _resultClient;
+    private readonly AppSettings _appSettings;
+    private readonly LinkGenerator _linkGenerator;
+
+    public JobAnalyticsService(
+        JobClient jobClient,
+        ResultClient resultClient,
+        Microsoft.Extensions.Options.IOptions<AppSettings> appSettings,
+        LinkGenerator linkGenerator)
+    {
+        _jobClient = jobClient;
+        _resultClient = resultClient;
+        _appSettings = appSettings.Value;
+        _linkGenerator = linkGenerator;
+    }
+
+    public async Task<JobAnalyticsSummary> BuildSummaryAsync(string domainId, int jobId, JobAnalyticsConfig config, CancellationToken ct = default)
+    {
+        Job job = await _jobClient.GetOneAsync(jobId);
+        IReadOnlyList<Result> results = await _resultClient.List2Async(jobId);
+
+        JobAnalyticsPolicy policy = new();
+        JobAnalyticsConfig effectiveConfig = ApplyUserParams(config ?? new JobAnalyticsConfig());
+        JobAnalyticsConfigMeta meta = BuildRuntimeConfigMeta();
+        JobAnalyticsValidationResult configValidation = ValidateConfig(effectiveConfig, meta);
+
+        List<JobAnalyticsRow> rows = MapResultsToAnalyticsRows(domainId, job, results, policy);
+        ApplyPolicy(rows, policy);
+        ComputeDerivedFields(rows, effectiveConfig, policy);
+
+        JobAnalyticsSummary summary = BuildSummary(domainId, job, rows, effectiveConfig);
+        JobAnalyticsValidationResult dataValidation = ValidateDataQuality(rows, policy);
+        summary.Validation = new JobAnalyticsValidationResult
+        {
+            IsValid = configValidation.IsValid && dataValidation.IsValid,
+            Errors = configValidation.Errors.Concat(dataValidation.Errors).ToList(),
+            Warnings = configValidation.Warnings.Concat(dataValidation.Warnings).ToList()
+        };
+
+        return summary;
+    }
+
+    public JobAnalyticsConfigMeta BuildRuntimeConfigMeta()
+    {
+        JobAnalyticsConfig defaults = new();
+
+        return new JobAnalyticsConfigMeta
+        {
+            Fields = new List<JobAnalyticsConfigFieldMeta>
+        {
+            new() {
+                Label = "Docking Threshold",
+                Type = "number",
+                Default = defaults.PlatformDefaults.DockingThreshold,
+                Editable = true,
+                Min = -20, Max = 0, Step = 0.1,
+                Group = "platform_defaults",
+                UiComponent = "number",
+                Description = "Docking threshold used in analysis space only.",
+                Path = "platformDefaults.dockingThreshold",
+                PlatformLockedNote = "Platform Spider Plot uses fixed platform thresholds."
+            },
+            new() {
+                Label = "Similarity Threshold (Interaction)",
+                Type = "number",
+                Default = defaults.PlatformDefaults.SimilarityThresholdInteraction,
+                Editable = true,
+                Min = 0, Max = 1, Step = 0.01,
+                Group = "platform_defaults",
+                UiComponent = "slider",
+                Description = "Similarity threshold for interaction candidates.",
+                Path = "platformDefaults.similarityThresholdInteraction",
+                PlatformLockedNote = "Platform Spider Plot uses fixed platform thresholds."
+            },
+            new() {
+                Label = "Similarity Threshold (Known)",
+                Type = "number",
+                Default = defaults.PlatformDefaults.SimilarityThresholdKnown,
+                Editable = true,
+                Min = 0, Max = 1, Step = 0.01,
+                Group = "platform_defaults",
+                UiComponent = "slider",
+                Description = "Similarity threshold for known-like candidates.",
+                Path = "platformDefaults.similarityThresholdKnown",
+                PlatformLockedNote = "Platform Spider Plot uses fixed platform thresholds."
+            },
+
+            new() {
+                Label = "Top N",
+                Type = "integer",
+                Default = defaults.AnalysisParams.TopN,
+                Editable = true,
+                Min = 1, Max = 100, Step = 1,
+                Group = "analysis_params",
+                UiComponent = "number",
+                Description = "Number of top candidates to display/export.",
+                Path = "analysisParams.topN"
+            },
+            new() {
+                Label = "Docking Aggregate Method",
+                Type = "select",
+                Default = defaults.AnalysisParams.AggregateMethod,
+                Editable = true,
+                Group = "analysis_params",
+                UiComponent = "select",
+                Description = "Aggregate method for docking scores.",
+                Path = "analysisParams.aggregateMethod"
+            },
+            new() {
+                Label = "High Priority Max Std",
+                Type = "number",
+                Default = defaults.AnalysisParams.HighPriorityStdThreshold,
+                Editable = true,
+                Min = 0, Max = 5, Step = 0.05,
+                Group = "analysis_params",
+                UiComponent = "number",
+                Description = "Maximum docking std allowed for high-priority style classification.",
+                Path = "analysisParams.highPriorityStdThreshold"
+            },
+            new() {
+                Label = "Moderate Docking Threshold",
+                Type = "number",
+                Default = defaults.AnalysisParams.ModerateDockingThreshold,
+                Editable = true,
+                Min = -20, Max = 0, Step = 0.1,
+                Group = "analysis_params",
+                UiComponent = "number",
+                Description = "Docking threshold used in moderate candidate classification.",
+                Path = "analysisParams.moderateDockingThreshold"
+            },
+            new() {
+                Label = "Moderate Similarity Threshold",
+                Type = "number",
+                Default = defaults.AnalysisParams.ModerateSimilarityThreshold,
+                Editable = true,
+                Min = 0, Max = 1, Step = 0.01,
+                Group = "analysis_params",
+                UiComponent = "slider",
+                Description = "Similarity threshold used in moderate candidate classification.",
+                Path = "analysisParams.moderateSimilarityThreshold"
+            },
+
+            new() {
+                Label = "Bonus: All Models Pass",
+                Type = "number",
+                Default = defaults.RuleBonus.AllModelsPassBonus,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "rule_bonus",
+                UiComponent = "number",
+                Description = "Rule bonus when all valid docking models pass threshold.",
+                Path = "ruleBonus.allModelsPassBonus"
+            },
+            new() {
+                Label = "Bonus: Interaction Pass",
+                Type = "number",
+                Default = defaults.RuleBonus.InteractionBonus,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "rule_bonus",
+                UiComponent = "number",
+                Description = "Rule bonus when similarity passes interaction threshold.",
+                Path = "ruleBonus.interactionBonus"
+            },
+            new() {
+                Label = "Bonus: Known Pass",
+                Type = "number",
+                Default = defaults.RuleBonus.KnownCompoundBonus,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "rule_bonus",
+                UiComponent = "number",
+                Description = "Rule bonus when similarity passes known threshold.",
+                Path = "ruleBonus.knownCompoundBonus"
+            },
+
+            new() {
+                Label = "Weight: Docking",
+                Type = "number",
+                Default = defaults.PriorityWeights.DockingWeight,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "priority_weights",
+                UiComponent = "slider",
+                Description = "Weight of docking contribution in priority score.",
+                Path = "priorityWeights.dockingWeight"
+            },
+            new() {
+                Label = "Weight: Similarity",
+                Type = "number",
+                Default = defaults.PriorityWeights.SimilarityWeight,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "priority_weights",
+                UiComponent = "slider",
+                Description = "Weight of similarity contribution in priority score.",
+                Path = "priorityWeights.similarityWeight"
+            },
+            new() {
+                Label = "Weight: Consistency",
+                Type = "number",
+                Default = defaults.PriorityWeights.ConsistencyWeight,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "priority_weights",
+                UiComponent = "slider",
+                Description = "Weight of consistency contribution in priority score.",
+                Path = "priorityWeights.consistencyWeight"
+            },
+            new() {
+                Label = "Weight: Rule Bonus",
+                Type = "number",
+                Default = defaults.PriorityWeights.RuleBonusWeight,
+                Editable = true,
+                Min = 0, Max = 100, Step = 1,
+                Group = "priority_weights",
+                UiComponent = "slider",
+                Description = "Weight of rule-bonus contribution in priority score.",
+                Path = "priorityWeights.ruleBonusWeight"
+            },
+
+            new() {
+                Label = "Scatter Size Base",
+                Type = "number",
+                Default = defaults.PlotParams.ScatterSizeBase,
+                Editable = true,
+                Min = 1, Max = 200, Step = 1,
+                Group = "plot_params",
+                UiComponent = "number",
+                Description = "Base size for scatter plot markers.",
+                Path = "plotParams.scatterSizeBase",
+                PlatformLockedNote = "Analytics params do not affect Spider Plot logic."
+            },
+            new() {
+                Label = "Scatter Size Scale",
+                Type = "number",
+                Default = defaults.PlotParams.ScatterSizeScale,
+                Editable = true,
+                Min = 0, Max = 20, Step = 0.1,
+                Group = "plot_params",
+                UiComponent = "number",
+                Description = "Priority-score-to-marker-size scale.",
+                Path = "plotParams.scatterSizeScale",
+                PlatformLockedNote = "Analytics params do not affect Spider Plot logic."
+            }
+        }
+        };
+    }
+    public JobAnalyticsConfig ApplyUserParams(JobAnalyticsConfig config)
+    {
+        config ??= new JobAnalyticsConfig();
+
+        config.AnalysisParams.AggregateMethod =
+            (config.AnalysisParams.AggregateMethod ?? "mean").Trim().ToLowerInvariant();
+
+        if (config.AnalysisParams.AggregateMethod != "mean" &&
+            config.AnalysisParams.AggregateMethod != "median" &&
+            config.AnalysisParams.AggregateMethod != "min")
+        {
+            config.AnalysisParams.AggregateMethod = "mean";
+        }
+
+        if (config.AnalysisParams.TopN < 1)
+            config.AnalysisParams.TopN = 1;
+
+        if (config.AnalysisParams.HighPriorityStdThreshold < 0)
+            config.AnalysisParams.HighPriorityStdThreshold = 0.5f;
+
+        if (config.AnalysisParams.ModerateSimilarityThreshold < 0)
+            config.AnalysisParams.ModerateSimilarityThreshold = 0;
+        if (config.AnalysisParams.ModerateSimilarityThreshold > 1)
+            config.AnalysisParams.ModerateSimilarityThreshold = 1;
+
+        if (config.PlatformDefaults.SimilarityThresholdInteraction < 0)
+            config.PlatformDefaults.SimilarityThresholdInteraction = 0;
+        if (config.PlatformDefaults.SimilarityThresholdInteraction > 1)
+            config.PlatformDefaults.SimilarityThresholdInteraction = 1;
+
+        if (config.PlatformDefaults.SimilarityThresholdKnown < 0)
+            config.PlatformDefaults.SimilarityThresholdKnown = 0;
+        if (config.PlatformDefaults.SimilarityThresholdKnown > 1)
+            config.PlatformDefaults.SimilarityThresholdKnown = 1;
+
+        return config;
+    }
+
+    public JobAnalyticsValidationResult ValidateConfig(JobAnalyticsConfig config, JobAnalyticsConfigMeta meta)
+    {
+        JobAnalyticsValidationResult validation = new();
+
+        if (config.PlatformDefaults.SimilarityThresholdKnown < config.PlatformDefaults.SimilarityThresholdInteraction)
+            validation.Errors.Add("Similarity known threshold must be >= interaction threshold.");
+
+        if (config.AnalysisParams.TopN < 1)
+            validation.Errors.Add("TopN must be >= 1.");
+
+        if (config.AnalysisParams.HighPriorityStdThreshold < 0)
+            validation.Errors.Add("HighPriorityStdThreshold must be >= 0.");
+
+        if (config.AnalysisParams.ModerateSimilarityThreshold < 0 || config.AnalysisParams.ModerateSimilarityThreshold > 1)
+            validation.Errors.Add("ModerateSimilarityThreshold must be in [0,1].");
+
+        float weightSum =
+            config.PriorityWeights.DockingWeight +
+            config.PriorityWeights.SimilarityWeight +
+            config.PriorityWeights.ConsistencyWeight +
+            config.PriorityWeights.RuleBonusWeight;
+
+        if (Math.Abs(weightSum) < 0.0001f)
+            validation.Errors.Add("Priority weight sum must not be 0.");
+        else if (Math.Abs(weightSum - 100.0f) > 0.0001f)
+            validation.Warnings.Add($"Priority weight sum is {weightSum:F2}; recommended total is 100.");
+
+        if (config.RuleBonus.InteractionBonus < 0 ||
+            config.RuleBonus.KnownCompoundBonus < 0 ||
+            config.RuleBonus.AllModelsPassBonus < 0)
+        {
+            validation.Errors.Add("Rule bonus values must be >= 0.");
+        }
+
+        if (config.PlotParams.ScatterSizeBase <= 0)
+            validation.Errors.Add("ScatterSizeBase must be > 0.");
+
+        if (config.PlotParams.ScatterSizeScale < 0)
+            validation.Errors.Add("ScatterSizeScale must be >= 0.");
+
+        validation.IsValid = validation.Errors.Count == 0;
+        return validation;
+    }
+
+    public JobAnalyticsValidationResult ValidateDataQuality(IReadOnlyCollection<JobAnalyticsRow> rows, JobAnalyticsPolicy policy)
+    {
+        int missingDocking = rows.Count(o => o.ExclusionReasons.Contains("Missing docking score"));
+        int missingSimilarity = rows.Count(o => o.ExclusionReasons.Contains("Missing similarity score"));
+        int analyzable = rows.Count(o => o.IsAnalyzable);
+
+        JobAnalyticsValidationResult validation = new JobAnalyticsValidationResult
+        {
+            IsValid = analyzable > 0,
+            Errors = new List<string>(),
+            Warnings = new List<string>()
+        };
+
+        validation.Warnings.Add($"Rows with missing docking score: {missingDocking}");
+        validation.Warnings.Add($"Rows with missing similarity score: {missingSimilarity}");
+        validation.Warnings.Add($"Analyzable rows: {analyzable}");
+
+        if (analyzable == 0)
+            validation.Errors.Add("No analyzable rows found.");
+
+        return validation;
+    }
+
+    public object BuildFrontendPayload(JobAnalyticsSummary summary, JobAnalyticsConfigMeta meta)
+    {
+        return new
+        {
+            summary.TotalRows,
+            summary.AnalyzableRows,
+            summary.ExcludedByMissingDocking,
+            summary.ExcludedByMissingSimilarity,
+            summary.MeanDocking,
+            summary.MedianDocking,
+            summary.HighPriorityCount,
+            summary.TopCandidates,
+            summary.GroupedByProtein,
+            summary.GroupedByGene,
+            summary.GroupedByLigand,
+            summary.Validation,
+            summary.AppliedConfig,
+            ConfigMeta = meta,
+            Notice = "Analysis Space parameters affect only analytics results and exports. They do not affect platform Spider Plot logic."
+        };
+    }
+
+    public string BuildSummaryCsv(JobAnalyticsSummary summary)
+    {
+        List<string[]> rows = new()
+    {
+        new [] { "Metric", "Value" },
+        new [] { "Total rows", summary.TotalRows.ToString(CultureInfo.InvariantCulture) },
+        new [] { "Analyzable rows", summary.AnalyzableRows.ToString(CultureInfo.InvariantCulture) },
+        new [] { "Excluded by missing docking", summary.ExcludedByMissingDocking.ToString(CultureInfo.InvariantCulture) },
+        new [] { "Excluded by missing similarity", summary.ExcludedByMissingSimilarity.ToString(CultureInfo.InvariantCulture) },
+        new [] { "Mean docking", summary.MeanDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A" },
+        new [] { "Median docking", summary.MedianDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A" },
+        new [] { "High priority count", summary.HighPriorityCount.ToString(CultureInfo.InvariantCulture) },
+        new [] { "Applied docking threshold", summary.AppliedConfig.PlatformDefaults.DockingThreshold.ToString("F3", CultureInfo.InvariantCulture) },
+        new [] { "Applied interaction threshold", summary.AppliedConfig.PlatformDefaults.SimilarityThresholdInteraction.ToString("F3", CultureInfo.InvariantCulture) },
+        new [] { "Applied known threshold", summary.AppliedConfig.PlatformDefaults.SimilarityThresholdKnown.ToString("F3", CultureInfo.InvariantCulture) },
+        new [] { "Applied aggregate method", summary.AppliedConfig.AnalysisParams.AggregateMethod },
+        new [] { "" , "" },
+        new [] { "Top Candidates" , "" },
+        new [] { "Ligand", "Protein", "Gene", "Docking Aggregate", "Similarity", "Priority Score", "Candidate Class" }
+    };
+
+        rows.AddRange(summary.TopCandidates.Select(o => new[]
+        {
+        o.LigandName,
+        o.ProteinSymbol,
+        o.GeneSymbol,
+        o.DockingEffectiveScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+        o.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+        o.PriorityScore?.ToString("F2", CultureInfo.InvariantCulture) ?? "N/A",
+        o.CandidateClass ?? "N/A"
+    }));
+
+        return string.Join(Environment.NewLine, CsvHelper.FormatCsvRows(rows));
+    }
+
+    public string BuildFullAnalysisCsv(JobAnalyticsSummary summary)
+    {
+        int maxModelCount = summary.Rows.Count == 0 ? 0 : summary.Rows.Max(o => o.DockingScores.Count);
+        List<string> headers = new()
+        {
+            "Ligand",
+            "SMILES",
+            "Protein Symbol",
+            "Gene Symbol",
+            "Similarity Score",
+            "Prediction Result",
+            "Prediction Confidence",
+            "IsAnalyzable",
+            "ExclusionReasons",
+            "DockingMean",
+            "DockingMedian",
+            "DockingMin",
+            "DockingMax",
+            "DockingStd",
+            "DockingRange",
+            "ModelsPassingDockingCount",
+            "AllModelsPassDocking",
+            "AnyModelPassDocking",
+            "PassDockingEffective",
+            "PassSimilarityInteraction",
+            "PassSimilarityKnown",
+            "DockingEffectiveScore",
+            "SimilarityScoreNorm",
+            "ConsistencyScore",
+            "RuleBonusRaw",
+            "RuleBonusNorm",
+            "PriorityScore",
+            "PriorityRank",
+            "CandidateClass",
+            "Compare Url",
+            "Source Url"
+        };
+
+        headers.AddRange(Enumerable.Range(1, maxModelCount).Select(o => $"Docking Score Model {o}"));
+
+        IEnumerable<IEnumerable<string>> content = summary.Rows.Select(o =>
+        {
+            List<string> row = new()
+            {
+                o.LigandName,
+                o.LigandSmiles,
+                o.ProteinSymbol,
+                o.GeneSymbol,
+                o.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.PredictionResult,
+                o.PredictionConfidence,
+                o.IsAnalyzable ? "true" : "false",
+                string.Join(" | ", o.ExclusionReasons),
+                o.DockingMean?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.DockingMedian?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.DockingMin?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.DockingMax?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.DockingStd?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.DockingRange?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.ModelsPassingDockingCount.ToString(CultureInfo.InvariantCulture),
+                o.AllModelsPassDocking ? "true" : "false",
+                o.AnyModelPassDocking ? "true" : "false",
+                o.PassDockingEffective ? "true" : "false",
+                o.PassSimilarityInteraction ? "true" : "false",
+                o.PassSimilarityKnown ? "true" : "false",
+                o.DockingEffectiveScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.SimilarityScoreNorm?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.ConsistencyScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.RuleBonusRaw.ToString("F3", CultureInfo.InvariantCulture),
+                o.RuleBonusNorm.ToString("F3", CultureInfo.InvariantCulture),
+                o.PriorityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
+                o.PriorityRank?.ToString(CultureInfo.InvariantCulture) ?? "N/A",
+                o.CandidateClass,
+                o.CompareUrl,
+                o.SourceUrl,
+            };
+
+            row.AddRange(Enumerable.Range(0, maxModelCount).Select(i => i < o.DockingScores.Count && o.DockingScores[i].HasValue
+                ? o.DockingScores[i]!.Value.ToString("F3", CultureInfo.InvariantCulture)
+                : "N/A"));
+
+            return row;
+        });
+
+        return string.Join(Environment.NewLine, CsvHelper.FormatCsvRows(content, headers));
+    }
+
+    private List<JobAnalyticsRow> MapResultsToAnalyticsRows(string domainId, Job job, IReadOnlyList<Result> results, JobAnalyticsPolicy policy)
+    {
+        string hosting = _appSettings.ExternalUrls.Hosting.TrimEnd('/');
+
+        return results.Select(o =>
+        {
+            SimilarChemblCompound compound = o.MostSimilarCompound;
+            bool hasValidSimilarity = compound != null && compound.Activity != BioActivity.Unknown;
+
+            string comparePath = _linkGenerator.GetPathByAction(
+                action: "Compare",
+                controller: "Job",
+                values: new
+                {
+                    domainId,
+                    jobId = job.Id,
+                    cavityId = o.CavityId.StringifyId(),
+                    ligandId = o.LigandId.StringifyId()
+                }) ?? string.Empty;
+
+            string sourcePath = _linkGenerator.GetPathByAction(
+                action: "JobDetails",
+                controller: "Protein",
+                values: new
+                {
+                    domainId,
+                    jobId = job.Id,
+                    cavityId = o.CavityId.StringifyId()
+                }) ?? string.Empty;
+
+            return new JobAnalyticsRow
+            {
+                LigandName = job.JobLigands.First(p => p.LigandId == o.LigandId).LigandName,
+                LigandSmiles = o.Ligand.Smiles,
+                ProteinSymbol = o.Cavity.Protein.ProteinSymbol,
+                GeneSymbol = o.Cavity.Protein.GeneSymbol,
+                OrganismSymbol = o.Cavity.Protein.OrganismSymbol,
+                ApprovedName = o.Cavity.Protein.ProteinName,
+                Organism = o.Cavity.Protein.Organism,
+                Synonyms = string.Join(',', o.Cavity.Protein.Properties.Synonyms),
+                DockingScores = o.DockingScores?.ToList() ?? new List<float?>(),
+                SimilarityScore = hasValidSimilarity ? compound.Similarity : null,
+                BestMatchId = hasValidSimilarity ? compound.Id : null,
+                BestMatchUrl = hasValidSimilarity ? compound.Url : null,
+                BestMatchSmiles = hasValidSimilarity ? compound.Smiles : null,
+                CompareUrl = string.IsNullOrWhiteSpace(comparePath) ? null : hosting + comparePath,
+                SourceUrl = string.IsNullOrWhiteSpace(sourcePath) ? null : hosting + sourcePath,
+                PredictionResult = o.GetFormattedActivity(),
+                PredictionConfidence = o.GetFormattedConfidenceLevel(),
+            };
+        }).ToList();
+    }
+
+    private static void ApplyPolicy(List<JobAnalyticsRow> rows, JobAnalyticsPolicy policy)
+    {
+        foreach (JobAnalyticsRow row in rows)
+        {
+            bool hasValidDocking = row.DockingScores.Any(v => v.HasValue);
+            bool hasValidSimilarity = row.SimilarityScore.HasValue;
+
+            row.IsAnalyzable = true;
+            row.ExclusionReasons.Clear();
+
+            if (policy.Docking.ExcludeWhenAllMissing && !hasValidDocking)
+            {
+                row.IsAnalyzable = false;
+                row.ExclusionReasons.Add("Missing docking score");
+            }
+
+            if (policy.Similarity.ExcludeFromScoringWhenMissing && !hasValidSimilarity)
+            {
+                row.IsAnalyzable = false;
+                row.ExclusionReasons.Add("Missing similarity score");
+            }
+        }
+    }
+
+    private static void ComputeDerivedFields(List<JobAnalyticsRow> rows, JobAnalyticsConfig config, JobAnalyticsPolicy policy)
+    {
+        float weightSum =
+            config.PriorityWeights.DockingWeight +
+            config.PriorityWeights.SimilarityWeight +
+            config.PriorityWeights.ConsistencyWeight +
+            config.PriorityWeights.RuleBonusWeight;
+
+        float dockingWeight = weightSum <= 0 ? 0 : config.PriorityWeights.DockingWeight / weightSum;
+        float similarityWeight = weightSum <= 0 ? 0 : config.PriorityWeights.SimilarityWeight / weightSum;
+        float consistencyWeight = weightSum <= 0 ? 0 : config.PriorityWeights.ConsistencyWeight / weightSum;
+        float ruleBonusWeight = weightSum <= 0 ? 0 : config.PriorityWeights.RuleBonusWeight / weightSum;
+
+        float maxBonus =
+            config.RuleBonus.AllModelsPassBonus +
+            config.RuleBonus.InteractionBonus +
+            config.RuleBonus.KnownCompoundBonus;
+
+        foreach (JobAnalyticsRow row in rows)
+        {
+            List<float> docking = row.DockingScores.Where(v => v.HasValue).Select(v => v.Value).ToList();
+
+            if (docking.Count > 0)
+            {
+                row.DockingMean = docking.Average();
+                row.DockingMedian = GetMedian(docking);
+                row.DockingMin = docking.Min();
+                row.DockingMax = docking.Max();
+                row.DockingRange = row.DockingMax - row.DockingMin;
+
+                float mean = row.DockingMean.Value;
+                row.DockingStd = (float)Math.Sqrt(docking.Average(v => Math.Pow(v - mean, 2)));
+
+                row.ModelsPassingDockingCount = docking.Count(v => v <= config.PlatformDefaults.DockingThreshold);
+                row.AllModelsPassDocking = docking.Count > 0 && row.ModelsPassingDockingCount == docking.Count;
+                row.AnyModelPassDocking = row.ModelsPassingDockingCount > 0;
+            }
+
+            row.PassSimilarityInteraction =
+                row.SimilarityScore.HasValue &&
+                row.SimilarityScore.Value >= config.PlatformDefaults.SimilarityThresholdInteraction;
+
+            row.PassSimilarityKnown =
+                row.SimilarityScore.HasValue &&
+                row.SimilarityScore.Value >= config.PlatformDefaults.SimilarityThresholdKnown;
+
+            row.DockingEffectiveScore = GetAggregateDocking(row, config.AnalysisParams.AggregateMethod);
+            row.PassDockingEffective =
+                row.DockingEffectiveScore.HasValue &&
+                row.DockingEffectiveScore.Value <= config.PlatformDefaults.DockingThreshold;
+
+            if (!row.IsAnalyzable)
+                continue;
+
+            row.SimilarityScoreNorm = Math.Clamp(row.SimilarityScore ?? 0f, 0f, 1f);
+
+            row.ConsistencyScore = row.DockingStd.HasValue
+                ? Math.Clamp(1f - (row.DockingStd.Value / Math.Max(config.AnalysisParams.HighPriorityStdThreshold, 0.0001f)), 0f, 1f)
+                : 0f;
+
+            float dockingNorm = row.DockingEffectiveScore.HasValue
+                ? Math.Clamp((config.PlatformDefaults.DockingThreshold - row.DockingEffectiveScore.Value + 5f) / 10f, 0f, 1f)
+                : 0f;
+
+            row.RuleBonusRaw = 0f;
+            if (row.AllModelsPassDocking)
+                row.RuleBonusRaw += config.RuleBonus.AllModelsPassBonus;
+            if (row.PassSimilarityInteraction)
+                row.RuleBonusRaw += config.RuleBonus.InteractionBonus;
+            if (row.PassSimilarityKnown)
+                row.RuleBonusRaw += config.RuleBonus.KnownCompoundBonus;
+
+            row.RuleBonusNorm = maxBonus <= 0 ? 0f : row.RuleBonusRaw / maxBonus;
+
+            row.PriorityScore = 100f * (
+                dockingNorm * dockingWeight +
+                (row.SimilarityScoreNorm ?? 0f) * similarityWeight +
+                (row.ConsistencyScore ?? 0f) * consistencyWeight +
+                row.RuleBonusNorm * ruleBonusWeight
+            );
+  
+            row.CandidateClass =
+                row.PriorityScore >= config.AnalysisParams.HighPriorityThreshold ? "High" :
+                row.PriorityScore >= config.AnalysisParams.ModeratePriorityThreshold ? "Moderate" :
+                "Low";
+        }
+
+        int rank = 1;
+        foreach (JobAnalyticsRow row in rows
+            .Where(r => r.IsAnalyzable)
+            .OrderByDescending(r => r.PriorityScore ?? float.MinValue)
+            .ThenBy(r => r.DockingEffectiveScore ?? float.MaxValue)
+            .ThenByDescending(r => r.SimilarityScore ?? float.MinValue))
+        {
+            row.PriorityRank = rank++;
+        }
+    }
+
+    private static JobAnalyticsSummary BuildSummary(string domainId, Job job, List<JobAnalyticsRow> rows, JobAnalyticsConfig config)
+    {
+        List<JobAnalyticsRow> analyzable = rows.Where(o => o.IsAnalyzable).ToList();
+        List<float> docking = analyzable.Where(o => o.DockingEffectiveScore.HasValue).Select(o => o.DockingEffectiveScore.Value).OrderBy(o => o).ToList();
+
+        JobAnalyticsSummary summary = new()
+        {
+            DomainId = domainId,
+            Job = job,
+            Rows = rows,
+            TotalRows = rows.Count,
+            AnalyzableRows = analyzable.Count,
+            ExcludedByMissingDocking = rows.Count(o => o.ExclusionReasons.Contains("Missing docking score")),
+            ExcludedByMissingSimilarity = rows.Count(o => o.ExclusionReasons.Contains("Missing similarity score")),
+            MeanDocking = docking.Count > 0 ? docking.Average() : null,
+            MedianDocking = docking.Count > 0 ? docking[docking.Count / 2] : null,
+            HighPriorityCount = analyzable.Count(o => o.CandidateClass == "High"),
+            AppliedConfig = config,
+            TopCandidates = analyzable.OrderBy(o => o.PriorityRank).Take(config.AnalysisParams.TopN).ToList(),
+            GroupedByProtein = BuildGroups(analyzable, o => o.ProteinSymbol),
+            GroupedByGene = BuildGroups(analyzable, o => o.GeneSymbol),
+            GroupedByLigand = BuildGroups(analyzable, o => o.LigandName),
+        };
+
+        summary.DistributionStats["priority_score"] = analyzable.Select(o => o.PriorityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
+        summary.DistributionStats["docking"] = analyzable.Select(o => o.DockingEffectiveScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
+        summary.DistributionStats["similarity"] = analyzable.Select(o => o.SimilarityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
+
+        summary.FigureData["scatter"] = analyzable.Select(o => new
+        {
+            x = o.DockingEffectiveScore,
+            y = o.SimilarityScore,
+            size = config.PlotParams.ScatterSizeBase + config.PlotParams.ScatterSizeScale * (o.PriorityScore ?? 0) / 100f,
+            label = $"{o.LigandName} / {o.ProteinSymbol}"
+        }).ToArray();
+
+        return summary;
+    }
+
+    private static List<JobAnalyticsGroupSummary> BuildGroups(IEnumerable<JobAnalyticsRow> rows, Func<JobAnalyticsRow, string> keySelector)
+    {
+        return rows.GroupBy(keySelector)
+            .Select(g => new JobAnalyticsGroupSummary
+            {
+                GroupKey = g.Key,
+                TotalRows = g.Count(),
+                AnalyzableRows = g.Count(o => o.IsAnalyzable),
+                MeanPriorityScore = g.Any(o => o.PriorityScore.HasValue)
+                    ? g.Where(o => o.PriorityScore.HasValue).Select(o => o.PriorityScore!.Value).Average()
+                    : null,
+                MeanDocking = g.Any(o => o.DockingEffectiveScore.HasValue)
+                    ? g.Where(o => o.DockingEffectiveScore.HasValue).Select(o => o.DockingEffectiveScore!.Value).Average()
+                    : null,
+            })
+            .OrderByDescending(o => o.MeanPriorityScore)
+            .ToList();
+    }
+    private static float? GetMedian(List<float> values)
+    {
+        if (values == null || values.Count == 0)
+            return null;
+
+        List<float> sorted = values.OrderBy(x => x).ToList();
+        int count = sorted.Count;
+        int mid = count / 2;
+
+        if (count % 2 == 1)
+            return sorted[mid];
+
+        return (sorted[mid - 1] + sorted[mid]) / 2f;
+    }
+
+    private static float? GetAggregateDocking(JobAnalyticsRow row, string method)
+    {
+        return method switch
+        {
+            "median" => row.DockingMedian,
+            "min" => row.DockingMin,
+            _ => row.DockingMean,
+        };
+    }
+}

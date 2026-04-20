@@ -260,3 +260,6 @@ ModelManifest.xml
 **/Workspace/Receptors/
 **/wwwroot/models/
 **/wwwroot/images/
+DockingApiService/Workspace/*.db
+DockingApiService/Workspace/*.db-shm
+DockingApiService/Workspace/*.db-wal
