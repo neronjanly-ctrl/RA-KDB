@@ -381,6 +381,7 @@ public class JobAnalyticsService : IJobAnalyticsService
             summary.MedianDocking,
             summary.HighPriorityCount,
             summary.TopCandidates,
+            summary.Figures,
             summary.GroupedByProtein,
             summary.GroupedByGene,
             summary.GroupedByLigand,
@@ -710,21 +711,150 @@ public class JobAnalyticsService : IJobAnalyticsService
             GroupedByProtein = BuildGroups(analyzable, o => o.ProteinSymbol),
             GroupedByGene = BuildGroups(analyzable, o => o.GeneSymbol),
             GroupedByLigand = BuildGroups(analyzable, o => o.LigandName),
+            Figures = BuildFigures(analyzable, config),
         };
 
         summary.DistributionStats["priority_score"] = analyzable.Select(o => o.PriorityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
         summary.DistributionStats["docking"] = analyzable.Select(o => o.DockingEffectiveScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
         summary.DistributionStats["similarity"] = analyzable.Select(o => o.SimilarityScore).Where(o => o.HasValue).Select(o => o.Value).ToArray();
 
-        summary.FigureData["scatter"] = analyzable.Select(o => new
-        {
-            x = o.DockingEffectiveScore,
-            y = o.SimilarityScore,
-            size = config.PlotParams.ScatterSizeBase + config.PlotParams.ScatterSizeScale * (o.PriorityScore ?? 0) / 100f,
-            label = $"{o.LigandName} / {o.ProteinSymbol}"
-        }).ToArray();
-
         return summary;
+    }
+
+    private static JobAnalyticsFigures BuildFigures(List<JobAnalyticsRow> analyzable, JobAnalyticsConfig config)
+    {
+        return new JobAnalyticsFigures
+        {
+            DockingDistribution = BuildHistogram(analyzable.Select(o => o.DockingEffectiveScore), 12),
+            ModelBoxplot = BuildModelBoxplot(analyzable),
+            SimilarityDistribution = BuildHistogram(analyzable.Select(o => o.SimilarityScore), 10),
+            PriorityScatter = BuildPriorityScatter(analyzable, config),
+            TopCandidatesBar = BuildTopCandidatesBar(analyzable, config.AnalysisParams.TopN),
+            ModelCorrelationHeatmap = BuildCorrelationHeatmap(analyzable),
+        };
+    }
+
+    private static HistogramFigure BuildHistogram(IEnumerable<float?> values, int bins)
+    {
+        List<float> numeric = values.Where(o => o.HasValue).Select(o => o!.Value).ToList();
+        HistogramFigure figure = new();
+        if (numeric.Count == 0 || bins <= 0)
+            return figure;
+
+        float min = numeric.Min();
+        float max = numeric.Max();
+        float range = max - min;
+        if (Math.Abs(range) < 0.00001f)
+        {
+            figure.Labels.Add($"{min:F2}");
+            figure.Counts.Add(numeric.Count);
+            return figure;
+        }
+
+        float step = range / bins;
+        int[] counts = new int[bins];
+        foreach (float value in numeric)
+        {
+            int idx = (int)Math.Floor((value - min) / step);
+            idx = Math.Clamp(idx, 0, bins - 1);
+            counts[idx]++;
+        }
+
+        for (int i = 0; i < bins; i++)
+        {
+            float start = min + i * step;
+            float end = i == bins - 1 ? max : start + step;
+            figure.Labels.Add($"{start:F2}..{end:F2}");
+            figure.Counts.Add(counts[i]);
+        }
+
+        return figure;
+    }
+
+    private static ModelBoxplotFigure BuildModelBoxplot(List<JobAnalyticsRow> analyzable)
+    {
+        ModelBoxplotFigure figure = new();
+        int modelCount = analyzable.Count == 0 ? 0 : analyzable.Max(o => o.DockingScores.Count);
+        for (int i = 0; i < modelCount; i++)
+        {
+            List<float> values = analyzable
+                .Where(o => o.DockingScores.Count > i && o.DockingScores[i].HasValue)
+                .Select(o => o.DockingScores[i]!.Value)
+                .OrderBy(o => o)
+                .ToList();
+            if (values.Count == 0)
+                continue;
+
+            figure.Models.Add(new ModelBoxplotItem
+            {
+                Model = $"Model {i + 1}",
+                Min = values.First(),
+                Q1 = GetPercentile(values, 0.25f),
+                Median = GetPercentile(values, 0.5f),
+                Q3 = GetPercentile(values, 0.75f),
+                Max = values.Last(),
+            });
+        }
+
+        return figure;
+    }
+
+    private static PriorityScatterFigure BuildPriorityScatter(List<JobAnalyticsRow> analyzable, JobAnalyticsConfig config)
+    {
+        return new PriorityScatterFigure
+        {
+            Points = analyzable.Select(o => new PriorityScatterPoint
+            {
+                X = o.DockingEffectiveScore,
+                Y = o.SimilarityScore,
+                Size = config.PlotParams.ScatterSizeBase + config.PlotParams.ScatterSizeScale * (o.PriorityScore ?? 0) / 100f,
+                Label = $"{o.LigandName} / {o.ProteinSymbol}",
+                CandidateClass = o.CandidateClass,
+                Priority = o.PriorityScore
+            }).ToList()
+        };
+    }
+
+    private static TopCandidatesBarFigure BuildTopCandidatesBar(List<JobAnalyticsRow> analyzable, int topN)
+    {
+        TopCandidatesBarFigure figure = new();
+        foreach (JobAnalyticsRow row in analyzable.OrderBy(o => o.PriorityRank).Take(topN))
+        {
+            figure.Labels.Add($"{row.LigandName}/{row.ProteinSymbol}");
+            figure.PriorityScores.Add(row.PriorityScore ?? 0f);
+        }
+
+        return figure;
+    }
+
+    private static CorrelationHeatmapFigure BuildCorrelationHeatmap(List<JobAnalyticsRow> analyzable)
+    {
+        Dictionary<string, List<float?>> series = new()
+        {
+            ["Docking"] = analyzable.Select(o => o.DockingEffectiveScore).ToList(),
+            ["Similarity"] = analyzable.Select(o => o.SimilarityScore).ToList(),
+            ["Consistency"] = analyzable.Select(o => o.ConsistencyScore).ToList(),
+            ["RuleBonus"] = analyzable.Select(o => (float?)o.RuleBonusNorm).ToList(),
+            ["Priority"] = analyzable.Select(o => o.PriorityScore).ToList(),
+        };
+
+        List<string> labels = series.Keys.ToList();
+        CorrelationHeatmapFigure figure = new()
+        {
+            Labels = labels,
+            Matrix = new List<List<float>>()
+        };
+        for (int i = 0; i < labels.Count; i++)
+        {
+            List<float> row = new();
+            for (int j = 0; j < labels.Count; j++)
+            {
+                row.Add(GetPearson(series[labels[i]], series[labels[j]]));
+            }
+            figure.Matrix.Add(row);
+        }
+
+        return figure;
     }
 
     private static List<JobAnalyticsGroupSummary> BuildGroups(IEnumerable<JobAnalyticsRow> rows, Func<JobAnalyticsRow, string> keySelector)
@@ -759,7 +889,47 @@ public class JobAnalyticsService : IJobAnalyticsService
 
         return (sorted[mid - 1] + sorted[mid]) / 2f;
     }
+    private static float GetPercentile(List<float> sortedValues, float percentile)
+    {
+        if (sortedValues == null || sortedValues.Count == 0)
+            return 0f;
 
+        if (sortedValues.Count == 1)
+            return sortedValues[0];
+
+        float rank = percentile * (sortedValues.Count - 1);
+        int low = (int)Math.Floor(rank);
+        int high = (int)Math.Ceiling(rank);
+        if (low == high)
+            return sortedValues[low];
+
+        float weight = rank - low;
+        return sortedValues[low] + (sortedValues[high] - sortedValues[low]) * weight;
+    }
+    private static float GetPearson(IReadOnlyList<float?> x, IReadOnlyList<float?> y)
+    {
+        List<(float x, float y)> paired = new();
+        for (int i = 0; i < Math.Min(x.Count, y.Count); i++)
+        {
+            if (x[i].HasValue && y[i].HasValue)
+                paired.Add((x[i]!.Value, y[i]!.Value));
+        }
+
+        if (paired.Count < 2)
+            return 0f;
+
+        float meanX = paired.Average(o => o.x);
+        float meanY = paired.Average(o => o.y);
+        float cov = paired.Sum(o => (o.x - meanX) * (o.y - meanY));
+        float varX = paired.Sum(o => (o.x - meanX) * (o.x - meanX));
+        float varY = paired.Sum(o => (o.y - meanY) * (o.y - meanY));
+
+        float denom = (float)Math.Sqrt(varX * varY);
+        if (Math.Abs(denom) < 0.00001f)
+            return 0f;
+
+        return cov / denom;
+    }
     private static float? GetAggregateDocking(JobAnalyticsRow row, string method)
     {
         return method switch

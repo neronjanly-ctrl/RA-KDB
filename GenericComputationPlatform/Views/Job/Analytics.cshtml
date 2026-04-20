@@ -1,8 +1,30 @@
 @using System.Globalization
+@using System.Collections.Generic
 @using System.Text.Json
 @model GenericComputationPlatform.ViewModels.Analytics.JobAnalyticsPageModel
 @{
     ViewData["Title"] = $"{Model.Summary.Job.Name} #{Model.Summary.Job.Id} Analytics";
+    var cfg = Model.Summary.AppliedConfig;
+    var routeConfig = new Dictionary<string, string>
+            {
+                ["platformDefaults.dockingThreshold"] = cfg.PlatformDefaults.DockingThreshold.ToString(CultureInfo.InvariantCulture),
+                ["platformDefaults.similarityThresholdInteraction"] = cfg.PlatformDefaults.SimilarityThresholdInteraction.ToString(CultureInfo.InvariantCulture),
+                ["platformDefaults.similarityThresholdKnown"] = cfg.PlatformDefaults.SimilarityThresholdKnown.ToString(CultureInfo.InvariantCulture),
+                ["analysisParams.topN"] = cfg.AnalysisParams.TopN.ToString(CultureInfo.InvariantCulture),
+                ["analysisParams.aggregateMethod"] = cfg.AnalysisParams.AggregateMethod,
+                ["analysisParams.highPriorityStdThreshold"] = cfg.AnalysisParams.HighPriorityStdThreshold.ToString(CultureInfo.InvariantCulture),
+                ["analysisParams.moderateDockingThreshold"] = cfg.AnalysisParams.ModerateDockingThreshold.ToString(CultureInfo.InvariantCulture),
+                ["analysisParams.moderateSimilarityThreshold"] = cfg.AnalysisParams.ModerateSimilarityThreshold.ToString(CultureInfo.InvariantCulture),
+                ["ruleBonus.allModelsPassBonus"] = cfg.RuleBonus.AllModelsPassBonus.ToString(CultureInfo.InvariantCulture),
+                ["ruleBonus.interactionBonus"] = cfg.RuleBonus.InteractionBonus.ToString(CultureInfo.InvariantCulture),
+                ["ruleBonus.knownCompoundBonus"] = cfg.RuleBonus.KnownCompoundBonus.ToString(CultureInfo.InvariantCulture),
+                ["priorityWeights.dockingWeight"] = cfg.PriorityWeights.DockingWeight.ToString(CultureInfo.InvariantCulture),
+                ["priorityWeights.similarityWeight"] = cfg.PriorityWeights.SimilarityWeight.ToString(CultureInfo.InvariantCulture),
+                ["priorityWeights.consistencyWeight"] = cfg.PriorityWeights.ConsistencyWeight.ToString(CultureInfo.InvariantCulture),
+                ["priorityWeights.ruleBonusWeight"] = cfg.PriorityWeights.RuleBonusWeight.ToString(CultureInfo.InvariantCulture),
+                ["plotParams.scatterSizeBase"] = cfg.PlotParams.ScatterSizeBase.ToString(CultureInfo.InvariantCulture),
+                ["plotParams.scatterSizeScale"] = cfg.PlotParams.ScatterSizeScale.ToString(CultureInfo.InvariantCulture),
+            };
 }
 
 <div class="jumbotron py-4">
@@ -50,6 +72,30 @@
     <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">High Priority count</div><div class="h4 mb-0">@Model.Summary.HighPriorityCount</div></div></div></div>
 </div>
 
+<form method="post" asp-controller="Job" asp-action="Analytics" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" class="card card-body mb-4">
+    <div class="row">
+        <div class="col-md-2"><label class="small">Top N</label><input class="form-control form-control-sm" type="number" name="analysisParams.topN" min="1" value="@cfg.AnalysisParams.TopN" /></div>
+        <div class="col-md-2"><label class="small">Aggregate</label><select class="form-control form-control-sm" name="analysisParams.aggregateMethod"><option selected="@(cfg.AnalysisParams.AggregateMethod=="mean")">mean</option><option selected="@(cfg.AnalysisParams.AggregateMethod=="median")">median</option><option selected="@(cfg.AnalysisParams.AggregateMethod=="min")">min</option></select></div>
+        <div class="col-md-2"><label class="small">Docking threshold</label><input class="form-control form-control-sm" type="number" step="0.1" name="platformDefaults.dockingThreshold" value="@cfg.PlatformDefaults.DockingThreshold.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Similarity interaction</label><input class="form-control form-control-sm" type="number" step="0.01" name="platformDefaults.similarityThresholdInteraction" value="@cfg.PlatformDefaults.SimilarityThresholdInteraction.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2"><label class="small">Similarity known</label><input class="form-control form-control-sm" type="number" step="0.01" name="platformDefaults.similarityThresholdKnown" value="@cfg.PlatformDefaults.SimilarityThresholdKnown.ToString(CultureInfo.InvariantCulture)" /></div>
+        <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-primary btn-block">Run Analysis</button></div>
+    </div>
+    @foreach (var kv in routeConfig.Where(k => !new[] { "analysisParams.topN", "analysisParams.aggregateMethod", "platformDefaults.dockingThreshold", "platformDefaults.similarityThresholdInteraction", "platformDefaults.similarityThresholdKnown" }.Contains(k.Key)))
+    {
+        <input type="hidden" name="@kv.Key" value="@kv.Value" />
+    }
+</form>
+
+<div class="row mb-3">
+    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Docking distribution</div><div class="card-body"><canvas id="chart-docking"></canvas></div></div></div>
+    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Similarity distribution</div><div class="card-body"><canvas id="chart-similarity"></canvas></div></div></div>
+    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Top candidates bar</div><div class="card-body"><canvas id="chart-top-bar"></canvas></div></div></div>
+    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Model boxplot</div><div class="card-body"><canvas id="chart-boxplot"></canvas></div></div></div>
+    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Priority scatter</div><div class="card-body"><canvas id="chart-priority-scatter"></canvas></div></div></div>
+    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Model correlation heatmap</div><div class="card-body"><div id="chart-heatmap" class="table-responsive"></div></div></div></div>
+</div>
+
 <h3>Top N Candidates</h3>
 <table class="table table-striped table-hover table-maxwidth mt-3 w-100">
     <thead>
@@ -61,7 +107,7 @@
             <th>Similarity</th>
             <th>Priority Score</th>
             <th>Candidate Class</th>
-            <th>Compare</th>
+            
         </tr>
     </thead>
     <tbody>
@@ -75,7 +121,6 @@
                 <td>@(row.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
                 <td>@(row.PriorityScore?.ToString("F2", CultureInfo.InvariantCulture) ?? "N/A")</td>
                 <td>@row.CandidateClass</td>
-                <td><a href="@row.CompareUrl" target="_blank">Compare</a></td>
             </tr>
         }
     </tbody>
@@ -121,8 +166,8 @@
 </div>
 
 <div class="mt-4">
-    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReport" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
-    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReportFull" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id">Download Full Analysis CSV <i class="fa fa-download"></i></a>
+    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReport" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" asp-all-route-data="routeConfig">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
+    <a class="btn btn-outline-primary" asp-controller="Job" asp-action="AnalyticsReportFull" asp-route-domainId="@Model.DomainId" asp-route-jobId="@Model.Summary.Job.Id" asp-all-route-data="routeConfig">Download Full Analysis CSV <i class="fa fa-download"></i></a>
 </div>
 
 @section Menu {
@@ -137,7 +182,73 @@
 }
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script>
         window.jobAnalyticsPayload = @Html.Raw(JsonSerializer.Serialize(Model.FrontendPayload));
+        (function () {
+            const payload = window.jobAnalyticsPayload || {};
+            const fig = payload.figures || {};
+            if (!window.Chart) return;
+
+            const to2 = v => (typeof v === "number" ? v.toFixed(2) : "N/A");
+            const classColor = c => c === "High" ? "#d9534f" : c === "Moderate" ? "#f0ad4e" : "#5bc0de";
+
+            new Chart(document.getElementById("chart-docking"), {
+                type: "bar",
+                data: { labels: fig.dockingDistribution?.labels || [], datasets: [{ label: "Count", data: fig.dockingDistribution?.counts || [], backgroundColor: "#4e79a7" }] }
+            });
+
+            new Chart(document.getElementById("chart-similarity"), {
+                type: "bar",
+                data: { labels: fig.similarityDistribution?.labels || [], datasets: [{ label: "Count", data: fig.similarityDistribution?.counts || [], backgroundColor: "#59a14f" }] }
+            });
+
+            new Chart(document.getElementById("chart-top-bar"), {
+                type: "bar",
+                data: { labels: fig.topCandidatesBar?.labels || [], datasets: [{ label: "Priority Score", data: fig.topCandidatesBar?.priorityScores || [], backgroundColor: "#9c755f" }] },
+                options: { indexAxis: 'y' }
+            });
+
+            const box = fig.modelBoxplot?.models || [];
+            new Chart(document.getElementById("chart-boxplot"), {
+                type: "bar",
+                data: {
+                    labels: box.map(o => o.model),
+                    datasets: [
+                        { label: "Q1", data: box.map(o => o.q1), backgroundColor: "#e0ecf8", stack: "s" },
+                        { label: "IQR", data: box.map(o => o.q3 - o.q1), backgroundColor: "#4e79a7", stack: "s" }
+                    ]
+                },
+                options: { plugins: { tooltip: { callbacks: { afterBody: (ctx) => { const i = ctx[0].dataIndex; const b = box[i]; return [`min ${to2(b.min)}`, `median ${to2(b.median)}`, `max ${to2(b.max)}`]; } } } } }
+            });
+
+            new Chart(document.getElementById("chart-priority-scatter"), {
+                type: "bubble",
+                data: {
+                    datasets: (fig.priorityScatter?.points || []).map(p => ({
+                        label: p.label,
+                        data: [{ x: p.x, y: p.y, r: Math.max(3, Math.sqrt((p.size || 1) / 2)) }],
+                        backgroundColor: classColor(p.candidateClass)
+                    }))
+                },
+                options: { scales: { x: { title: { display: true, text: "Docking (aggregate)" } }, y: { min: 0, max: 1, title: { display: true, text: "Similarity" } } } }
+            });
+
+            const heatmapEl = document.getElementById("chart-heatmap");
+            const labels = fig.modelCorrelationHeatmap?.labels || [];
+            const matrix = fig.modelCorrelationHeatmap?.matrix || [];
+            let html = "<table class='table table-sm table-bordered mb-0'><thead><tr><th></th>" + labels.map(l => `<th>${l}</th>`).join("") + "</tr></thead><tbody>";
+            for (let i = 0; i < labels.length; i++) {
+                html += `<tr><th>${labels[i]}</th>`;
+                for (let j = 0; j < labels.length; j++) {
+                    const v = (matrix[i] || [])[j] ?? 0;
+                    const red = v > 0 ? Math.round(255 * v) : 0;
+                    const blue = v < 0 ? Math.round(255 * -v) : 0;
+                    html += `<td style="background-color:rgba(${red},80,${blue},0.28)">${to2(v)}</td>`;
+                }
+                html += "</tr>";
+            }
+            heatmapEl.innerHTML = html + "</tbody></table>";
+        })();
     </script>
 }
