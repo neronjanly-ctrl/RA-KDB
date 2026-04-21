@@ -37,8 +37,15 @@
 
 <div class="jumbotron py-4">
     <h1 class="display-5">@ViewData["Title"]</h1>
-    <p class="mb-1">Analytics configuration for this page is independent and <strong>does not affect Spider Plot thresholds</strong>.</p>
-    <div class="small text-muted">Applied aggregate method: @Model.Summary.AppliedConfig.AnalysisParams.AggregateMethod, Top N: @Model.Summary.AppliedConfig.AnalysisParams.TopN</div>
+    <p class="mb-1">
+        Default analytics flow on this page is aligned with Python raw-data-first handling as closely as possible,
+        while still preserving the analysis-space parameter panel and exports.
+        <strong>It does not affect Spider Plot thresholds or formal report logic.</strong>
+    </p>
+    <div class="small text-muted">
+        Applied aggregate method: @Model.Summary.AppliedConfig.AnalysisParams.AggregateMethod,
+        Top N: @Model.Summary.AppliedConfig.AnalysisParams.TopN
+    </div>
 
     @if (Model.Summary.Validation.Errors.Count > 0)
     {
@@ -73,6 +80,7 @@
     <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Excluded (docking missing)</div><div class="h4 mb-0">@Model.Summary.ExcludedByMissingDocking</div></div></div></div>
     <div class="col-md-3 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Excluded (similarity missing)</div><div class="h4 mb-0">@Model.Summary.ExcludedByMissingSimilarity</div></div></div></div>
 </div>
+
 <div class="row mb-4">
     <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Mean docking</div><div class="h4 mb-0">@(Model.Summary.MeanDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</div></div></div></div>
     <div class="col-md-4 mb-2"><div class="card"><div class="card-body"><div class="text-muted small">Median docking</div><div class="h4 mb-0">@(Model.Summary.MedianDocking?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</div></div></div></div>
@@ -123,38 +131,89 @@
         <div class="col-md-2"><label class="small">Scatter size base</label><input class="form-control form-control-sm" type="number" step="1" name="plotParams.scatterSizeBase" value="@cfg.PlotParams.ScatterSizeBase.ToString(CultureInfo.InvariantCulture)" /></div>
         <div class="col-md-2"><label class="small">Scatter size scale</label><input class="form-control form-control-sm" type="number" step="0.1" name="plotParams.scatterSizeScale" value="@cfg.PlotParams.ScatterSizeScale.ToString(CultureInfo.InvariantCulture)" /></div>
     </div>
+
     @foreach (var kv in routeConfig.Where(k => !new[] {
-                "analysisParams.topN",
-                "analysisParams.aggregateMethod",
-                "platformDefaults.dockingThreshold",
-                "platformDefaults.similarityThresholdInteraction",
-                "platformDefaults.similarityThresholdKnown",
-                "ruleBonus.allModelsPassBonus",
-                "ruleBonus.interactionBonus",
-                "ruleBonus.knownCompoundBonus",
-                "priorityWeights.dockingWeight",
-                "priorityWeights.similarityWeight",
-                "priorityWeights.consistencyWeight",
-                "priorityWeights.ruleBonusWeight",
-                "analysisParams.highPriorityStdThreshold",
-                "analysisParams.moderateDockingThreshold",
-                "analysisParams.moderateSimilarityThreshold",
-                "plotParams.scatterSizeBase",
-                "plotParams.scatterSizeScale"
-             }.Contains(k.Key)))
+    "analysisParams.topN",
+    "analysisParams.aggregateMethod",
+    "platformDefaults.dockingThreshold",
+    "platformDefaults.similarityThresholdInteraction",
+    "platformDefaults.similarityThresholdKnown",
+    "ruleBonus.allModelsPassBonus",
+    "ruleBonus.interactionBonus",
+    "ruleBonus.knownCompoundBonus",
+    "priorityWeights.dockingWeight",
+    "priorityWeights.similarityWeight",
+    "priorityWeights.consistencyWeight",
+    "priorityWeights.ruleBonusWeight",
+    "analysisParams.highPriorityStdThreshold",
+    "analysisParams.moderateDockingThreshold",
+    "analysisParams.moderateSimilarityThreshold",
+    "plotParams.scatterSizeBase",
+    "plotParams.scatterSizeScale"
+    }.Contains(k.Key)))
     {
         <input type="hidden" name="@kv.Key" value="@kv.Value" />
     }
 </form>
 
 <div class="row mb-3">
-    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Docking distribution</div><div class="card-body"><canvas id="chart-docking"></canvas></div></div></div>
-    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Similarity distribution</div><div class="card-body"><canvas id="chart-similarity"></canvas></div></div></div>
-    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Top candidates bar</div><div class="card-body"><canvas id="chart-top-bar"></canvas></div></div></div>
-    <div class="col-md-6 mb-3"><div class="card"><div class="card-header">Model boxplot</div><div class="card-body"><canvas id="chart-boxplot"></canvas><div class="small text-muted mt-2">Temporary pseudo-boxplot; planned migration to a true boxplot chart component/plugin.</div></div></div></div>
-    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Priority scatter</div><div class="card-body"><canvas id="chart-priority-scatter"></canvas></div></div></div>
-    <div class="col-md-12 mb-3"><div class="card"><div class="card-header">Model correlation heatmap</div><div class="card-body"><div id="chart-heatmap" class="table-responsive"></div><div class="small text-muted mt-2">Table-based fallback heatmap; planned migration to a dedicated heatmap chart implementation.</div></div></div></div>
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">Docking distribution</div>
+            <div class="card-body">
+                <canvas id="chart-docking"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">Similarity distribution</div>
+            <div class="card-body">
+                <canvas id="chart-similarity"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">Top candidates bar</div>
+            <div class="card-body">
+                <canvas id="chart-top-bar"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-header">Model boxplot</div>
+            <div class="card-body">
+                <canvas id="chart-boxplot"></canvas>
+                <div class="small text-muted mt-2">Temporary pseudo-boxplot; planned migration to a true boxplot chart component/plugin.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <div class="card">
+            <div class="card-header">Priority scatter</div>
+            <div class="card-body">
+                <canvas id="chart-priority-scatter"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <div class="card">
+            <div class="card-header">Model correlation heatmap</div>
+            <div class="card-body">
+                <div id="chart-heatmap" class="table-responsive"></div>
+                <div class="small text-muted mt-2">Table-based fallback heatmap; planned migration to a dedicated heatmap chart implementation.</div>
+            </div>
+        </div>
+    </div>
 </div>
+
 <div class="alert alert-light border small">
     <strong>Stage 3 plan:</strong> upgrade boxplot/heatmap to dedicated chart components first; then consider AJAX partial recompute and cross-chart/table interactions.
 </div>
@@ -165,12 +224,11 @@
         <tr>
             <th>Protein Symbol</th>
             <th>Gene Symbol</th>
-            <th>Docking aggregate</th>
+            <th>Docking Mean</th>
             <th>Docking Std</th>
             <th>Similarity</th>
             <th>Priority Score</th>
             <th>Candidate Class</th>
-            
         </tr>
     </thead>
     <tbody>
@@ -179,7 +237,7 @@
             <tr>
                 <td>@row.ProteinSymbol</td>
                 <td>@row.GeneSymbol</td>
-                <td>@(row.DockingEffectiveScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
+                <td>@(row.DockingMean?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
                 <td>@(row.DockingStd?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
                 <td>@(row.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A")</td>
                 <td>@(row.PriorityScore?.ToString("F2", CultureInfo.InvariantCulture) ?? "N/A")</td>
@@ -193,35 +251,49 @@
     <div class="col-md-4">
         <h4>Grouped by Protein</h4>
         <table class="table table-sm table-striped">
-            <thead><tr><th>Protein</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <thead><tr><th>Protein</th><th>Scorable Rows</th><th>Mean Score</th></tr></thead>
             <tbody>
                 @foreach (var group in Model.Summary.GroupedByProtein.Take(10))
                 {
-                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                    <tr>
+                        <td>@group.GroupKey</td>
+                        <td>@group.AnalyzableRows</td>
+                        <td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td>
+                    </tr>
                 }
             </tbody>
         </table>
     </div>
+
     <div class="col-md-4">
         <h4>Grouped by Gene</h4>
         <table class="table table-sm table-striped">
-            <thead><tr><th>Gene</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <thead><tr><th>Gene</th><th>Scorable Rows</th><th>Mean Score</th></tr></thead>
             <tbody>
                 @foreach (var group in Model.Summary.GroupedByGene.Take(10))
                 {
-                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                    <tr>
+                        <td>@group.GroupKey</td>
+                        <td>@group.AnalyzableRows</td>
+                        <td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td>
+                    </tr>
                 }
             </tbody>
         </table>
     </div>
+
     <div class="col-md-4">
         <h4>Grouped by Ligand</h4>
         <table class="table table-sm table-striped">
-            <thead><tr><th>Ligand</th><th>Rows</th><th>Mean Score</th></tr></thead>
+            <thead><tr><th>Ligand</th><th>Scorable Rows</th><th>Mean Score</th></tr></thead>
             <tbody>
                 @foreach (var group in Model.Summary.GroupedByLigand.Take(10))
                 {
-                    <tr><td>@group.GroupKey</td><td>@group.AnalyzableRows</td><td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td></tr>
+                    <tr>
+                        <td>@group.GroupKey</td>
+                        <td>@group.AnalyzableRows</td>
+                        <td>@group.MeanPriorityScore?.ToString("F2", CultureInfo.InvariantCulture)</td>
+                    </tr>
                 }
             </tbody>
         </table>
@@ -229,8 +301,19 @@
 </div>
 
 <div class="mt-4">
-    <a class="btn btn-outline-primary" href="@summaryReportUrl">Download Analytics Summary CSV <i class="fa fa-download"></i></a>
-    <a class="btn btn-outline-primary" href="@fullReportUrl">Download Full Analysis CSV <i class="fa fa-download"></i></a>
+    <button type="button"
+            class="btn btn-outline-primary"
+            id="download-summary-csv"
+            data-url="@summaryReportUrl">
+        Download Analytics Summary CSV <i class="fa fa-download"></i>
+    </button>
+
+    <button type="button"
+            class="btn btn-outline-primary"
+            id="download-full-csv"
+            data-url="@fullReportUrl">
+        Download Full Analysis CSV <i class="fa fa-download"></i>
+    </button>
 </div>
 
 @section Menu {
@@ -248,31 +331,34 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script>
         window.jobAnalyticsPayload = @Html.Raw(JsonSerializer.Serialize(Model.FrontendPayload));
+
         (function () {
             const payload = window.jobAnalyticsPayload || {};
             console.log("Analytics payload", payload);
-            console.log("Analytics payload Figures", payload.Figures, payload.figures);
 
             const fig = payload.Figures || payload.figures || {};
             if (!window.Chart) return;
 
             const to2 = v => (typeof v === "number" ? v.toFixed(2) : "N/A");
-            const priorityClassToGroup = (point) => {
-                if (point.PassSimilarityKnown ?? point.passSimilarityKnown) return "known-like";
-                if (point.PassSimilarityInteraction ?? point.passSimilarityInteraction) return "interaction-pass";
-                const c = (point.CandidateClass ?? point.candidateClass ?? "").toLowerCase();
-                if (c === "high") return "high";
-                if (c === "moderate") return "moderate";
-                return "low";
-            };
-            const groupColor = {
-                "known-like": "#7c3aed",
-                "interaction-pass": "#0f766e",
-                "high": "#dc2626",
-                "moderate": "#f59e0b",
-                "low": "#2563eb"
-            };
             const get = (obj, pascal, camel) => obj?.[pascal] ?? obj?.[camel];
+
+            const priorityClassToGroup = (point) => {
+                const c = (point.CandidateClass ?? point.candidateClass ?? "").toLowerCase();
+                if (c.includes("high priority")) return "high-priority";
+                if (c.includes("known-like strong")) return "known-like-strong";
+                if (c.includes("novel strong binder")) return "novel-strong-binder";
+                if (c.includes("moderate")) return "moderate";
+                return "low-priority";
+            };
+
+            const groupColor = {
+                "high-priority": "#dc2626",
+                "known-like-strong": "#7c3aed",
+                "novel-strong-binder": "#0f766e",
+                "moderate": "#f59e0b",
+                "low-priority": "#2563eb"
+            };
+
             const pluginId = "analytics-threshold-lines";
             const thresholdLinePlugin = {
                 id: pluginId,
@@ -281,14 +367,17 @@
                     const min = pluginOptions?.min;
                     const max = pluginOptions?.max;
                     if (!lines.length || typeof min !== "number" || typeof max !== "number" || min === max) return;
+
                     const { left, right, top, bottom } = chart.chartArea || {};
                     if (left === undefined) return;
+
                     const ctx = chart.ctx;
                     lines.forEach((line) => {
                         if (typeof line.value !== "number") return;
                         const ratio = (line.value - min) / (max - min);
                         const x = left + ratio * (right - left);
                         if (x < left || x > right) return;
+
                         ctx.save();
                         ctx.strokeStyle = line.color || "#111";
                         ctx.lineWidth = 1.5;
@@ -306,6 +395,55 @@
                 }
             };
             Chart.register(thresholdLinePlugin);
+
+            const scatterThresholdPlugin = {
+                id: "analytics-scatter-threshold-lines",
+                afterDatasetsDraw(chart, args, pluginOptions) {
+                    const lines = pluginOptions?.lines || [];
+                    if (!lines.length) return;
+
+                    const xScale = chart.scales?.x;
+                    const yScale = chart.scales?.y;
+                    if (!xScale || !yScale) return;
+
+                    const ctx = chart.ctx;
+                    lines.forEach((line) => {
+                        if (typeof line.value !== "number") return;
+
+                        ctx.save();
+                        ctx.strokeStyle = line.color || "#111";
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([6, 4]);
+
+                        if ((line.axis || "").toLowerCase() === "y") {
+                            const y = yScale.getPixelForValue(line.value);
+                            ctx.beginPath();
+                            ctx.moveTo(xScale.left, y);
+                            ctx.lineTo(xScale.right, y);
+                            ctx.stroke();
+                            if (line.label) {
+                                ctx.fillStyle = line.color || "#111";
+                                ctx.font = "11px sans-serif";
+                                ctx.fillText(line.label, xScale.left + 4, y - 4);
+                            }
+                        } else {
+                            const x = xScale.getPixelForValue(line.value);
+                            ctx.beginPath();
+                            ctx.moveTo(x, yScale.top);
+                            ctx.lineTo(x, yScale.bottom);
+                            ctx.stroke();
+                            if (line.label) {
+                                ctx.fillStyle = line.color || "#111";
+                                ctx.font = "11px sans-serif";
+                                ctx.fillText(line.label, x + 4, yScale.top + 12);
+                            }
+                        }
+
+                        ctx.restore();
+                    });
+                }
+            };
+            Chart.register(scatterThresholdPlugin);
 
             const buildHistogramOptions = (histogram) => {
                 const xAxisTitle = get(histogram, "XAxisTitle", "xAxisTitle");
@@ -326,60 +464,93 @@
             };
 
             const dockingFigure = get(fig, "DockingDistribution", "dockingDistribution") || {};
+            const dockingCanvas = document.getElementById("chart-docking");
+            if (dockingCanvas) {
+                new Chart(dockingCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: get(dockingFigure, "Labels", "labels") || [],
+                        datasets: [{
+                            label: "Count",
+                            data: get(dockingFigure, "Counts", "counts") || [],
+                            backgroundColor: "#4e79a7"
+                        }]
+                    },
+                    options: buildHistogramOptions(dockingFigure)
+                });
+            }
 
-            new Chart(document.getElementById("chart-docking"), {
-                type: "bar",
-                data: {
-                    labels: get(dockingFigure, "Labels", "labels") || [],
-                    datasets: [{
-                        label: "Count",
-                        data: get(dockingFigure, "Counts", "counts") || [],
-                        backgroundColor: "#4e79a7"
-                    }]
-                },
-                options: buildHistogramOptions(dockingFigure)
-            });
             const similarityFigure = get(fig, "SimilarityDistribution", "similarityDistribution") || {};
-            new Chart(document.getElementById("chart-similarity"), {
-                type: "bar",
-                data: {
-                    labels: get(similarityFigure, "Labels", "labels") || [], 
-                    datasets: [{
-                        label: "Count",
-                        data: get(similarityFigure, "Counts", "counts") || [], 
-                        backgroundColor: "#59a14f"
-                    }]
-                },
-                options: buildHistogramOptions(similarityFigure)
-            });
+            const similarityCanvas = document.getElementById("chart-similarity");
+            if (similarityCanvas) {
+                new Chart(similarityCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: get(similarityFigure, "Labels", "labels") || [],
+                        datasets: [{
+                            label: "Count",
+                            data: get(similarityFigure, "Counts", "counts") || [],
+                            backgroundColor: "#59a14f"
+                        }]
+                    },
+                    options: buildHistogramOptions(similarityFigure)
+                });
+            }
 
-            new Chart(document.getElementById("chart-top-bar"), {
-                type: "bar",
-                data: {
-                    labels: get(get(fig, "TopCandidatesBar", "topCandidatesBar"), "Labels", "labels") || [],
-                    datasets: [{
-                        label: "Priority Score",
-                        data: get(get(fig, "TopCandidatesBar", "topCandidatesBar"), "PriorityScores", "priorityScores") || [],
-                        backgroundColor: "#9c755f"
-                    }]
-                },
-                options: { indexAxis: 'y' }
-            });
+            const topBarFigure = get(fig, "TopCandidatesBar", "topCandidatesBar") || {};
+            const topBarCanvas = document.getElementById("chart-top-bar");
+            if (topBarCanvas) {
+                new Chart(topBarCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: get(topBarFigure, "Labels", "labels") || [],
+                        datasets: [{
+                            label: "Priority Score",
+                            data: get(topBarFigure, "PriorityScores", "priorityScores") || [],
+                            backgroundColor: "#9c755f"
+                        }]
+                    },
+                    options: { indexAxis: "y" }
+                });
+            }
 
-            const box = get(get(fig, "ModelBoxplot", "modelBoxplot"), "Models", "models") || [];
-            new Chart(document.getElementById("chart-boxplot"), {
-                type: "bar",
-                data: {
-                    labels: box.map(o => o.Model ?? o.model),
-                    datasets: [
-                        { label: "Q1", data: box.map(o => o.Q1 ?? o.q1), backgroundColor: "#e0ecf8", stack: "s" },
-                        { label: "IQR", data: box.map(o => (o.Q3 ?? o.q3) - (o.Q1 ?? o.q1)), backgroundColor: "#4e79a7", stack: "s" }
-                    ]
-                },
-                options: { plugins: { tooltip: { callbacks: { afterBody: (ctx) => { const i = ctx[0].dataIndex; const b = box[i]; return [`min ${to2(b.Min ?? b.min)}`, `median ${to2(b.Median ?? b.median)}`, `max ${to2(b.Max ?? b.max)}`]; } } } } }
-            });
+            const boxFigure = get(fig, "ModelBoxplot", "modelBoxplot") || {};
+            const box = get(boxFigure, "Models", "models") || [];
+            const boxCanvas = document.getElementById("chart-boxplot");
+            if (boxCanvas) {
+                new Chart(boxCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: box.map(o => o.Model ?? o.model),
+                        datasets: [
+                            { label: "Q1", data: box.map(o => o.Q1 ?? o.q1), backgroundColor: "#e0ecf8", stack: "s" },
+                            { label: "IQR", data: box.map(o => (o.Q3 ?? o.q3) - (o.Q1 ?? o.q1)), backgroundColor: "#4e79a7", stack: "s" }
+                        ]
+                    },
+                    options: {
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: (ctx) => {
+                                        const i = ctx[0].dataIndex;
+                                        const b = box[i];
+                                        return [
+                                            `min ${to2(b.Min ?? b.min)}`,
+                                            `median ${to2(b.Median ?? b.median)}`,
+                                            `max ${to2(b.Max ?? b.max)}`
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
 
-            const priorityPoints = get(get(fig, "PriorityScatter", "priorityScatter"), "Points", "points") || [];
+            const scatterFigure = get(fig, "PriorityScatter", "priorityScatter") || {};
+            const scatterThresholds = get(scatterFigure, "ThresholdLines", "thresholdLines") || [];
+            const priorityPoints = get(scatterFigure, "Points", "points") || [];
+
             const groupedPoints = priorityPoints.reduce((acc, p) => {
                 const key = priorityClassToGroup(p);
                 if (!acc[key]) acc[key] = [];
@@ -387,78 +558,138 @@
                 return acc;
             }, {});
 
-            new Chart(document.getElementById("chart-priority-scatter"), {
-                type: "bubble",
-                data: {
-                    datasets: Object.entries(groupedPoints).map(([groupName, points]) => ({
-                        label: groupName,
-                        data: points.map((p) => ({
-                            x: p.X ?? p.x,
-                            y: p.Y ?? p.y,
-                            r: Math.max(3, Math.sqrt(((p.Size ?? p.size) || 1) / 2)),
-                            rawPoint: p
-                        })),
-                        backgroundColor: groupColor[groupName] || "#6b7280",
-                        borderColor: (ctx) => {
-                            const rp = ctx.raw?.rawPoint || {};
-                            const rank = rp.PriorityRank ?? rp.priorityRank;
-                            return (typeof rank === "number" && rank > 0 && rank <= (payload.AppliedConfig?.AnalysisParams?.TopN ?? payload.appliedConfig?.analysisParams?.topN ?? 10))
-                                ? "#111111"
-                                : "#374151";
-                        },
-                        borderWidth: (ctx) => {
-                            const rp = ctx.raw?.rawPoint || {};
-                            const rank = rp.PriorityRank ?? rp.priorityRank;
-                            return (typeof rank === "number" && rank > 0 && rank <= (payload.AppliedConfig?.AnalysisParams?.TopN ?? payload.appliedConfig?.analysisParams?.topN ?? 10))
-                                ? 2.2
-                                : 1;
-                        }
-                    }))
-                },
-                options: {
-                    scales: {
-                        x: { title: { display: true, text: "Docking (aggregate)" } },
-                        y: { min: 0, max: 1, title: { display: true, text: "Similarity" } }
+            const scatterCanvas = document.getElementById("chart-priority-scatter");
+            if (scatterCanvas) {
+                new Chart(scatterCanvas, {
+                    type: "bubble",
+                    data: {
+                        datasets: Object.entries(groupedPoints).map(([groupName, points]) => ({
+                            label: groupName,
+                            data: points.map((p) => ({
+                                x: p.X ?? p.x,
+                                y: p.Y ?? p.y,
+                                r: Math.max(3, Math.sqrt(((p.Size ?? p.size) || 1) / 2)),
+                                rawPoint: p
+                            })),
+                            backgroundColor: groupColor[groupName] || "#6b7280",
+                            borderColor: (ctx) => {
+                                const rp = ctx.raw?.rawPoint || {};
+                                const isTop = rp.IsTopCandidate ?? rp.isTopCandidate;
+                                return isTop ? "#111111" : "#374151";
+                            },
+                            borderWidth: (ctx) => {
+                                const rp = ctx.raw?.rawPoint || {};
+                                const isTop = rp.IsTopCandidate ?? rp.isTopCandidate;
+                                return isTop ? 2.2 : 1;
+                            }
+                        }))
                     },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                title: (items) => {
-                                    const rawPoint = items?.[0]?.raw?.rawPoint || {};
-                                    return rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "Candidate";
-                                },
-                                label: (ctx) => {
-                                    const rawPoint = ctx.raw?.rawPoint || {};
-                                    return [
-                                        `protein: ${rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "N/A"}`,
-                                        `docking: ${to2(rawPoint.Docking ?? rawPoint.docking ?? rawPoint.X ?? rawPoint.x)}`,
-                                        `similarity: ${to2(rawPoint.Similarity ?? rawPoint.similarity ?? rawPoint.Y ?? rawPoint.y)}`,
-                                        `priority: ${to2(rawPoint.Priority ?? rawPoint.priority)}`,
-                                        `class: ${priorityClassToGroup(rawPoint)}`
-                                    ];
+                    options: {
+                        scales: {
+                            x: { title: { display: true, text: "Docking Mean" } },
+                            y: { min: 0, max: 1, title: { display: true, text: "Similarity" } }
+                        },
+                        plugins: {
+                            "analytics-scatter-threshold-lines": { lines: scatterThresholds },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => {
+                                        const rawPoint = items?.[0]?.raw?.rawPoint || {};
+                                        return rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "Candidate";
+                                    },
+                                    label: (ctx) => {
+                                        const rawPoint = ctx.raw?.rawPoint || {};
+                                        return [
+                                            `protein: ${rawPoint.Protein || rawPoint.protein || rawPoint.Label || rawPoint.label || "N/A"}`,
+                                            `docking: ${to2(rawPoint.Docking ?? rawPoint.docking ?? rawPoint.X ?? rawPoint.x)}`,
+                                            `similarity: ${to2(rawPoint.Similarity ?? rawPoint.similarity ?? rawPoint.Y ?? rawPoint.y)}`,
+                                            `priority: ${to2(rawPoint.Priority ?? rawPoint.priority)}`,
+                                            `class: ${priorityClassToGroup(rawPoint)}`
+                                        ];
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
 
             const heatmapEl = document.getElementById("chart-heatmap");
             const heatmap = get(fig, "ModelCorrelationHeatmap", "modelCorrelationHeatmap") || {};
             const labels = get(heatmap, "Labels", "labels") || [];
             const matrix = get(heatmap, "Matrix", "matrix") || [];
-            let html = "<table class='table table-sm table-bordered mb-0'><thead><tr><th></th>" + labels.map(l => `<th>${l}</th>`).join("") + "</tr></thead><tbody>";
-            for (let i = 0; i < labels.length; i++) {
-                html += `<tr><th>${labels[i]}</th>`;
-                for (let j = 0; j < labels.length; j++) {
-                    const v = (matrix[i] || [])[j] ?? 0;
-                    const red = v > 0 ? Math.round(255 * v) : 0;
-                    const blue = v < 0 ? Math.round(255 * -v) : 0;
-                    html += `<td style="background-color:rgba(${red},80,${blue},0.28)">${to2(v)}</td>`;
+
+            if (heatmapEl) {
+                let html = "<table class='table table-sm table-bordered mb-0'><thead><tr><th></th>" + labels.map(l => `<th>${l}</th>`).join("") + "</tr></thead><tbody>";
+                for (let i = 0; i < labels.length; i++) {
+                    html += `<tr><th>${labels[i]}</th>`;
+                    for (let j = 0; j < labels.length; j++) {
+                        const v = (matrix[i] || [])[j] ?? 0;
+                        const red = v > 0 ? Math.round(255 * v) : 0;
+                        const blue = v < 0 ? Math.round(255 * -v) : 0;
+                        html += `<td style="background-color:rgba(${red},80,${blue},0.28)">${to2(v)}</td>`;
+                    }
+                    html += "</tr>";
                 }
-                html += "</tr>";
+                heatmapEl.innerHTML = html + "</tbody></table>";
             }
-            heatmapEl.innerHTML = html + "</tbody></table>";
+
+            async function downloadCsv(url, fallbackFileName) {
+                const response = await fetch(url, {
+                    method: "GET",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Download failed: ${response.status}`);
+                }
+
+                const blob = await response.blob();
+                const contentDisposition = response.headers.get("Content-Disposition") || "";
+                const match = contentDisposition.match(/filename="?([^"]+)"?/i);
+                const fileName = match?.[1] || fallbackFileName || "analytics.csv";
+
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+
+            const summaryBtn = document.getElementById("download-summary-csv");
+            if (summaryBtn) {
+                summaryBtn.addEventListener("click", async function () {
+                    const url = this.dataset.url;
+                    try {
+                        this.disabled = true;
+                        await downloadCsv(url, "analytics-summary.csv");
+                    } catch (err) {
+                        console.error(err);
+                        alert("Failed to download Analytics Summary CSV.");
+                    } finally {
+                        this.disabled = false;
+                    }
+                });
+            }
+
+            const fullBtn = document.getElementById("download-full-csv");
+            if (fullBtn) {
+                fullBtn.addEventListener("click", async function () {
+                    const url = this.dataset.url;
+                    try {
+                        this.disabled = true;
+                        await downloadCsv(url, "analytics-full.csv");
+                    } catch (err) {
+                        console.error(err);
+                        alert("Failed to download Full Analysis CSV.");
+                    } finally {
+                        this.disabled = false;
+                    }
+                });
+            }
         })();
     </script>
 }

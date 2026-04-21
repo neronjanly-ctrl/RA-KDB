@@ -24,7 +24,6 @@ public class AnalysisParams
     public float HighPriorityStdThreshold { get; set; } = 0.5f;
     public float ModerateDockingThreshold { get; set; } = -7.0f;
     public float ModerateSimilarityThreshold { get; set; } = 0.5f;
-
     public float ModeratePriorityThreshold { get; set; } = 55.0f;
     public float HighPriorityThreshold { get; set; } = 75.0f;
 }

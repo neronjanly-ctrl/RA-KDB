@@ -48,6 +48,7 @@ public class ModelBoxplotItem
 public class PriorityScatterFigure
 {
     public List<PriorityScatterPoint> Points { get; set; } = new();
+    public List<ScatterThresholdLine> ThresholdLines { get; set; } = new();
 }
 
 public class PriorityScatterPoint
@@ -64,6 +65,15 @@ public class PriorityScatterPoint
     public int? PriorityRank { get; set; }
     public bool PassSimilarityInteraction { get; set; }
     public bool PassSimilarityKnown { get; set; }
+    public bool IsTopCandidate { get; set; }
+}
+
+public class ScatterThresholdLine
+{
+    public string Axis { get; set; }
+    public float Value { get; set; }
+    public string Label { get; set; }
+    public string Color { get; set; }
 }
 
 public class TopCandidatesBarFigure

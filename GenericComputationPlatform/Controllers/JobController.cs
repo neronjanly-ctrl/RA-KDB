@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 
 namespace GenericComputationPlatform.Controllers;
 
-
 [Route("/{domainId:required}/job")]
 public partial class JobController : Controller
 {
@@ -95,11 +94,11 @@ public partial class JobController : Controller
 
     [HttpPost("create")]
     public virtual async Task<ActionResult<int?>> Create(
-    string domainId,
-    [FromForm] string jobName,
-    [FromForm] JobLigandInputModel[] ligands,
-    [FromForm] bool isPrivate,
-    [FromForm] string[] selectedProteinIds)
+        string domainId,
+        [FromForm] string jobName,
+        [FromForm] JobLigandInputModel[] ligands,
+        [FromForm] bool isPrivate,
+        [FromForm] string[] selectedProteinIds)
     {
         Console.WriteLine($"[GCP Create] domainId={domainId}, jobName={jobName}");
         Console.WriteLine($"[GCP Create] selectedProteinIds count = {selectedProteinIds?.Length ?? 0}");
@@ -231,9 +230,6 @@ public partial class JobController : Controller
 
     [HttpGet("w{jobId:int}/output-table")]
     public virtual async Task<IActionResult> TableViewAll(string domainId, int jobId) => await OutputAction(domainId, jobId, -1, false);
-
-    //[HttpGet("w{jobId:int}/output-table/{pageNum:int=1}")]
-    //public IActionResult TableView(string domainId, int jobId, int pageNum) => OutputAction(domainId, jobId, pageNum, false);
 
     private async Task<IActionResult> OutputAction(string domainId, int jobId, int pageNum, bool cardView)
     {
@@ -381,90 +377,53 @@ public partial class JobController : Controller
         return View(model);
     }
 
-
     [HttpGet("w{jobId:int}/analytics")]
-    public virtual async Task<IActionResult> Analytics(string domainId, int jobId)
+    public async Task<IActionResult> Analytics(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
-        Domain domain = await _domainClient.GetOneAsync(domainId);
-        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
-            return NotFound();
-
-        Job job = await _jobClient.GetOneAsync(jobId);
-        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
-            return NotFound();
-
-        ViewBag.Keywords = domain.Keywords;
-
-        JobAnalyticsConfig config = new();
-        JobAnalyticsConfigMeta configMeta = _jobAnalyticsService.BuildRuntimeConfigMeta();
-        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, config);
-        JobAnalyticsPageModel model = new()
-        {
-            DomainId = domainId,
-            Summary = summary,
-            ConfigMeta = configMeta,
-            FrontendPayload = _jobAnalyticsService.BuildFrontendPayload(summary, configMeta),
-        };
-
-        return View(model);
-    }
-
-    [HttpPost("w{jobId:int}/analytics")]
-    public virtual async Task<IActionResult> Analytics(string domainId, int jobId, [FromForm] JobAnalyticsConfig config)
-    {
-        Domain domain = await _domainClient.GetOneAsync(domainId);
-        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
-            return NotFound();
-
-        Job job = await _jobClient.GetOneAsync(jobId);
-        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
-            return NotFound();
-
-        ViewBag.Keywords = domain.Keywords;
-
-        JobAnalyticsConfigMeta configMeta = _jobAnalyticsService.BuildRuntimeConfigMeta();
-        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, config);
-        JobAnalyticsPageModel model = new()
-        {
-            DomainId = domainId,
-            Summary = summary,
-            ConfigMeta = configMeta,
-            FrontendPayload = _jobAnalyticsService.BuildFrontendPayload(summary, configMeta),
-        };
-
-        return View(model);
+        JobAnalyticsPageModel model = await BuildAnalyticsPageModelAsync(domainId, jobId, config);
+        return View("Analytics", model);
     }
 
     [HttpGet("w{jobId:int}/analytics-report")]
-    public virtual async Task<IActionResult> AnalyticsReport(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
+    public async Task<IActionResult> AnalyticsReport(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
-        Domain domain = await _domainClient.GetOneAsync(domainId);
-        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
-            return NotFound();
+        JobAnalyticsConfig effectiveConfig = config ?? new JobAnalyticsConfig();
+        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, effectiveConfig);
+        string csv = _jobAnalyticsService.BuildSummaryCsv(summary);
 
-        Job job = await _jobClient.GetOneAsync(jobId);
-        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
-            return NotFound();
+        byte[] bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        string fileName = $"job#{jobId}-analytics-summary.csv";
 
-        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, config ?? new JobAnalyticsConfig());
-        byte[] bytes = Encoding.UTF8.GetBytes(_jobAnalyticsService.BuildSummaryCsv(summary));
-        return File(bytes, "text/csv", $"job#{jobId}-{job.Name.EscapePath()}-analytics-summary.csv");
+        return File(bytes, "text/csv; charset=utf-8", fileName);
     }
 
     [HttpGet("w{jobId:int}/analytics-report-full")]
-    public virtual async Task<IActionResult> AnalyticsReportFull(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
+    public async Task<IActionResult> AnalyticsReportFull(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
-        Domain domain = await _domainClient.GetOneAsync(domainId);
-        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
-            return NotFound();
+        JobAnalyticsConfig effectiveConfig = config ?? new JobAnalyticsConfig();
+        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, effectiveConfig);
+        string csv = _jobAnalyticsService.BuildFullAnalysisCsv(summary);
 
-        Job job = await _jobClient.GetOneAsync(jobId);
-        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
-            return NotFound();
+        byte[] bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+        string fileName = $"job#{jobId}-analytics-full.csv";
 
-        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, config ?? new JobAnalyticsConfig());
-        byte[] bytes = Encoding.UTF8.GetBytes(_jobAnalyticsService.BuildFullAnalysisCsv(summary));
-        return File(bytes, "text/csv", $"job#{jobId}-{job.Name.EscapePath()}-analysis-full.csv");
+        return File(bytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    private async Task<JobAnalyticsPageModel> BuildAnalyticsPageModelAsync(string domainId, int jobId, JobAnalyticsConfig config)
+    {
+        JobAnalyticsConfig effectiveConfig = config ?? new JobAnalyticsConfig();
+        JobAnalyticsConfigMeta meta = _jobAnalyticsService.BuildRuntimeConfigMeta();
+        JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, effectiveConfig);
+        object payload = _jobAnalyticsService.BuildFrontendPayload(summary, meta);
+
+        return new JobAnalyticsPageModel
+        {
+            DomainId = domainId,
+            Summary = summary,
+            ConfigMeta = meta,
+            FrontendPayload = payload
+        };
     }
 
     [HttpGet("w{jobId:int}/report")]
@@ -510,9 +469,7 @@ public partial class JobController : Controller
             "Prediction Result",
             "Confidence Level",
         } : Array.Empty<string>())
-        .Append(
-            "Source Url"
-        )
+        .Append("Source Url")
         .ToArray();
 
         string hosting = _appSettings.ExternalUrls.Hosting.TrimEnd('/');
@@ -520,7 +477,7 @@ public partial class JobController : Controller
         {
             List<string> list = new()
             {
-                job.JobLigands.First(p=>p.LigandId == o.LigandId).LigandName,
+                job.JobLigands.First(p => p.LigandId == o.LigandId).LigandName,
                 o.Ligand.Smiles,
                 o.Cavity.Protein.ProteinSymbol,
                 o.Cavity.Protein.GeneSymbol,

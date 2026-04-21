@@ -34,7 +34,9 @@ public class JobAnalyticsRow
     public int ModelsPassingDockingCount { get; set; }
     public bool AllModelsPassDocking { get; set; }
     public bool AnyModelPassDocking { get; set; }
+    public bool PassDockingMean { get; set; }
     public bool PassDockingEffective { get; set; }
+    public float? DockingMeanScore { get; set; }
     public bool PassSimilarityInteraction { get; set; }
     public bool PassSimilarityKnown { get; set; }
     public float? DockingEffectiveScore { get; set; }
