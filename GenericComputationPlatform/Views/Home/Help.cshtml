@@ -1,51 +1,168 @@
 ﻿@model Domain
-@{ 
+@{
     ViewData["Title"] = "User Guide";
 }
+
 <h2>User Guide</h2>
 <hr />
 
-<div class="text-muted mb-3">
-    <span class="bg-info mr-2">&nbsp;</span>How to create a computation job for @Model.Name?
+<div class="alert alert-light border mb-4">
+    <strong>Overview</strong><br />
+    This guide introduces the navigation flow of the RA platform and the complete docking workflow,
+    from entering the workspace to inspecting analytics and plot results.
 </div>
 
-<div class="mb-3 user-guide small">
+<div class="text-muted mb-3">
+    <span class="bg-info mr-2">&nbsp;</span>Platform Navigation
+</div>
+
+<div class="mb-4 user-guide small">
     <ol>
-        <li>
-            To issue a new computation job, you first need to click on the yellow <a asp-controller="Job" asp-action="New" asp-route-domainId="@Model.Id" target="_blank">Create a new job</a> button from the <a asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id" target="_blank">ALL JOBS</a> page. You can find the link to <b>ALL JOBS</b> wherever you are on this web site.
-            <img src="~/guide/step1.png" alt="step1" />
+        <li class="mb-4">
+            <p>
+                Start from the platform homepage. This page provides the main introduction of the
+                Rheumatoid Arthritis Knowledge & Docking Platform. Click <strong>RA Workspace</strong>
+                in the top navigation bar to enter the workspace.
+            </p>
+            <img src="~/guide/Index1.png" alt="Platform homepage" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
-        <li>
-            Name your job and draw your molecule with the Molecular Editor. You can also paste in any pre-existing molecule structure in either <i>MOL</i>, <i>SDF</i> or <i>SMILES</i> format via the dropdown menu of the blue double-triangle icon on the toolbar. In this way, please be aware that the pasted code should <b>NOT</b> contain any leading or trailing spaces. Hit <b>Accept</b> to continue.
-            <img src="~/guide/step2.1.png" alt="step2.1" />
-            <img src="~/guide/step2.2.png" alt="step2.2" />
+
+        <li class="mb-4">
+            <p>
+                After clicking <strong>RA Workspace</strong>, you will enter the workspace page.
+                This page presents the two core functional modules of the platform:
+                <strong>Protein KnowledgeBase</strong> and <strong>Protein-Ligand Docking Analysis</strong>.
+            </p>
+            <img src="~/guide/WorkingSpace.png" alt="RA workspace" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
-        <li>
-            Verify the graphic depiction of your molecule presented at the Molecular Editor canvas area. You can use the editor to modify it as needed and then hit the yellow <b>Create Job</b> button below when it is ready to go. Your job will be created immediately and enqueued to be processed.
-            <img src="~/guide/step3.png" alt="step3" />
+
+        <li class="mb-4">
+            <p>
+                Click the <strong>left card</strong> to enter the <strong>Knowledge Base</strong>.
+                Here you can browse curated RA-related protein targets, search by protein name,
+                gene symbol, UniProt ID, or tag, and inspect detailed protein records.
+            </p>
+            <img src="~/guide/KnowledgeBase.png" alt="Knowledge base page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                Click the <strong>right card</strong> to enter the <strong>Docking</strong> workflow.
+                This is the main entrance for creating jobs, submitting molecules, and analyzing docking results.
+            </p>
+            <img src="~/guide/Docking_1.png" alt="Docking entry page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
     </ol>
 </div>
 
 <div class="text-muted mb-3">
-    <span class="bg-info mr-2">&nbsp;</span>How to inspect prediction results?
+    <span class="bg-info mr-2">&nbsp;</span>Docking Workflow
 </div>
 
-<div class="mb-3 user-guide small">
+<div class="mb-4 user-guide small">
     <ol>
-        <li>
-            Once your job is created and enqueued, you will be brought to the home page of the newly created job where you are presented useful functionalities like <i>Molecular Fingerprint</i>, <i>Molecular Model Download</i> and <i>BBB Prediction</i> for the input molecule. Scroll down the page to access all the tools. Links to <b>OUTPUT</b> and <b>SPIDER PLOT</b> can be found from the context-aware navigation bar where you will find prediction results of your job.
-            <img src="~/guide/step4.png" alt="step4" />
+        <li class="mb-4">
+            <p>
+                <strong>Step 1. Create a docking job.</strong><br />
+                Enter a <strong>Job Name</strong>, provide the <strong>Molecule Name</strong>,
+                and draw or paste the molecule structure in the editor.
+                You may keep the default option <strong>One-click all RA targets</strong>,
+                or switch to <strong>Dock with selected targets only</strong> if you want to limit
+                the docking scope to specific targets.
+            </p>
+            <img src="~/guide/Docking_1.png" alt="Create docking job" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
-        <li>
-            The <b>OUTPUT</b> page can display results of your job in either <i>table mode</i> or <i>cards mode</i> for your conveniences. Toggle between views with the top right switch. In <i>table mode</i> you are provided multiple options to customize the view such as defining the pagination length and the sorting column. Results that are finalized will be presented with links to see detailed information about the protein, to download models or to compare between best matched known molecule. Also note that the sorting headers support multi-sorting by clicking multiple column headers one after another while holding SHIFT key at the same time.
-            <img src="~/guide/step5.1.png" alt="step5.1" />
-            In card mode you can instinctly compare 3D models of the targets. Same functionalities are provided but view customization is limited.
-            <img src="~/guide/step5.2.png" alt="step5.2" />
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 1.2 Select docking target any number in your jobs.</strong><br />
+                Select any number of platform-supported pre-screened protein targets for molecular docking 
+                and you will see docking scores across multiple targets within a single workflow.
+            </p>
+            <img src="~/guide/Docking_2.png" alt="All jobs list" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
-        <li>
-            Switch to <b>SPIDER PLOT</b> and you will see prediction result in graphics. A bunch of customization tools are provided. You can define molecule/target circle colors and sizes, text colors and sizes, border sizes and colors. You can also toggle visibility of interaction labels, display of molecular depiction. All nodes on the graph are also manipulatable. You can define position of every single nodes and by holding SHIFT or CTRL key you can even move the entire graph and multi-select nodes. Additional functionalities including exporting the plot to an image are coming soon. At the moment with Chrome you can <i>Save image as</i> by right clicking on the image.
-            <img src="~/guide/step6.png" alt="step6" />
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 2. View all submitted jobs.</strong><br />
+                Once a job is created, it will appear in the <strong>All Jobs</strong> list.
+                Here you can review job names, ligand counts, submit time, finish time,
+                processing progress, and current status. Click <strong>Open</strong> to inspect a job in detail.
+            </p>
+            <img src="~/guide/Docking_3.png" alt="All jobs list" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 3_1. Open the job.</strong><br />
+                After enter <strong>Open</strong> to inspect a job in list.On the job detail page, you can confirm whether the task has finished successfully,
+                inspect the ligand model information, and access the next-level outputs through
+                <strong>See Detailed Output</strong>, <strong>See Analytics</strong>, and
+                <strong>Download CSV</strong>.
+            </p>
+            <img src="~/guide/Docking_4_0.png" alt="Job page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 3_2. Open the detail page.</strong><br />
+                After enter <strong>Open</strong> to inspect a job in list.On the job detail page, you can confirm whether the task has finished successfully,
+                inspect the ligand model information, and access the next-level outputs through
+                <strong>See Detailed Output</strong>, <strong>See Analytics</strong>, and
+                <strong>Download CSV</strong>.
+            </p>
+            <img src="~/guide/Docking_4_0_1.png" alt="Job detail page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 4. Inspect analytics.</strong><br />
+                Click <strong>See Analytics</strong> to enter the analytics page.
+                This page supports parameter adjustment, figure-based inspection, target ranking,
+                grouped summaries, and downloadable analysis results.
+            </p>
+
+            <p class="mb-2">
+                <strong>4.1 Configuration panel.</strong> You can review default parameters and adjust
+                analysis settings such as Top N, docking threshold, similarity thresholds, rule bonus,
+                and scoring weights before re-running analytics.
+            </p>
+            <img src="~/guide/Docking_4_0.png" alt="Analytics configuration panel" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+
+            <p class="mb-2">
+                <strong>4.2 Figure plots.</strong> The platform provides histogram and ranking-style plots
+                for docking score distribution, similarity distribution, top candidates, and model consistency.
+            </p>
+            <img src="~/guide/Docking_4_1_0.png" alt="Analytics figure plots" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+
+            <p class="mb-2">
+                <strong>4.3 Priority scatter.</strong> This scatter plot helps users quickly identify
+                candidate classes based on docking mean and similarity values.
+            </p>
+            <img src="~/guide/Docking_4_1_1.png" alt="Priority scatter plot" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+
+            <p class="mb-2">
+                <strong>4.4 Correlation heatmap and Top N candidates.</strong> The heatmap summarizes
+                model agreement, while the Top N table lists key candidate proteins/genes together with
+                docking mean, docking std, similarity, priority score, and candidate class.
+            </p>
+            <img src="~/guide/Docking_4_1_2.png" alt="Correlation heatmap and Top N candidates" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+
+            <p class="mb-2">
+                <strong>4.5 Grouped summary.</strong> The grouped summary aggregates the results at the
+                protein or gene level and provides export options for both summary and full analytics CSV files.
+            </p>
+            <img src="~/guide/Docking_4_1_3.png" alt="Grouped summary" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 5. Open the plot view.</strong><br />
+                The plot view displays the docking result in a graph-based structure centered on the molecule.
+                It helps users visually inspect protein-level or gene-level relationships and understand
+                the docking connections more intuitively.
+            </p>
+            <img src="~/guide/Docking_5.png" alt="Docking plot view" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
     </ol>
 </div>
