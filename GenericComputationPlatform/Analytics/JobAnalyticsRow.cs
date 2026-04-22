@@ -19,9 +19,6 @@ public class JobAnalyticsRow
     public string BestMatchSmiles { get; set; }
     public string CompareUrl { get; set; }
     public string SourceUrl { get; set; }
-    public string PredictionResult { get; set; }
-    public string PredictionConfidence { get; set; }
-
     public bool IsAnalyzable { get; set; }
     public List<string> ExclusionReasons { get; set; } = new();
 

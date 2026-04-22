@@ -434,8 +434,6 @@ public class JobAnalyticsService : IJobAnalyticsService
             "Protein Symbol",
             "Gene Symbol",
             "Similarity Score",
-            "Prediction Result",
-            "Prediction Confidence",
             "IsAnalyzable",
             "ExclusionReasons",
             "DockingMean",
@@ -475,8 +473,6 @@ public class JobAnalyticsService : IJobAnalyticsService
                 o.ProteinSymbol,
                 o.GeneSymbol,
                 o.SimilarityScore?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
-                o.PredictionResult,
-                o.PredictionConfidence,
                 o.IsAnalyzable ? "true" : "false",
                 string.Join(" | ", o.ExclusionReasons),
                 o.DockingMean?.ToString("F3", CultureInfo.InvariantCulture) ?? "N/A",
@@ -563,8 +559,6 @@ public class JobAnalyticsService : IJobAnalyticsService
                 BestMatchSmiles = hasSimilarity ? compound.Smiles : null,
                 CompareUrl = string.IsNullOrWhiteSpace(comparePath) ? null : hosting + comparePath,
                 SourceUrl = string.IsNullOrWhiteSpace(sourcePath) ? null : hosting + sourcePath,
-                PredictionResult = o.GetFormattedActivity(),
-                PredictionConfidence = o.GetFormattedConfidenceLevel(),
             };
         }).ToList();
     }

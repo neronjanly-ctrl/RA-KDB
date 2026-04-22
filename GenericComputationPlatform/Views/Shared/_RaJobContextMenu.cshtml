@@ -4,7 +4,7 @@
     var active = (ViewData["JobNavActive"]?.ToString() ?? string.Empty).ToLowerInvariant();
     var outputUrl = ViewData["JobNavOutputUrl"]?.ToString();
     var outputPageNum = ViewData["JobNavOutputPageNum"];
-    var isJobContextActive = active == "job" || active == "bbb" || active == "output" || active == "plot" || active == "analytics";
+    var isJobContextActive = active == "job" || active == "output" || active == "plot" || active == "analytics";
 
     if (!string.IsNullOrWhiteSpace(domainId) &&
         !string.IsNullOrWhiteSpace(jobId) &&
@@ -35,7 +35,7 @@
            data-toggle="dropdown"
            aria-haspopup="true"
            aria-expanded="false">
-            <span class="ra-section-dropdown-label">Job View</span>
+            <span class="ra-section-dropdown-label">Job Function</span>
         </a>
 
         <div class="dropdown-menu dropdown-menu-right ra-section-dropdown-menu"
@@ -45,22 +45,13 @@
                asp-action="Details"
                asp-route-domainId="@domainId"
                asp-route-jobId="@jobId">
-                Job
-            </a>
-
-            <a class="dropdown-item ra-section-dropdown-item @(active == "bbb" ? "active" : "")"
-               asp-controller="Job"
-               asp-action="Bbb"
-               asp-route-domainId="@domainId"
-               asp-route-jobId="@jobId">
-                BBB
+                Back to this Job
             </a>
 
             <a class="dropdown-item ra-section-dropdown-item @(active == "output" ? "active" : "")"
                href="@outputUrl">
                 Output
             </a>
-
 
             <a class="dropdown-item ra-section-dropdown-item @(active == "analytics" ? "active" : "")"
                asp-controller="Job"

@@ -200,26 +200,7 @@ public partial class JobController : Controller
     [HttpGet("w{jobId:int}/bbb")]
     public virtual async Task<IActionResult> Bbb(string domainId, int jobId)
     {
-        Domain domain = await _domainClient.GetOneAsync(domainId);
-        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
-            return NotFound();
-
-        Job job = await _jobClient.GetOneAsync(jobId);
-
-        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
-            return NotFound();
-
-        ViewBag.Keywords = domain.Keywords;
-
-        JobDetailsModel model = new()
-        {
-            DomainId = domainId,
-            Job = job,
-            PreviewLigandModels = _appSettings.Display.PreviewLigandModels,
-            PreviewLigandFingerprints = _appSettings.Display.PreviewLigandFingerprints,
-        };
-
-        return View(model);
+        return NotFound();
     }
 
     [HttpGet("w{jobId:int}/output-card/all")]
@@ -380,13 +361,26 @@ public partial class JobController : Controller
     [HttpGet("w{jobId:int}/analytics")]
     public async Task<IActionResult> Analytics(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
+        (Domain domain, Job job) = await ValidateDomainAndJobAccessAsync(domainId, jobId);
+        if (domain == null || job == null)
+            return NotFound();
+
+        ViewBag.Keywords = domain.Keywords;
         JobAnalyticsPageModel model = await BuildAnalyticsPageModelAsync(domainId, jobId, config);
         return View("Analytics", model);
     }
 
+    [HttpPost("w{jobId:int}/analytics")]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> AnalyticsPost(string domainId, int jobId, [FromForm] JobAnalyticsConfig config) => Analytics(domainId, jobId, config);
+
     [HttpGet("w{jobId:int}/analytics-report")]
     public async Task<IActionResult> AnalyticsReport(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
+        (Domain domain, Job job) = await ValidateDomainAndJobAccessAsync(domainId, jobId);
+        if (domain == null || job == null)
+            return NotFound();
+
         JobAnalyticsConfig effectiveConfig = config ?? new JobAnalyticsConfig();
         JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, effectiveConfig);
         string csv = _jobAnalyticsService.BuildSummaryCsv(summary);
@@ -400,6 +394,10 @@ public partial class JobController : Controller
     [HttpGet("w{jobId:int}/analytics-report-full")]
     public async Task<IActionResult> AnalyticsReportFull(string domainId, int jobId, [FromQuery] JobAnalyticsConfig config)
     {
+        (Domain domain, Job job) = await ValidateDomainAndJobAccessAsync(domainId, jobId);
+        if (domain == null || job == null)
+            return NotFound();
+
         JobAnalyticsConfig effectiveConfig = config ?? new JobAnalyticsConfig();
         JobAnalyticsSummary summary = await _jobAnalyticsService.BuildSummaryAsync(domainId, jobId, effectiveConfig);
         string csv = _jobAnalyticsService.BuildFullAnalysisCsv(summary);
@@ -424,6 +422,19 @@ public partial class JobController : Controller
             ConfigMeta = meta,
             FrontendPayload = payload
         };
+    }
+
+    private async Task<(Domain domain, Job job)> ValidateDomainAndJobAccessAsync(string domainId, int jobId)
+    {
+        Domain domain = await _domainClient.GetOneAsync(domainId);
+        if (domain == null || !domain.IsPublic && User.Identity?.IsAuthenticated != true)
+            return (null, null);
+
+        Job job = await _jobClient.GetOneAsync(jobId);
+        if (job == null || job.IsPrivate && (!User.Identity.IsAuthenticated || job.UserId != User.Identity.Name?.ToLower()))
+            return (null, null);
+
+        return (domain, job);
     }
 
     [HttpGet("w{jobId:int}/report")]
