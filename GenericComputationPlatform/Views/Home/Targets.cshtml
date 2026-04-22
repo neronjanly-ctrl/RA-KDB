@@ -105,7 +105,7 @@
                 <div class="ra-hero-copy">
 
                     <h1 class="ra-hero-title">
-                        Knowledgebase workspace for curated RA targets
+                        Knowledgebase workspace
                     </h1>           
                     <p class="ra-hero-desc">
                         Explore curated rheumatoid arthritis related targets, protein records, and docking-ready structures
@@ -119,7 +119,8 @@
     <section class="ra-module ra-module--light" id="search">
         <div class="ra-module-body ra-container">
             <div class="ra-editorial-head mb-5">
-                <h2 class="ra-section-title">Search & Filter Targets</h2>
+                <h1 class="ra-hero-title-docking">
+                Search & View RA Targets</h1>
                 <p class="ra-section-desc">
                     Browse @cavityItems.Count structured protein records across @categoryStats.Count functional categories.
                     Search by name, gene, UniProt, or tag to quickly find your target.
@@ -194,42 +195,44 @@
 
                 </div>
             </div>
-
-            <div class="ra-card-shell ra-results mt-4">
-                <div id="raCardView" class="ra-card-view"></div>
-                <div id="raTableView" class="ra-table-view"></div>
-
-                <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
-                    No targets are available for the current filter.
-                </div>
-
-                <div class="ra-pagination">
-                    <div class="ra-page-info">
-                        Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
-                    </div>
-                    <div class="ra-page-actions">
-                        <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
-                        <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
-                    </div>
-                </div>
-
-                <div class="ra-footer-actions">
-                    <a class="btn-ra-secondary"
-                       asp-controller="Home"
-                       asp-action="Index"
-                       asp-route-domainId="@Model.Domain.Id">
-                        Back to RA Workspace
-                    </a>
-                    <a class="btn-ra-primary"
-                       asp-controller="Job"
-                       asp-action="New"
-                       asp-route-domainId="@Model.Domain.Id">
-                        Continue to Docking
-                    </a>
-                </div>
-            </div>
         </div>
     </section>
+
+<h2 class="ra-section-title">
+       Results View
+</h2>
+
+    <div id="raCardView" class="ra-card-view"></div>
+    <div id="raTableView" class="ra-table-view"></div>
+
+    <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
+        No targets are available for the current filter.
+    </div>
+
+    <div class="ra-pagination">
+        <div class="ra-page-info">
+            Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
+        </div>
+        <div class="ra-page-actions">
+            <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
+            <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
+        </div>
+    </div>
+
+    <div class="ra-footer-actions">
+        <a class="btn-ra-secondary"
+            asp-controller="Home"
+            asp-action="Index"
+            asp-route-domainId="@Model.Domain.Id">
+            Back to RA Workspace
+        </a>
+        <a class="btn-ra-primary"
+            asp-controller="Job"
+            asp-action="New"
+            asp-route-domainId="@Model.Domain.Id">
+            Continue to Docking
+        </a>
+    </div>
 </div>
 
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewTitle" aria-hidden="true">

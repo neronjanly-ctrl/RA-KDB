@@ -165,7 +165,7 @@
             </div>
         </div>
 
-        <div class="small text-muted mt-2">
+        <div class="small text-danger mt-2">
             <strong>Higher Priority Score</strong> means higher relative priority within the current batch; it does not by itself mean that the candidate has passed the platform threshold criteria.
         </div>
     </div>
@@ -274,14 +274,9 @@
             <div class="card-header">Model correlation heatmap</div>
             <div class="card-body">
                 <div id="chart-heatmap" class="table-responsive"></div>
-                <div class="small text-muted mt-2">Table-based fallback heatmap; planned migration to a dedicated heatmap chart implementation.</div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="alert alert-light border small">
-    <strong>Stage 3 plan:</strong> upgrade boxplot/heatmap to dedicated chart components first; then consider AJAX partial recompute and cross-chart/table interactions.
 </div>
 
 <h3>Top N Candidates</h3>

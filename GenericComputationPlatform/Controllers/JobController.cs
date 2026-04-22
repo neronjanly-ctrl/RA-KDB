@@ -241,7 +241,6 @@ public partial class JobController : Controller
             UseCardOutputDisplay = cardView,
             UseGeneSymbolForTargetDisplay = HttpContext.UseGeneSymbolForTargetDisplay(),
             MaxStructureCount = data.Count > 0 ? data.Max(o => o.DockingScores.Length) : 0,
-            HasPrediction = data.Any(o => o.Prediction != null),
             SameGeneProteinSymbol = data.All(o => o.Cavity.Protein.GeneSymbol == o.Cavity.Protein.ProteinSymbol),
         };
 
@@ -268,30 +267,29 @@ public partial class JobController : Controller
         if (!_appSettings.Test.UseMockDataForPlotting)
         {
             IReadOnlyList<Result> results = await _resultClient.List2Async(jobId);
-            bool hasPrediction = results.Any(o => o.Prediction != null);
-            float dockingThresholdInteraction = _appSettings.Plotting.DockingThresholdInteraction;
+                      float dockingThresholdInteraction = _appSettings.Plotting.DockingThresholdInteraction;
             float thresholdInteraction = _appSettings.Plotting.ThresholdForInteraction;
             float thresholdKnown = _appSettings.Plotting.ThresholdForKnown;
 
             ViewBag.SameGeneProteinSymbol = results.All(o => o.Cavity.Protein.GeneSymbol == o.Cavity.Protein.ProteinSymbol);
 
             data = results
-                .Where(o => hasPrediction ? o.Prediction?.Activity == BioActivity.Active
-                    : o.MostSimilarCompound?.Similarity >= thresholdInteraction ? o.MostSimilarCompound?.Activity == BioActivity.Active : o.AverageDockingScore <= dockingThresholdInteraction)
-                .Select(o => new[]
-                {
-                    o.Cavity.Protein.ProteinName,
-                    null,
-                    o.GetFormattedVinaScore(),
-                    job.JobLigands.FirstOrDefault(p => p.LigandId == o.LigandId).LigandName,
-                    o.LigandId.StringifyId(),
-                    HttpContext.UseGeneSymbolForTargetDisplay() ? o.Cavity.Protein.GeneSymbol : o.Cavity.Protein.ProteinSymbol,
-                    o.Cavity.Protein.OrganismSymbol,
-                    (!hasPrediction ? o.MostSimilarCompound?.Similarity ?? 0
-                    : o.MostSimilarActiveCompound != null && o.MostSimilarActiveCompound.Activity != BioActivity.Unknown ? o.MostSimilarActiveCompound.Similarity
-                    : 0) >= thresholdKnown ? "1" : "0",
-                })
-                .ToArray();
+                    .Where(o =>
+                        o.MostSimilarCompound?.Similarity >= thresholdInteraction
+                            ? o.MostSimilarCompound?.Activity == BioActivity.Active
+                            : o.AverageDockingScore <= dockingThresholdInteraction)
+                    .Select(o => new[]
+                    {
+                        o.Cavity.Protein.ProteinName,
+                        null,
+                        o.GetFormattedVinaScore(),
+                        job.JobLigands.FirstOrDefault(p => p.LigandId == o.LigandId).LigandName,
+                        o.LigandId.StringifyId(),
+                        HttpContext.UseGeneSymbolForTargetDisplay() ? o.Cavity.Protein.GeneSymbol : o.Cavity.Protein.ProteinSymbol,
+                        o.Cavity.Protein.OrganismSymbol,
+                        (o.MostSimilarCompound?.Similarity ?? 0) >= thresholdKnown ? "1" : "0",
+                    })
+                    .ToArray();
 
             foreach (JobLigand item in job.JobLigands)
             {
@@ -453,7 +451,6 @@ public partial class JobController : Controller
             return NotFound();
 
         int maxStructureCount = results.Max(o => o.DockingScores.Length);
-        bool hasPrediction = results.Any(o => o.Prediction != null);
 
         string[] headers = new[]
         {
@@ -470,16 +467,11 @@ public partial class JobController : Controller
         .Concat(new[]
         {
             "Similarity Score",
-            $"Best{(hasPrediction ? " Active" : "")} Match",
-            $"Best{(hasPrediction ? " Active" : "")} Match Url",
-            $"Best{(hasPrediction ? " Active" : "")} Match SMILES",
-            $"Best{(hasPrediction ? " Active" : "")} Match Compare Url",
+            "Best Match",
+            "Best Match Url",
+            "Best Match SMILES",
+            "Best Match Compare Url",
         })
-        .Concat(hasPrediction ? new[]
-        {
-            "Prediction Result",
-            "Confidence Level",
-        } : Array.Empty<string>())
         .Append("Source Url")
         .ToArray();
 
@@ -501,7 +493,7 @@ public partial class JobController : Controller
             for (int i = 0; i < maxStructureCount; i++)
                 list.Add(o.GetFormattedVinaScore(i));
 
-            SimilarChemblCompound comp = hasPrediction ? o.MostSimilarActiveCompound : o.MostSimilarCompound;
+            SimilarChemblCompound comp = o.MostSimilarCompound;
             if (comp == null)
             {
                 list.AddRange(new[] { "N/A", "N/A", "N/A", "N/A" });
@@ -528,12 +520,6 @@ public partial class JobController : Controller
                 cavityId = o.CavityId.StringifyId(),
                 ligandId = o.LigandId.StringifyId()
             }));
-
-            if (hasPrediction)
-            {
-                list.Add(o.GetFormattedActivity());
-                list.Add(o.GetFormattedConfidenceLevel());
-            }
 
             list.Add(hosting + Url.Action("JobDetails", "Protein", new
             {
