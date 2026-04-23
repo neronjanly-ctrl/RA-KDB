@@ -8,8 +8,8 @@
 
 <div class="alert alert-light border mb-4">
     <strong>Overview</strong><br />
-    This guide introduces the navigation flow of the RA platform and the complete docking workflow,
-    from entering the workspace to inspecting analytics and plot results.
+    This guide explains how to navigate the RA Knowledge & Docking Platform, explore the Knowledge Base,
+    create docking jobs, and inspect output, analytics, and plot results.
 </div>
 
 <div class="text-muted mb-3">
@@ -20,9 +20,9 @@
     <ol>
         <li class="mb-4">
             <p>
-                Start from the platform homepage. This page provides the main introduction of the
-                Rheumatoid Arthritis Knowledge & Docking Platform. Click <strong>RA Workspace</strong>
-                in the top navigation bar to enter the workspace.
+                This is the homepage of the Rheumatoid Arthritis Knowledge & Docking Platform (RA-KDP).
+                It provides an overview of the platform and introduces its main functions.
+                Click <strong>RA Workspace</strong> in the top navigation bar to enter the main workspace.
             </p>
             <img src="~/guide/Index1.png" alt="Platform homepage" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
@@ -30,7 +30,7 @@
         <li class="mb-4">
             <p>
                 After clicking <strong>RA Workspace</strong>, you will enter the workspace page.
-                This page presents the two core functional modules of the platform:
+                This page presents the two core modules of the platform:
                 <strong>Protein KnowledgeBase</strong> and <strong>Protein-Ligand Docking Analysis</strong>.
             </p>
             <img src="~/guide/WorkingSpace.png" alt="RA workspace" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
@@ -38,19 +38,47 @@
 
         <li class="mb-4">
             <p>
-                Click the <strong>left card</strong> to enter the <strong>Knowledge Base</strong>.
-                Here you can browse curated RA-related protein targets, search by protein name,
-                gene symbol, UniProt ID, or tag, and inspect detailed protein records.
+                Click the <strong>Protein KnowledgeBase</strong> card to enter the Knowledge Base workspace.
+                Here you can browse curated RA-related protein targets, explore structured protein records,
+                and continue to the search and results view.
             </p>
-            <img src="~/guide/KnowledgeBase.png" alt="Knowledge base page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+            <img src="~/guide/KDB_Preface.png" alt="Knowledge base page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                Click the <strong>right card</strong> to enter the <strong>Docking</strong> workflow.
-                This is the main entrance for creating jobs, submitting molecules, and analyzing docking results.
+                Click the <strong>Protein-Ligand Docking Analysis</strong> card to enter the docking workspace.
+                This is the main page for creating docking jobs, submitting molecules, and selecting docking targets.
             </p>
             <img src="~/guide/Docking_1.png" alt="Docking entry page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+    </ol>
+</div>
+
+<div class="text-muted mb-3">
+    <span class="bg-info mr-2">&nbsp;</span>Knowledge Base Workflow
+</div>
+
+<div class="mb-4 user-guide small">
+    <ol>
+        <li class="mb-4">
+            <p>
+                <strong>Step 1. Search and browse RA targets.</strong><br />
+                In the Knowledge Base, you can search targets by protein name, gene symbol, UniProt ID, or tag.
+                The results can be viewed in either <strong>Card view</strong> or <strong>Table view</strong>,
+                and category filters help you quickly narrow the target list.
+            </p>
+            <img src="~/guide/KDB_Serach.png" alt="Knowledge Base search and results" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 2. Open the target details page.</strong><br />
+                Click <strong>Details</strong> for any target to open its details page.
+                This page provides structural visualization, external resource links, and downloadable model files
+                for further inspection.
+            </p>
+            <img src="~/guide/KDB_Details.png" alt="Knowledge Base details page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
     </ol>
 </div>
@@ -65,102 +93,113 @@
             <p>
                 <strong>Step 1. Create a docking job.</strong><br />
                 Enter a <strong>Job Name</strong>, provide the <strong>Molecule Name</strong>,
-                and draw or paste the molecule structure in the editor.
-                You may keep the default option <strong>One-click all RA targets</strong>,
-                or switch to <strong>Dock with selected targets only</strong> if you want to limit
-                the docking scope to specific targets.
+                and draw or paste the molecule structure in the molecular editor.
+                When the molecule is ready, proceed to target selection and job creation.
             </p>
             <img src="~/guide/Docking_1.png" alt="Create docking job" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 1.2 Select docking target any number in your jobs.</strong><br />
-                Select any number of platform-supported pre-screened protein targets for molecular docking 
-                and you will see docking scores across multiple targets within a single workflow.
+                <strong>Step 2. Select the target scope.</strong><br />
+                You can keep the default option <strong>One-click all RA targets</strong> for full-panel docking,
+                or switch to <strong>Dock with selected targets only</strong> and manually choose specific proteins.
+                This allows you to focus the docking task on a custom target subset.
             </p>
-            <img src="~/guide/Docking_2.png" alt="All jobs list" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+            <img src="~/guide/Docking_2.png" alt="Docking target selection" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 2. View all submitted jobs.</strong><br />
-                Once a job is created, it will appear in the <strong>All Jobs</strong> list.
-                Here you can review job names, ligand counts, submit time, finish time,
-                processing progress, and current status. Click <strong>Open</strong> to inspect a job in detail.
+                <strong>Step 3. Browse submitted jobs.</strong><br />
+                After a job is created, it appears in the docking job list.
+                This page summarizes submitted jobs and displays their names, ligands, created and updated time,
+                progress, status, and available actions.
             </p>
-            <img src="~/guide/Docking_3.png" alt="All jobs list" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+            <img src="~/guide/Docking_joblists.png" alt="All jobs list" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 3_1. Open the job.</strong><br />
-                After enter <strong>Open</strong> to inspect a job in list.On the job detail page, you can confirm whether the task has finished successfully,
-                inspect the ligand model information, and access the next-level outputs through
-                <strong>See Detailed Output</strong>, <strong>See Analytics</strong>, and
-                <strong>Download CSV</strong>.
+                <strong>Step 4. Search and filter jobs.</strong><br />
+                Use the search box and status filters to quickly locate a job by job name, job ID, or ligand name.
+                You can also sort the list and switch between different job states such as running, finished, or failed.
+            </p>
+            <img src="~/guide/Docking_jobsearch.png" alt="Search and filter jobs" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+        </li>
+
+        <li class="mb-4">
+            <p>
+                <strong>Step 5. Open a job.</strong><br />
+                Click <strong>Open</strong> in the job list to enter the job view page.
+                Here you can confirm the job status, review ligand information, and access
+                <strong>See Detailed Output</strong>, <strong>See Analytics</strong>, and <strong>Download CSV</strong>.
             </p>
             <img src="~/guide/Docking_4_0.png" alt="Job page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 3_2. Open the detail page.</strong><br />
-                After enter <strong>Open</strong> to inspect a job in list.On the job detail page, you can confirm whether the task has finished successfully,
-                inspect the ligand model information, and access the next-level outputs through
-                <strong>See Detailed Output</strong>, <strong>See Analytics</strong>, and
-                <strong>Download CSV</strong>.
+                <strong>Step 6. View detailed output.</strong><br />
+                Click <strong>See Detailed Output</strong> to inspect docking results in table form.
+                This page shows protein symbols, approved names, docking scores for each model,
+                similarity scores, best-match references, and also supports CSV download.
             </p>
-            <img src="~/guide/Docking_4_0_1.png" alt="Job detail page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+            <img src="~/guide/Docking_4_0_1.png" alt="Detailed output page" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 4. Inspect analytics.</strong><br />
+                <strong>Step 7. Inspect analytics.</strong><br />
                 Click <strong>See Analytics</strong> to enter the analytics page.
-                This page supports parameter adjustment, figure-based inspection, target ranking,
+                This section supports parameter adjustment, chart-based inspection, candidate ranking,
                 grouped summaries, and downloadable analysis results.
             </p>
 
             <p class="mb-2">
-                <strong>4.1 Configuration panel.</strong> You can review default parameters and adjust
-                analysis settings such as Top N, docking threshold, similarity thresholds, rule bonus,
-                and scoring weights before re-running analytics.
+                <strong>7.1 Configuration panel.</strong>
+                Review the default parameters and adjust analysis settings such as Top N,
+                docking threshold, similarity thresholds, bonus rules, and scoring weights
+                before running the analysis again.
             </p>
-            <img src="~/guide/Docking_4_0.png" alt="Analytics configuration panel" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+            <img src="~/guide/Docking_4_1_0.png" alt="Analytics configuration panel" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
 
             <p class="mb-2">
-                <strong>4.2 Figure plots.</strong> The platform provides histogram and ranking-style plots
-                for docking score distribution, similarity distribution, top candidates, and model consistency.
+                <strong>7.2 Distribution and ranking plots.</strong>
+                These figures summarize docking score distribution, similarity distribution,
+                top-candidate ranking, and model-level score spread.
             </p>
-            <img src="~/guide/Docking_4_1_0.png" alt="Analytics figure plots" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+            <img src="~/guide/Docking_4_1_1.png" alt="Analytics figure plots" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
 
             <p class="mb-2">
-                <strong>4.3 Priority scatter.</strong> This scatter plot helps users quickly identify
-                candidate classes based on docking mean and similarity values.
+                <strong>7.3 Priority scatter.</strong>
+                The scatter plot compares docking mean and similarity values,
+                helping users identify candidate classes and visually distinguish promising targets.
             </p>
-            <img src="~/guide/Docking_4_1_1.png" alt="Priority scatter plot" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+            <img src="~/guide/Docking_4_1_2.png" alt="Priority scatter plot" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
 
             <p class="mb-2">
-                <strong>4.4 Correlation heatmap and Top N candidates.</strong> The heatmap summarizes
-                model agreement, while the Top N table lists key candidate proteins/genes together with
-                docking mean, docking std, similarity, priority score, and candidate class.
+                <strong>7.4 Correlation heatmap and Top N candidates.</strong>
+                The heatmap summarizes consistency across models,
+                while the Top N table lists candidate proteins or genes together with docking mean,
+                docking standard deviation, similarity, priority score, and candidate class.
             </p>
-            <img src="~/guide/Docking_4_1_2.png" alt="Correlation heatmap and Top N candidates" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
+            <img src="~/guide/Docking_4_1_3.png" alt="Correlation heatmap and Top N candidates" class="img-fluid rounded shadow-sm border mb-3" loading="lazy" />
 
             <p class="mb-2">
-                <strong>4.5 Grouped summary.</strong> The grouped summary aggregates the results at the
-                protein or gene level and provides export options for both summary and full analytics CSV files.
+                <strong>7.5 Grouped summary.</strong>
+                The grouped summary aggregates the analysis results at the protein or gene level
+                and provides export options for both summary and full analytics CSV files.
             </p>
-            <img src="~/guide/Docking_4_1_3.png" alt="Grouped summary" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
+            <img src="~/guide/Docking_4_1_4.png" alt="Grouped summary" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
 
         <li class="mb-4">
             <p>
-                <strong>Step 5. Open the plot view.</strong><br />
-                The plot view displays the docking result in a graph-based structure centered on the molecule.
+                <strong>Step 8. Open the plot view.</strong><br />
+                The plot view displays the docking result as an interaction-style network centered on the molecule.
                 It helps users visually inspect protein-level or gene-level relationships and understand
-                the docking connections more intuitively.
+                docking connections more intuitively.
             </p>
             <img src="~/guide/Docking_5.png" alt="Docking plot view" class="img-fluid rounded shadow-sm border mb-2" loading="lazy" />
         </li>
@@ -171,16 +210,5 @@
     @{
         ViewData["ActiveMenu"] = "";
     }
-    <partial name="_RaWorkspaceMenu" />
-    <li class="nav-item nav-item-with-separator">
-        <a class="nav-link" asp-controller="Job" asp-action="List" asp-route-domainId="@Model.Id">
-            All Jobs
-            <span class="badge badge-light">@ViewData["Badge"]</span>
-        </a>
-    </li>
-    <li class="nav-item nav-item-with-separator active">
-        <a class="nav-link" asp-controller="Home" asp-action="Help" asp-route-domainId="@Model.Id">
-            Help
-        </a>
-    </li>
+    <partial name="_RaWorkspaceMenu" />   
 }

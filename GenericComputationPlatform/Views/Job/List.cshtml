@@ -30,50 +30,6 @@
     }
 
     var topBanner = Url.Content("~/images/version1/docking_1.png");
-
-    var jobItems = Model.Jobs.Select(job =>
-    {
-        var isOwner = User.Identity.IsAuthenticated && userName == job.UserId;
-        var canDelete = isOwner && (job.Status == RunningStatus.Finished || job.Status == RunningStatus.Failed || job.Status == RunningStatus.Running);
-        var canRename = isOwner;
-        var ligandText = !job.IsPrivate || isOwner
-            ? string.Join("; ", job.JobLigands.Select(o => o.LigandName))
-            : "***";
-
-        var statusLabel = StatusLabel(job);
-        var statusClass = StatusClass(job);
-        var statusKey = (job.Status == RunningStatus.Running || job.Status == RunningStatus.Created)
-            ? "running"
-            : (job.Status == RunningStatus.Finished ? "finished" : (job.Status == RunningStatus.Failed ? "failed" : "other"));
-
-        var searchText = $"{job.Id} {job.Name} {ligandText} {statusLabel}".ToLowerInvariant();
-
-        return new
-        {
-            JobId = job.Id,
-            JobName = job.Name,
-            Job = job,
-            LigandCount = job.LigandCount,
-            LigandText = ligandText,
-            StatusLabel = statusLabel,
-            StatusClass = statusClass,
-            StatusKey = statusKey,
-            SearchText = searchText,
-            IsOwner = isOwner,
-            CanDelete = canDelete,
-            CanRename = canRename,
-            IsPrivate = job.IsPrivate,
-            OwnerName = string.IsNullOrWhiteSpace(job.UserId) ? "Public" : job.UserId,
-            DetailsUrl = !(job.IsPrivate && !isOwner)
-                ? Url.Action("Details", "Job", new { domainId = Model.DomainId, jobId = job.Id })
-                : null,
-            RenameUrl = Url.Action("Rename", "Job", new { domainId = Model.DomainId, jobId = job.Id }),
-            DeleteUrl = Url.Action("Delete", "Job", new { domainId = Model.DomainId, jobId = job.Id }),
-            CreatedUnixMs = job.Created.UtcToUnixTimeMilliseconds(),
-            UpdatedUnixMs = job.Updated.UtcToUnixTimeMilliseconds(),
-            ProgressPercent = job.Progress.ToString("P")
-        };
-    }).ToList();
 }
 
 @section Menu {
@@ -203,7 +159,7 @@
             padding: 1.25rem;
         }
 
-        .ra-toolbar-row {
+        .ra-toolbar-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -215,7 +171,8 @@
             flex: 1 1 420px;
         }
 
-        .ra-search {
+        .ra-search,
+        .ra-sort-select {
             width: 100%;
             min-height: 48px;
             border-radius: 999px;
@@ -226,6 +183,11 @@
             outline: none;
         }
 
+        .ra-sort-wrap {
+            flex: 0 0 240px;
+        }
+
+        .ra-controls,
         .ra-actions {
             display: flex;
             gap: .75rem;
@@ -282,10 +244,6 @@
 
         .ra-table-wrap {
             padding: 1.25rem;
-        }
-
-        .ra-results--full {
-            width: 100%;
         }
 
         .ra-table-shell {
@@ -481,6 +439,11 @@
             font-size: .95rem;
         }
 
+        .ra-empty {
+            color: var(--ra-text);
+            font-weight: 600;
+        }
+
         @@media (max-width: 1200px) {
             .col-updated {
                 display: none;
@@ -508,6 +471,10 @@
             .col-ligands {
                 display: none;
             }
+
+            .ra-sort-wrap {
+                flex: 1 1 100%;
+            }
         }
 
         @@media (max-width: 768px) {
@@ -516,13 +483,14 @@
                 padding-right: 12px;
             }
 
-            .ra-toolbar-row,
+            .ra-toolbar-top,
             .ra-footer {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .ra-actions {
+            .ra-actions,
+            .ra-controls {
                 width: 100%;
             }
 
@@ -533,7 +501,6 @@
         }
     </style>
 }
-
 
 <div class="ra-jobs-page">
     <section class="ra-section ra-header-hero">
@@ -562,240 +529,255 @@
         </div>
     </section>
 
-     <div class="ra-module-body ra-container">
-            <div class="ra-editorial-head mb-5">
-                <h2 class="ra-section-title">Search & View Jobs</h2>
-                <p class="ra-section-desc">
-                    Browse @jobItems.Count docking jobs in the current RA workspace.
-                    Search by job name, job id, or ligand name, then filter by running, finished, or failed status.
-                </p>
-            </div>
-
-            <div class="ra-card-shell ra-toolbar">
-                <div class="ra-toolbar-top">
-                    <div class="ra-search-wrap">
-                        <input id="raJobSearchInput"
-                               class="ra-search"
-                               type="text"
-                               placeholder="Search by job name, job id, or ligand name..." />
-                    </div>
-
-                    <div class="ra-controls">
-                        <a class="btn-ra-primary"
-                           asp-controller="Job"
-                           asp-action="New"
-                           asp-route-domainId="@Model.DomainId">
-                            Create New Job
-                        </a>
-                        <a class="btn-ra-secondary"
-                           asp-controller="Home"
-                           asp-action="Index"
-                           asp-route-domainId="@Model.DomainId">
-                            Back to RA Workspace
-                        </a>
-                    </div>
-            </div>
-
-                <div class="ra-filter-row">
-                    <button type="button" class="ra-filter-btn is-active" data-status="all">All</button>
-                    <button type="button" class="ra-filter-btn" data-status="running">Running / Created</button>
-                    <button type="button" class="ra-filter-btn" data-status="finished">Finished</button>
-                    <button type="button" class="ra-filter-btn" data-status="failed">Failed</button>
-                </div>
-            </div>
-
-            
-                <div class="ra-table-wrap">
-                    <div class="ra-table-shell">
-                        <table class="ra-table">
-                            <thead>
-                                <tr>
-                                    <th>Job</th>
-                                    <th class="col-ligands">Ligands</th>
-                                    <th class="col-created">Created</th>
-                                    <th class="col-updated">Updated</th>
-                                    <th>Progress</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-
-                            <tbody id="raJobTableBody">
-                                @foreach (var job in Model.Jobs)
-                                {
-                                    var statusLabel = StatusLabel(job);
-                                    var statusClass = StatusClass(job);
-                                    var isOwner = User.Identity.IsAuthenticated && userName == job.UserId;
-                                    var canDelete = isOwner && (job.Status == RunningStatus.Finished || job.Status == RunningStatus.Failed || job.Status == RunningStatus.Running);
-                                    var canRename = isOwner;
-                                    var ligandText = !job.IsPrivate || isOwner
-                                    ? string.Join("; ", job.JobLigands.Select(o => o.LigandName))
-                                    : "***";
-
-                                    var searchText = $"{job.Id} {job.Name} {ligandText} {statusLabel}".ToLowerInvariant();
-                                    var statusKey = (job.Status == RunningStatus.Running || job.Status == RunningStatus.Created)
-                                    ? "running"
-                                    : (job.Status == RunningStatus.Finished ? "finished" : (job.Status == RunningStatus.Failed ? "failed" : "other"));
-
-                                    <tr class="ra-job-row"
-                                        data-status="@statusKey"
-                                        data-search="@searchText">
-                                        <td>
-                                            <div class="ra-job-name">
-                                                @if (job.IsPrivate && !isOwner)
-                                                {
-                                                    <text>
-                                                        #@job.Id @job.Name <i class="fas fa-lock"></i>
-                                                    </text>
-                                                }
-                                                else
-                                                {
-                                                    <a asp-controller="Job"
-                                                       asp-action="Details"
-                                                       asp-route-domainId="@Model.DomainId"
-                                                       asp-route-jobId="@job.Id">
-                                                        #@job.Id @job.Name
-                                                        @if (job.IsPrivate)
-                                                        {
-                                                            <i class="fas fa-lock-open"></i>
-                                                        }
-                                                    </a>
-                                                }
-                                            </div>
-                                            <div class="ra-meta">
-                                                Owner: @(string.IsNullOrWhiteSpace(job.UserId) ? "Public" : job.UserId)
-                                            </div>
-                                        </td>
-
-                                        <td class="col-ligands">
-                                            <div class="ra-meta">
-                                                <strong>@job.LigandCount</strong> ligand(s)<br />
-                                                @ligandText
-                                            </div>
-                                        </td>
-
-                                        <td class="col-created">
-                                            <div class="ra-meta update-utms" data-utms="@job.Created.UtcToUnixTimeMilliseconds()"></div>
-                                        </td>
-
-                                        <td class="col-updated">
-                                            <div class="ra-meta update-utms" data-utms="@job.Updated.UtcToUnixTimeMilliseconds()"></div>
-                                        </td>
-
-                                        <td>
-                                            <div class="ra-progress-wrap">
-                                                <div class="ra-progress-bar">
-                                                    <div class="ra-progress-fill" style="width:@(job.Progress * 100)%"></div>
-                                                </div>
-                                                <div class="ra-meta">@job.Progress.ToString("P")</div>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <span class="ra-status-badge @statusClass">@statusLabel</span>
-                                        </td>
-
-                                        <td>
-                                            <div class="ra-row-actions">
-                                                @if (!(job.IsPrivate && !isOwner))
-                                                {
-                                                    <a class="ra-action-btn primary"
-                                                       asp-controller="Job"
-                                                       asp-action="Details"
-                                                       asp-route-domainId="@Model.DomainId"
-                                                       asp-route-jobId="@job.Id">
-                                                        Open
-                                                    </a>
-                                                }
-
-                                                @if (canRename)
-                                                {
-                                                    <button type="button"
-                                                            class="ra-action-btn"
-                                                            data-toggle-rename="@job.Id">
-                                                        Rename
-                                                    </button>
-                                                }
-
-                                                @if (canDelete)
-                                                {
-                                                    <form asp-controller="Job"
-                                                          asp-action="Delete"
-                                                          asp-route-domainId="@Model.DomainId"
-                                                          asp-route-jobId="@job.Id"
-                                                          method="post"
-                                                          style="display:inline"
-                                                          onsubmit="return confirm('Delete job #@job.Id permanently?');">
-                                                        <button type="submit" class="ra-action-btn danger">
-                                                            Delete
-                                                        </button>
-                                                    </form>
-                                                }
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    @if (canRename)
-                                    {
-                                        <tr class="ra-rename-row" id="rename-row-@job.Id">
-                                            <td colspan="7">
-                                                <form asp-controller="Job"
-                                                      asp-action="Rename"
-                                                      asp-route-domainId="@Model.DomainId"
-                                                      asp-route-jobId="@job.Id"
-                                                      method="post">
-                                                    <div class="ra-rename-box">
-                                                        <input class="ra-rename-input"
-                                                               type="text"
-                                                               name="newName"
-                                                               value="@job.Name"
-                                                               placeholder="Enter a new job name" />
-                                                        <button type="submit" class="ra-action-btn primary">Save</button>
-                                                        <button type="button" class="ra-action-btn" data-close-rename="@job.Id">Cancel</button>
-                                                    </div>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
-                        No jobs are available for the current filter.
-                    </div>
-
-                    <div class="ra-footer">
-                        <div class="ra-result-info">
-                            <span id="raVisibleJobCount">@Model.Jobs.Count</span> visible jobs
-                        </div>
-
-                        <div class="ra-actions">
-                            <a class="btn-ra-secondary"
-                               asp-controller="Home"
-                               asp-action="Targets"
-                               asp-route-domainId="@Model.DomainId">
-                                Browse Protein Database
-                            </a>
-
-                            <a class="btn-ra-primary"
-                               asp-controller="Job"
-                               asp-action="New"
-                               asp-route-domainId="@Model.DomainId">
-                                Create Another Job
-                            </a>
-                        </div>
-                    </div>
-                </div>
+    <div class="ra-module-body ra-container">
+        <div class="ra-editorial-head mb-5">
+            <h2 class="ra-section-title">Search & View Jobs</h2>
+            <p class="ra-section-desc">
+                Browse @Model.Jobs.Count docking jobs in the current RA workspace.
+                Search by job name, job id, or ligand name, then filter by running, finished, or failed status.
+            </p>
         </div>
+
+        <div class="ra-card-shell ra-toolbar">
+            <div class="ra-toolbar-top">
+                <div class="ra-search-wrap">
+                    <input id="raJobSearchInput"
+                           class="ra-search"
+                           type="text"
+                           placeholder="Search by job name, job id, ligand name, or use job:/name:/ligand:/status:" />
+                </div>
+
+                <div class="ra-sort-wrap">
+                    <select id="raJobSort" class="ra-sort-select">
+                        <option value="created_desc">Created: Newest first</option>
+                        <option value="created_asc">Created: Oldest first</option>
+                        <option value="updated_desc">Updated: Newest first</option>
+                        <option value="updated_asc">Updated: Oldest first</option>
+                    </select>
+                </div>
+
+                <div class="ra-controls">
+                    <a class="btn-ra-primary"
+                       asp-controller="Job"
+                       asp-action="New"
+                       asp-route-domainId="@Model.DomainId">
+                        Create New Job
+                    </a>
+                    <a class="btn-ra-secondary"
+                       asp-controller="Home"
+                       asp-action="Index"
+                       asp-route-domainId="@Model.DomainId">
+                        Back to RA Workspace
+                    </a>
+                </div>
+            </div>
+
+            <div class="ra-filter-row">
+                <button type="button" class="ra-filter-btn is-active" data-status="all">All</button>
+                <button type="button" class="ra-filter-btn" data-status="running">Running / Created</button>
+                <button type="button" class="ra-filter-btn" data-status="finished">Finished</button>
+                <button type="button" class="ra-filter-btn" data-status="failed">Failed</button>
+            </div>
+        </div>
+
+        <div class="ra-table-wrap">
+            <div class="ra-table-shell">
+                <table class="ra-table">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th class="col-ligands">Ligands</th>
+                            <th class="col-created">Created</th>
+                            <th class="col-updated">Updated</th>
+                            <th>Progress</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="raJobTableBody">
+                        @foreach (var job in Model.Jobs)
+                        {
+                            var statusLabel = StatusLabel(job);
+                            var statusClass = StatusClass(job);
+                            var isOwner = User.Identity.IsAuthenticated && userName == job.UserId;
+                            var canDelete = isOwner && (job.Status == RunningStatus.Finished || job.Status == RunningStatus.Failed || job.Status == RunningStatus.Running);
+                            var canRename = isOwner;
+                            var ligandText = !job.IsPrivate || isOwner
+                            ? string.Join("; ", job.JobLigands.Select(o => o.LigandName))
+                            : "***";
+
+                            var searchText = $"{job.Id} {job.Name} {ligandText} {statusLabel}".ToLowerInvariant();
+                            var statusKey = (job.Status == RunningStatus.Running || job.Status == RunningStatus.Created)
+                            ? "running"
+                            : (job.Status == RunningStatus.Finished ? "finished" : (job.Status == RunningStatus.Failed ? "failed" : "other"));
+
+                            <tr class="ra-job-row"
+                                data-status="@statusKey"
+                                data-jobid="@job.Id"
+                                data-jobname="@job.Name.ToLowerInvariant()"
+                                data-ligands="@ligandText.ToLowerInvariant()"
+                                data-created="@job.Created.UtcToUnixTimeMilliseconds()"
+                                data-updated="@job.Updated.UtcToUnixTimeMilliseconds()"
+                                data-search="@searchText">
+                                <td>
+                                    <div class="ra-job-name">
+                                        @if (job.IsPrivate && !isOwner)
+                                        {
+                                            <text>
+                                                #@job.Id @job.Name <i class="fas fa-lock"></i>
+                                            </text>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="Job"
+                                               asp-action="Details"
+                                               asp-route-domainId="@Model.DomainId"
+                                               asp-route-jobId="@job.Id">
+                                                #@job.Id @job.Name
+                                                @if (job.IsPrivate)
+                                                {
+                                                    <i class="fas fa-lock-open"></i>
+                                                }
+                                            </a>
+                                        }
+                                    </div>
+                                    <div class="ra-meta">
+                                        Owner: @(string.IsNullOrWhiteSpace(job.UserId) ? "Public" : job.UserId)
+                                    </div>
+                                </td>
+
+                                <td class="col-ligands">
+                                    <div class="ra-meta">
+                                        <strong>@job.LigandCount</strong> ligand(s)<br />
+                                        @ligandText
+                                    </div>
+                                </td>
+
+                                <td class="col-created">
+                                    <div class="ra-meta update-utms" data-utms="@job.Created.UtcToUnixTimeMilliseconds()"></div>
+                                </td>
+
+                                <td class="col-updated">
+                                    <div class="ra-meta update-utms" data-utms="@job.Updated.UtcToUnixTimeMilliseconds()"></div>
+                                </td>
+
+                                <td>
+                                    <div class="ra-progress-wrap">
+                                        <div class="ra-progress-bar">
+                                            <div class="ra-progress-fill" style="width:@(job.Progress * 100)%"></div>
+                                        </div>
+                                        <div class="ra-meta">@job.Progress.ToString("P")</div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="ra-status-badge @statusClass">@statusLabel</span>
+                                </td>
+
+                                <td>
+                                    <div class="ra-row-actions">
+                                        @if (!(job.IsPrivate && !isOwner))
+                                        {
+                                            <a class="ra-action-btn primary"
+                                               asp-controller="Job"
+                                               asp-action="Details"
+                                               asp-route-domainId="@Model.DomainId"
+                                               asp-route-jobId="@job.Id">
+                                                Open
+                                            </a>
+                                        }
+
+                                        @if (canRename)
+                                        {
+                                            <button type="button"
+                                                    class="ra-action-btn"
+                                                    data-toggle-rename="@job.Id">
+                                                Rename
+                                            </button>
+                                        }
+
+                                        @if (canDelete)
+                                        {
+                                            <form asp-controller="Job"
+                                                  asp-action="Delete"
+                                                  asp-route-domainId="@Model.DomainId"
+                                                  asp-route-jobId="@job.Id"
+                                                  method="post"
+                                                  style="display:inline"
+                                                  onsubmit="return confirm('Delete job #@job.Id permanently?');">
+                                                <button type="submit" class="ra-action-btn danger">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+
+                            @if (canRename)
+                            {
+                                <tr class="ra-rename-row" id="rename-row-@job.Id">
+                                    <td colspan="7">
+                                        <form asp-controller="Job"
+                                              asp-action="Rename"
+                                              asp-route-domainId="@Model.DomainId"
+                                              asp-route-jobId="@job.Id"
+                                              method="post">
+                                            <div class="ra-rename-box">
+                                                <input class="ra-rename-input"
+                                                       type="text"
+                                                       name="newName"
+                                                       value="@job.Name"
+                                                       placeholder="Enter a new job name" />
+                                                <button type="submit" class="ra-action-btn primary">Save</button>
+                                                <button type="button" class="ra-action-btn" data-close-rename="@job.Id">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
+                No jobs are available for the current filter.
+            </div>
+
+            <div class="ra-footer">
+                <div class="ra-result-info">
+                    <span id="raVisibleJobCount">@Model.Jobs.Count</span> visible jobs
+                </div>
+
+                <div class="ra-actions">
+                    <a class="btn-ra-secondary"
+                       asp-controller="Home"
+                       asp-action="Targets"
+                       asp-route-domainId="@Model.DomainId">
+                        Browse Protein Database
+                    </a>
+
+                    <a class="btn-ra-primary"
+                       asp-controller="Job"
+                       asp-action="New"
+                       asp-route-domainId="@Model.DomainId">
+                        Create Another Job
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const searchInput = document.getElementById("raJobSearch");
+            const searchInput = document.getElementById("raJobSearchInput");
+            const sortSelect = document.getElementById("raJobSort");
             const filterButtons = Array.from(document.querySelectorAll(".ra-filter-btn"));
+            const tableBody = document.getElementById("raJobTableBody");
             const jobRows = Array.from(document.querySelectorAll(".ra-job-row"));
             const renameRows = Array.from(document.querySelectorAll(".ra-rename-row"));
             const visibleCount = document.getElementById("raVisibleJobCount");
@@ -803,26 +785,105 @@
 
             let activeStatus = "all";
 
-            function applyFilters() {
-                const query = (searchInput.value || "").trim().toLowerCase();
-                let count = 0;
+            function getRenameRow(jobRow) {
+                const next = jobRow.nextElementSibling;
+                if (next && next.classList.contains("ra-rename-row")) {
+                    return next;
+                }
+                return null;
+            }
 
-                renameRows.forEach(row => row.style.display = "none");
+            function matchesQuery(row, query) {
+                if (!query) return true;
+
+                const lowerQuery = query.toLowerCase();
+
+                if (lowerQuery.startsWith("job:")) {
+                    const value = lowerQuery.substring(4).trim();
+                    return (row.getAttribute("data-jobid") || "").toLowerCase().includes(value);
+                }
+
+                if (lowerQuery.startsWith("name:")) {
+                    const value = lowerQuery.substring(5).trim();
+                    return (row.getAttribute("data-jobname") || "").toLowerCase().includes(value);
+                }
+
+                if (lowerQuery.startsWith("ligand:")) {
+                    const value = lowerQuery.substring(7).trim();
+                    return (row.getAttribute("data-ligands") || "").toLowerCase().includes(value);
+                }
+
+                if (lowerQuery.startsWith("status:")) {
+                    const value = lowerQuery.substring(7).trim();
+                    return (row.getAttribute("data-status") || "").toLowerCase() === value;
+                }
+
+                return (row.getAttribute("data-search") || "").toLowerCase().includes(lowerQuery);
+            }
+
+            function sortRows(rows) {
+                const sortBy = sortSelect ? sortSelect.value : "created_desc";
+
+                rows.sort((a, b) => {
+                    const aCreated = parseInt(a.getAttribute("data-created") || "0", 10);
+                    const bCreated = parseInt(b.getAttribute("data-created") || "0", 10);
+                    const aUpdated = parseInt(a.getAttribute("data-updated") || "0", 10);
+                    const bUpdated = parseInt(b.getAttribute("data-updated") || "0", 10);
+
+                    switch (sortBy) {
+                        case "created_asc":
+                            return aCreated - bCreated;
+                        case "created_desc":
+                            return bCreated - aCreated;
+                        case "updated_asc":
+                            return aUpdated - bUpdated;
+                        case "updated_desc":
+                            return bUpdated - aUpdated;
+                        default:
+                            return bCreated - aCreated;
+                    }
+                });
+            }
+
+            function applyFilters() {
+                const query = (searchInput?.value || "").trim().toLowerCase();
+                const visibleRows = [];
+
+                renameRows.forEach(row => {
+                    row.style.display = "none";
+                });
 
                 jobRows.forEach(row => {
                     const status = row.getAttribute("data-status") || "";
-                    const text = (row.getAttribute("data-search") || "").toLowerCase();
-
                     const matchStatus = activeStatus === "all" || status === activeStatus;
-                    const matchText = !query || text.includes(query);
+                    const matchText = matchesQuery(row, query);
                     const visible = matchStatus && matchText;
 
                     row.style.display = visible ? "" : "none";
-                    if (visible) count++;
+
+                    const renameRow = getRenameRow(row);
+                    if (renameRow && !visible) {
+                        renameRow.style.display = "none";
+                    }
+
+                    if (visible) {
+                        visibleRows.push(row);
+                    }
                 });
 
-                visibleCount.textContent = count.toString();
-                emptyState.style.display = count === 0 ? "block" : "none";
+                sortRows(visibleRows);
+
+                visibleRows.forEach(row => {
+                    tableBody.appendChild(row);
+
+                    const renameRow = getRenameRow(row);
+                    if (renameRow) {
+                        tableBody.appendChild(renameRow);
+                    }
+                });
+
+                visibleCount.textContent = visibleRows.length.toString();
+                emptyState.style.display = visibleRows.length === 0 ? "block" : "none";
             }
 
             filterButtons.forEach(btn => {
@@ -836,6 +897,10 @@
 
             if (searchInput) {
                 searchInput.addEventListener("input", applyFilters);
+            }
+
+            if (sortSelect) {
+                sortSelect.addEventListener("change", applyFilters);
             }
 
             document.querySelectorAll("[data-toggle-rename]").forEach(btn => {
