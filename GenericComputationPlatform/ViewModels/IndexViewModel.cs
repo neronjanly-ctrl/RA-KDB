@@ -3,7 +3,7 @@ using DockingDataModels;
 
 namespace GenericComputationPlatform.ViewModels;
 
-public class PlatformIndexViewModel
+public class IndexViewModel
 {
     public IReadOnlyList<Domain> Domains { get; set; }
     public IReadOnlyList<FeaturedProteinCardViewModel> FeaturedProteins { get; set; }

@@ -1,0 +1,10 @@
+﻿{
+    "ReceptorDirs":  64,
+    "OutputDirs":  0,
+    "HasComputationDb":  false,
+    "HasHangfireDb":  false,
+    "ReceptorsGB":  1.17,
+    "OutputGB":  0,
+    "BinExists":  false,
+    "ObjExists":  false
+}

@@ -97,16 +97,17 @@
 
 <div class="ra-platform-home">
     <section class="ra-section ra-header-hero">
-        <div class="ra-hero-banner">
+        <div class="ra-banner ra-banner--overview">
             <img src="@topBanner" alt="RA Protein Database" />
-            <div class="ra-hero-banner-overlay"></div>
 
-            <div class="ra-hero-banner-inner">
-                <div class="ra-hero-copy">
+            <div class="ra-banner-inner ra-container">
+                <div class="ra-banner-copy">
+                    <div class="ra-kicker">Knowledge Base</div>
 
                     <h1 class="ra-hero-title">
                         Knowledgebase workspace
-                    </h1>           
+                    </h1>
+
                     <p class="ra-hero-desc">
                         Explore curated rheumatoid arthritis related targets, protein records, and docking-ready structures
                         in this research workspace designed for efficient browsing, comparison, and computational analysis.
@@ -119,8 +120,7 @@
     <section class="ra-module ra-module--light" id="search">
         <div class="ra-module-body ra-container">
             <div class="ra-editorial-head mb-5">
-                <h1 class="ra-hero-title-docking">
-                Search & View RA Targets</h1>
+                <h1 class="ra-hero-title-docking">Search & View RA Targets</h1>
                 <p class="ra-section-desc">
                     Browse @cavityItems.Count structured protein records across @categoryStats.Count functional categories.
                     Search by name, gene, UniProt, or tag to quickly find your target.
@@ -130,13 +130,18 @@
             <div class="ra-card-shell ra-toolbar">
                 <div class="ra-toolbar-top">
                     <div class="ra-search-wrap">
-                        <input id="raSearchInput" class="ra-search" type="text" placeholder="Search by protein name, gene symbol, UniProt ID, or tag..." />
+                        <input id="raSearchInput"
+                               class="ra-search"
+                               type="text"
+                               placeholder="Search by protein name, gene symbol, UniProt ID, or tag..." />
                     </div>
+
                     <div class="ra-controls">
                         <div class="ra-view-toggle">
                             <button class="ra-toggle-btn" type="button" data-view="card" aria-pressed="false">Card view</button>
                             <button class="ra-toggle-btn is-active" type="button" data-view="table" aria-pressed="true">Table view</button>
                         </div>
+
                         <div class="ra-page-size">
                             <button class="ra-size-btn is-active" type="button" data-size="20">20</button>
                             <button class="ra-size-btn" type="button" data-size="50">50</button>
@@ -192,47 +197,46 @@
                             </div>
                         }
                     </div>
-
                 </div>
             </div>
         </div>
     </section>
 
-<h2 class="ra-section-title">
-       Results View
-</h2>
+    <section class="ra-results-block">
+        <h2 class="ra-section-title ra-results-title">Results View</h2>
 
-    <div id="raCardView" class="ra-card-view"></div>
-    <div id="raTableView" class="ra-table-view"></div>
+        <div id="raCardView" class="ra-card-view"></div>
+        <div id="raTableView" class="ra-table-view"></div>
 
-    <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
-        No targets are available for the current filter.
-    </div>
-
-    <div class="ra-pagination">
-        <div class="ra-page-info">
-            Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
+        <div id="raEmptyState" class="ra-empty mt-3" style="display:none;">
+            No targets are available for the current filter.
         </div>
-        <div class="ra-page-actions">
-            <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
-            <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
-        </div>
-    </div>
 
-    <div class="ra-footer-actions">
-        <a class="btn-ra-secondary"
-            asp-controller="Home"
-            asp-action="Index"
-            asp-route-domainId="@Model.Domain.Id">
-            Back to RA Workspace
-        </a>
-        <a class="btn-ra-primary"
-            asp-controller="Job"
-            asp-action="New"
-            asp-route-domainId="@Model.Domain.Id">
-            Continue to Docking
-        </a>
-    </div>
+        <div class="ra-pagination">
+            <div class="ra-page-info">
+                Page <span id="raCurrentPage">1</span> / <span id="raTotalPages">1</span>
+            </div>
+            <div class="ra-page-actions">
+                <button class="ra-page-btn" id="raPrevPage" type="button">Previous</button>
+                <button class="ra-page-btn" id="raNextPage" type="button">Next</button>
+            </div>
+        </div>
+
+        <div class="ra-footer-actions">
+            <a class="btn-ra-secondary"
+               asp-controller="Home"
+               asp-action="Index"
+               asp-route-domainId="@Model.Domain.Id">
+                Back to RA Workspace
+            </a>
+            <a class="btn-ra-primary"
+               asp-controller="Job"
+               asp-action="New"
+               asp-route-domainId="@Model.Domain.Id">
+                Continue to Docking
+            </a>
+        </div>
+    </section>
 </div>
 
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewTitle" aria-hidden="true">
@@ -244,14 +248,20 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+
             <div class="modal-body">
-                <img id="imagePreviewTarget" src="" alt="" style="width:100%; border-radius:16px; margin-bottom:1rem; background:#eef3fa;" />
+                <img id="imagePreviewTarget"
+                     src=""
+                     alt=""
+                     style="width:100%; border-radius:16px; margin-bottom:1rem; background:#eef3fa;" />
+
                 <div class="ra-modal-meta">
                     <div><strong>Protein:</strong> <span id="imagePreviewProteinName"></span></div>
                     <div><strong>Gene:</strong> <span id="imagePreviewGene"></span></div>
                     <div><strong>Binding site:</strong> <span id="imagePreviewBinding"></span></div>
                 </div>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
             </div>
@@ -320,15 +330,11 @@
                 const refs = [];
 
                 if (item.UniProt) {
-                    refs.push(
-                        `<a target="_blank" rel="noopener noreferrer" href="${safeText(item.UniProt.Url)}">${safeText(item.UniProt.Id)}</a>`
-                    );
+                    refs.push(`<a target="_blank" rel="noopener noreferrer" href="${safeText(item.UniProt.Url)}">${safeText(item.UniProt.Id)}</a>`);
                 }
 
                 if (item.Chembl) {
-                    refs.push(
-                        `<a target="_blank" rel="noopener noreferrer" href="${safeText(item.Chembl.TargetUrl)}">${safeText(item.Chembl.Id)}</a>`
-                    );
+                    refs.push(`<a target="_blank" rel="noopener noreferrer" href="${safeText(item.Chembl.TargetUrl)}">${safeText(item.Chembl.Id)}</a>`);
                 }
 
                 return refs.join(" ");
@@ -390,14 +396,7 @@
                 const total = filtered.length;
 
                 totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-                if (currentPage > totalPages) {
-                    currentPage = totalPages;
-                }
-
-                if (currentPage < 1) {
-                    currentPage = 1;
-                }
+                currentPage = Math.min(Math.max(currentPage, 1), totalPages);
 
                 const start = (currentPage - 1) * pageSize;
                 const pageItems = filtered.slice(start, start + pageSize);
@@ -415,10 +414,8 @@
                 }
 
                 emptyState.style.display = total === 0 ? "block" : "none";
-
                 currentPageLabel.textContent = currentPage;
                 totalPagesLabel.textContent = totalPages;
-
                 prevPageBtn.disabled = currentPage <= 1;
                 nextPageBtn.disabled = currentPage >= totalPages;
             }
@@ -441,7 +438,6 @@
                 btn.addEventListener("click", () => {
                     sizeButtons.forEach(b => b.classList.remove("is-active"));
                     btn.classList.add("is-active");
-
                     pageSize = parseInt(btn.dataset.size, 10) || 20;
                     currentPage = 1;
                     render();

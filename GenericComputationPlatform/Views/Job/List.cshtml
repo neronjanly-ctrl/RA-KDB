@@ -37,6 +37,7 @@
         ViewData["ActiveMenu"] = "docking";
     }
     <partial name="_RaWorkspaceMenu" />
+
     <li class="nav-item nav-item-with-separator">
         <a class="nav-link"
            asp-controller="Job"
@@ -49,470 +50,21 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/pageFeatures.css" asp-append-version="true" />
-    <style>
-        :root {
-            --ra-bg: #f7f9fc;
-            --ra-surface: rgba(255,255,255,.86);
-            --ra-surface-strong: rgba(255,255,255,.96);
-            --ra-title: #162033;
-            --ra-text: #627089;
-            --ra-line: #dde6f2;
-            --ra-blue: #2f6bff;
-            --ra-blue-soft: rgba(47,107,255,.08);
-            --ra-shadow: 0 18px 44px rgba(20, 44, 84, .06);
-            --ra-shadow-card: 0 14px 28px rgba(20, 44, 84, .05);
-            --ra-success: #1f9d67;
-            --ra-danger: #d64545;
-            --ra-warning: #c88409;
-            --ra-secondary: #667085;
-        }
-
-        body {
-            background: radial-gradient(circle at top left, rgba(47,107,255,.08), transparent 26%), radial-gradient(circle at bottom right, rgba(104,200,208,.08), transparent 24%), linear-gradient(180deg, #fbfdff 0%, #f6f9fc 100%);
-            color: var(--ra-title);
-        }
-
-        .ra-jobs-page {
-            width: 100%;
-            margin: 0;
-            padding: 2rem 0 5rem;
-        }
-
-        .ra-module-body--full {
-            width: 100%;
-            max-width: none;
-            padding-left: clamp(16px, 2vw, 32px);
-            padding-right: clamp(16px, 2vw, 32px);
-        }
-
-        .ra-section + .ra-section {
-            margin-top: 1.8rem;
-        }
-
-        .ra-card-shell {
-            background: var(--ra-surface);
-            border: 1px solid var(--ra-line);
-            border-radius: 28px;
-            box-shadow: var(--ra-shadow);
-            backdrop-filter: blur(8px);
-        }
-
-        .ra-header {
-            padding: 2rem;
-        }
-
-        .ra-kicker {
-            display: inline-flex;
-            align-items: center;
-            padding: .42rem .95rem;
-            border-radius: 999px;
-            background: var(--ra-blue-soft);
-            color: var(--ra-blue);
-            font-size: .82rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .ra-title {
-            font-size: clamp(2.1rem, 3.7vw, 4rem);
-            line-height: 1.04;
-            font-weight: 800;
-            letter-spacing: -.04em;
-            margin-bottom: .9rem;
-        }
-
-        .ra-desc {
-            color: var(--ra-text);
-            font-size: 1.02rem;
-            line-height: 1.9;
-            max-width: 980px;
-        }
-
-        .ra-stats {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: .9rem;
-            margin-top: 1.4rem;
-        }
-
-        .ra-stat {
-            border: 1px solid var(--ra-line);
-            border-radius: 20px;
-            background: rgba(255,255,255,.96);
-            padding: 1rem;
-        }
-
-        .ra-stat-value {
-            font-size: 1.45rem;
-            font-weight: 780;
-            line-height: 1;
-            margin-bottom: .35rem;
-        }
-
-        .ra-stat-label {
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.6;
-        }
-
-        .ra-toolbar {
-            padding: 1.25rem;
-        }
-
-        .ra-toolbar-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .ra-search-wrap {
-            flex: 1 1 420px;
-        }
-
-        .ra-search,
-        .ra-sort-select {
-            width: 100%;
-            min-height: 48px;
-            border-radius: 999px;
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            padding: 0 1rem;
-            color: #24324a;
-            outline: none;
-        }
-
-        .ra-sort-wrap {
-            flex: 0 0 240px;
-        }
-
-        .ra-controls,
-        .ra-actions {
-            display: flex;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-ra-primary,
-        .btn-ra-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 42px;
-            border-radius: 999px;
-            padding: 0 1rem;
-            font-weight: 700;
-            text-decoration: none !important;
-        }
-
-        .btn-ra-primary {
-            color: #fff !important;
-            background: var(--ra-blue);
-        }
-
-        .btn-ra-secondary {
-            color: #24324a !important;
-            background: #fff;
-            border: 1px solid var(--ra-line);
-        }
-
-        .ra-filter-row {
-            display: flex;
-            gap: .6rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-        }
-
-        .ra-filter-btn {
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            color: #2f405e;
-            min-height: 36px;
-            border-radius: 999px;
-            padding: 0 .9rem;
-            font-size: .9rem;
-            font-weight: 650;
-            cursor: pointer;
-        }
-
-            .ra-filter-btn.is-active {
-                background: rgba(47,107,255,.08);
-                border-color: rgba(47,107,255,.18);
-                color: var(--ra-blue);
-            }
-
-        .ra-table-wrap {
-            padding: 1.25rem;
-        }
-
-        .ra-table-shell {
-            width: 100%;
-            border: 1px solid var(--ra-line);
-            border-radius: 24px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            background: rgba(255,255,255,.97);
-        }
-
-        .ra-table {
-            width: 100%;
-            min-width: 1180px;
-            border-collapse: collapse;
-        }
-
-            .ra-table thead th {
-                background: rgba(47,107,255,.05);
-                color: #32517c;
-                text-transform: uppercase;
-                letter-spacing: .04em;
-                font-size: .84rem;
-                font-weight: 800;
-                padding: .95rem 1rem;
-                border-bottom: 1px solid var(--ra-line);
-            }
-
-            .ra-table tbody td {
-                padding: 1rem;
-                border-bottom: 1px solid var(--ra-line);
-                vertical-align: middle;
-            }
-
-            .ra-table tbody tr:last-child td {
-                border-bottom: 0;
-            }
-
-            .ra-table th:first-child,
-            .ra-table td:first-child {
-                min-width: 280px;
-            }
-
-            .ra-table th:last-child,
-            .ra-table td:last-child {
-                white-space: nowrap;
-            }
-
-        .ra-job-name {
-            font-weight: 760;
-            line-height: 1.6;
-        }
-
-            .ra-job-name a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-                .ra-job-name a:hover {
-                    color: var(--ra-blue);
-                }
-
-        .ra-meta {
-            color: var(--ra-text);
-            font-size: .92rem;
-            line-height: 1.7;
-        }
-
-        .ra-status-badge {
-            display: inline-flex;
-            align-items: center;
-            min-height: 30px;
-            padding: 0 .75rem;
-            border-radius: 999px;
-            font-size: .82rem;
-            font-weight: 700;
-            border: 1px solid transparent;
-        }
-
-            .ra-status-badge.success {
-                color: var(--ra-success);
-                background: rgba(31,157,103,.08);
-                border-color: rgba(31,157,103,.18);
-            }
-
-            .ra-status-badge.primary {
-                color: var(--ra-blue);
-                background: rgba(47,107,255,.08);
-                border-color: rgba(47,107,255,.18);
-            }
-
-            .ra-status-badge.warning {
-                color: var(--ra-warning);
-                background: rgba(200,132,9,.08);
-                border-color: rgba(200,132,9,.18);
-            }
-
-            .ra-status-badge.danger {
-                color: var(--ra-danger);
-                background: rgba(214,69,69,.08);
-                border-color: rgba(214,69,69,.18);
-            }
-
-            .ra-status-badge.secondary {
-                color: var(--ra-secondary);
-                background: rgba(102,112,133,.08);
-                border-color: rgba(102,112,133,.18);
-            }
-
-        .ra-progress-wrap {
-            min-width: 180px;
-        }
-
-        .ra-progress-bar {
-            width: 100%;
-            height: 8px;
-            border-radius: 999px;
-            background: #edf2f8;
-            overflow: hidden;
-            margin-bottom: .45rem;
-        }
-
-        .ra-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4b7dff, #69c8d0);
-            border-radius: 999px;
-        }
-
-        .ra-row-actions {
-            display: flex;
-            gap: .45rem;
-            flex-wrap: wrap;
-        }
-
-        .ra-action-btn {
-            min-height: 36px;
-            border-radius: 999px;
-            padding: 0 .85rem;
-            border: 1px solid var(--ra-line);
-            background: #fff;
-            color: #24324a;
-            font-size: .88rem;
-            font-weight: 700;
-            text-decoration: none !important;
-            cursor: pointer;
-        }
-
-            .ra-action-btn.primary {
-                background: var(--ra-blue);
-                color: #fff;
-                border-color: var(--ra-blue);
-            }
-
-            .ra-action-btn.danger {
-                color: var(--ra-danger);
-                border-color: rgba(214,69,69,.22);
-                background: rgba(214,69,69,.04);
-            }
-
-        .ra-rename-row {
-            display: none;
-            background: rgba(47,107,255,.03);
-        }
-
-        .ra-rename-box {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-
-        .ra-rename-input {
-            flex: 1 1 340px;
-            min-height: 42px;
-            border-radius: 14px;
-            border: 1px solid var(--ra-line);
-            padding: 0 .9rem;
-            background: #fff;
-        }
-
-        .ra-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-top: 1.2rem;
-        }
-
-        .ra-result-info {
-            color: var(--ra-text);
-            font-weight: 600;
-            font-size: .95rem;
-        }
-
-        .ra-empty {
-            color: var(--ra-text);
-            font-weight: 600;
-        }
-
-        @@media (max-width: 1200px) {
-            .col-updated {
-                display: none;
-            }
-        }
-
-        @@media (max-width: 1199.98px) {
-            .ra-stats {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @@media (max-width: 992px) {
-            .ra-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .ra-header,
-            .ra-toolbar,
-            .ra-table-wrap {
-                padding: 1.25rem;
-            }
-
-            .col-created,
-            .col-ligands {
-                display: none;
-            }
-
-            .ra-sort-wrap {
-                flex: 1 1 100%;
-            }
-        }
-
-        @@media (max-width: 768px) {
-            .ra-module-body--full {
-                padding-left: 12px;
-                padding-right: 12px;
-            }
-
-            .ra-toolbar-top,
-            .ra-footer {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .ra-actions,
-            .ra-controls {
-                width: 100%;
-            }
-
-            .btn-ra-primary,
-            .btn-ra-secondary {
-                width: 100%;
-            }
-        }
-    </style>
 }
 
 <div class="ra-jobs-page">
     <section class="ra-section ra-header-hero">
-        <div class="ra-hero-banner">
+        <div class="ra-banner ra-banner--overview">
             <img src="@topBanner" alt="All Docking Jobs" />
-            <div class="ra-hero-banner-overlay"></div>
 
-            <div class="ra-hero-banner-inner">
-                <div class="ra-hero-copy">
+            <div class="ra-banner-inner ra-container">
+                <div class="ra-banner-copy">
+                    <div class="ra-kicker">Docking Jobs</div>
+
                     <h1 class="ra-hero-title">
-                        Docking job Lists
+                        Docking Job Lists
                     </h1>
+
                     <p class="ra-hero-desc">
                         Review submitted jobs, reopen completed runs, rename jobs for clarity,
                         and remove finished or failed jobs when they are no longer needed.
@@ -563,6 +115,7 @@
                        asp-route-domainId="@Model.DomainId">
                         Create New Job
                     </a>
+
                     <a class="btn-ra-secondary"
                        asp-controller="Home"
                        asp-action="Index"
@@ -582,7 +135,7 @@
 
         <div class="ra-table-wrap">
             <div class="ra-table-shell">
-                <table class="ra-table">
+                <table class="ra-table ra-jobs-table">
                     <thead>
                         <tr>
                             <th>Job</th>
@@ -642,6 +195,7 @@
                                             </a>
                                         }
                                     </div>
+
                                     <div class="ra-meta">
                                         Owner: @(string.IsNullOrWhiteSpace(job.UserId) ? "Public" : job.UserId)
                                     </div>
@@ -787,10 +341,7 @@
 
             function getRenameRow(jobRow) {
                 const next = jobRow.nextElementSibling;
-                if (next && next.classList.contains("ra-rename-row")) {
-                    return next;
-                }
-                return null;
+                return next && next.classList.contains("ra-rename-row") ? next : null;
             }
 
             function matchesQuery(row, query) {
@@ -907,6 +458,7 @@
                 btn.addEventListener("click", function () {
                     const id = this.getAttribute("data-toggle-rename");
                     const row = document.getElementById("rename-row-" + id);
+
                     if (row) {
                         row.style.display = row.style.display === "table-row" ? "none" : "table-row";
                     }
@@ -917,6 +469,7 @@
                 btn.addEventListener("click", function () {
                     const id = this.getAttribute("data-close-rename");
                     const row = document.getElementById("rename-row-" + id);
+
                     if (row) {
                         row.style.display = "none";
                     }

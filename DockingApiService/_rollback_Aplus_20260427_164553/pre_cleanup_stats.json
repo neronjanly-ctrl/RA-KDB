@@ -1,0 +1,8 @@
+﻿{
+    "ReceptorsTotalDirs":  927,
+    "ReceptorsKeepDirs":  64,
+    "ReceptorsDeleteDirs":  863,
+    "OutputDirs":  30,
+    "ComputationDbExists":  true,
+    "HangfireDbExists":  true
+}

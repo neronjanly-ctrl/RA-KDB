@@ -1,0 +1,4 @@
+﻿Workspace/Computation.db
+Workspace/Hangfire.db
+bin/
+obj/

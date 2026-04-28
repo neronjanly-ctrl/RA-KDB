@@ -54,7 +54,6 @@
     var baseUri = new Uri(_appSettings.Value.ExternalUrls.Hosting.TrimEnd('/'));
     var fullUri = new Uri(baseUri, baseUri.AbsolutePath.TrimEnd('/') + Context.Request.Path.Value);
     var path = baseUri.PathAndQuery.TrimEnd('/');
-    var homeAction = hasDomainContext ? "Index" : "PlatformIndex";
 
     var partnerLogos = (_appSettings.Value.Branding?.PartnerLogos ?? Array.Empty<PartnerLogoSettings>())
         .Where(item => !string.IsNullOrWhiteSpace(item?.Image))
@@ -472,7 +471,7 @@
          style="background-color:@navbarBackgroundColor; border-bottom-color:@navbarBorderColor;">
         <div class="container">
             <a asp-controller="Home"
-               asp-action="PlatformIndex"
+               asp-action="Index"
                class="navbar-brand brand-lockup">
                 <img alt="@appName" src="~/logos/@(logoId).png" class="brand-lockup-logo" />
                 <span class="brand-lockup-divider" aria-hidden="true"></span>
